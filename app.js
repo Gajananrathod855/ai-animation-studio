@@ -2180,6 +2180,7 @@ function handleGenerateScenes() {
     setTimeout(() => {
         AppState.scenes = generateScenesFromStory(AppState.story, AppState.settings);
         renderSceneList();
+        updateGenerateAnimationButton();
         goToStep(2);
         hideLoading();
         showToast(`${AppState.scenes.length} सीन बनाए गए`, 'success');
@@ -2191,12 +2192,29 @@ function renderSceneList() {
     container.innerHTML = '';
     
     AppState.scenes.forEach((scene, index) => {
+        const themeColors = ColorThemes[AppState.settings.colorTheme];
+        const bgColor = themeColors.background[0];
+        const paperColors = themeColors.paper;
+        
         const card = createElement('div', { class: 'scene-card', dataset: { index } }, [
             createElement('div', { class: 'scene-card-header' }, [
                 createElement('div', { class: 'scene-number' }, [String(index + 1)]),
                 createElement('h4', { class: 'scene-title' }, [scene.title]),
                 createElement('span', { class: 'scene-duration' }, [`${scene.duration} सेकंड`])
             ]),
+            
+            // Visual preview area
+            createElement('div', { class: 'scene-visual-preview', style: `background: ${bgColor};` }, [
+                createElement('div', { class: 'preview-bg' }),
+                ...scene.characters.slice(0, 3).map((char, i) => 
+                    createElement('div', { 
+                        class: 'preview-character',
+                        style: `background: ${paperColors[i % paperColors.length]}; left: ${10 + i * 35}px;`
+                    }, [getCharacterIcon(char)])
+                ),
+                createElement('div', { class: 'preview-label' }, [`${scene.background} • ${scene.characters.length} पात्र`])
+            ]),
+            
             createElement('p', { class: 'scene-preview' }, [scene.description]),
             createElement('div', { class: 'scene-meta' }, [
                 createElement('span', {}, ['👥 ', scene.characters.join(', ')]),
@@ -2207,6 +2225,40 @@ function renderSceneList() {
         card.addEventListener('click', () => openSceneEditor(index));
         container.appendChild(card);
     });
+    
+    // Update the generate animation button state
+    updateGenerateAnimationButton();
+}
+
+function getCharacterIcon(charName) {
+    const icons = {
+        'खरगोश': '🐰', 'बिल्ली': '🐱', 'कुत्ता': '🐶', 'पक्षी': '🐦', 'चिड़िया': '🐦',
+        'तितली': '🦋', 'हाथी': '🐘', 'शेर': '🦁', 'बंदर': '🐒', 'मोर': '🦚',
+        'तोता': '🦜', 'फूल': '🌸', 'पेड़': '🌳', 'बादल': '☁️', 'सूरज': '☀️',
+        'घर': '🏠', 'गाड़ी': '🚗', 'कार': '🚗'
+    };
+    return icons[charName] || '🎭';
+}
+
+function updateGenerateAnimationButton() {
+    const btn = $('#generateAnimationBtn');
+    if (btn) {
+        btn.disabled = AppState.scenes.length === 0;
+    }
+}
+
+// Rebuild a specific scene for 3D visual preview
+async function rebuildSceneForPreview(sceneIndex) {
+    if (sceneIndex < 0 || sceneIndex >= AppState.scenes.length) return;
+    
+    // Only rebuild if Three.js is initialized
+    if (!AppState.three.scene || !AppState.three.camera) return;
+    
+    try {
+        await buildScene(sceneIndex);
+    } catch (e) {
+        console.warn('Scene preview rebuild failed:', e);
+    }
 }
 
 function openSceneEditor(index) {
@@ -2239,6 +2291,11 @@ function saveSceneEdit() {
     scene.hindiText = $('#sceneHindiText').value;
     
     renderSceneList();
+    updateGenerateAnimationButton();
+    
+    // Rebuild the 3D scene for visual preview
+    rebuildSceneForPreview(index);
+    
     closeSceneEditor();
     showToast('सीन सेव हो गया', 'success');
 }
@@ -2417,6 +2474,11 @@ function goToStep(step) {
     if (step === 4 && !AppState.animationData) {
         showToast('पहले एनिमेशन बनाएं', 'warning');
         return;
+    }
+    
+    // Update button state when navigating to step 2
+    if (step === 2) {
+        updateGenerateAnimationButton();
     }
     
     $$('.step-panel').forEach(p => p.classList.remove('active'));

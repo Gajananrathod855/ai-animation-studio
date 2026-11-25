@@ -158,6 +158,138 @@
                             <label class="label">पात्र (कॉमा से अलग करें)</label>
                             <input type="text" id="sceneCharacters" class="input" placeholder="खरगोश, गाजर, तितली">
                         </div>
+                        
+                        <!-- 3D Character Customization Panel -->
+                        <div class="editor-section" id="character3dPanel" style="display: none;">
+                            <div class="section-header">
+                                <h4>3D पात्र अनुकूलन</h4>
+                                <button class="btn btn-sm btn-ghost" id="addCharacterBtn">+ पात्र जोड़ें</button>
+                            </div>
+                            <div class="character-list" id="character3dList"></div>
+                            
+                            <div class="character-customization" id="characterCustomization" style="display: none;">
+                                <h4 id="customizingCharacterName">पात्र अनुकूलित करें</h4>
+                                
+                                <div class="customization-tabs">
+                                    <button class="tab-btn active" data-tab="body">शरीर</button>
+                                    <button class="tab-btn" data-tab="face">चेहरा</button>
+                                    <button class="tab-btn" data-tab="hair">बाल</button>
+                                    <button class="tab-btn" data-tab="clothes">कपड़े</button>
+                                </div>
+                                
+                                <div class="tab-content">
+                                    <!-- Body Tab -->
+                                    <div class="tab-panel active" id="tab-body">
+                                        <div class="customize-row">
+                                            <label>बॉडी टाइप</label>
+                                            <select id="charBodyType" class="select">
+                                                <option value="child">बच्चा</option>
+                                                <option value="teen">किशोर</option>
+                                                <option value="adult" selected>वयस्क</option>
+                                                <option value="elderly">बुजुर्ग</option>
+                                            </select>
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>ऊंचाई <span id="heightValue">1.0</span></label>
+                                            <input type="range" id="charHeight" min="0.5" max="1.5" step="0.05" value="1.0" class="slider">
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>चौड़ाई <span id="widthValue">1.0</span></label>
+                                            <input type="range" id="charWidth" min="0.5" max="1.5" step="0.05" value="1.0" class="slider">
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>सिर का आकार <span id="headScaleValue">1.0</span></label>
+                                            <input type="range" id="charHeadScale" min="0.7" max="1.3" step="0.05" value="1.0" class="slider">
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>अंग की लंबाई <span id="limbLengthValue">1.0</span></label>
+                                            <input type="range" id="charLimbLength" min="0.7" max="1.3" step="0.05" value="1.0" class="slider">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Face Tab -->
+                                    <div class="tab-panel" id="tab-face">
+                                        <div class="customize-row">
+                                            <label>त्वचा का रंग</label>
+                                            <div class="color-palette" id="skinTonePalette"></div>
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>आंखों का रंग</label>
+                                            <div class="color-palette" id="eyeColorPalette"></div>
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>अभिव्यक्ति</label>
+                                            <select id="charExpression" class="select">
+                                                <option value="neutral">तटस्थ</option>
+                                                <option value="happy">खुश</option>
+                                                <option value="sad">उदास</option>
+                                                <option value="angry">गुस्सा</option>
+                                                <option value="surprised">आश्चर्य</option>
+                                                <option value="fear">डर</option>
+                                                <option value="disgusted">घृणा</option>
+                                                <option value="confused">उलझन</option>
+                                                <option value="thinking">सोच</option>
+                                                <option value="sleepy">नींद</option>
+                                                <option value="wink">विंक</option>
+                                            </select>
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>तीव्रता <span id="expressionIntensityValue">1.0</span></label>
+                                            <input type="range" id="expressionIntensity" min="0" max="1" step="0.1" value="1.0" class="slider">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Hair Tab -->
+                                    <div class="tab-panel" id="tab-hair">
+                                        <div class="customize-row">
+                                            <label>हेयर स्टाइल</label>
+                                            <select id="charHairStyle" class="select">
+                                                <option value="short">छोटे</option>
+                                                <option value="medium">मध्यम</option>
+                                                <option value="long">लंबे</option>
+                                                <option value="curly">घुंघराले</option>
+                                                <option value="bald">गंजा</option>
+                                                <option value="ponytail">पोनीटेल</option>
+                                                <option value="bun">बन</option>
+                                                <option value="dreadlocks">ड्रेडलॉक्स</option>
+                                            </select>
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>बालों का रंग</label>
+                                            <div class="color-palette" id="hairColorPalette"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Clothes Tab -->
+                                    <div class="tab-panel" id="tab-clothes">
+                                        <div class="customize-row">
+                                            <label>पोशाक प्रीसेट</label>
+                                            <select id="charClothing" class="select">
+                                                <option value="casual">कैजुअल</option>
+                                                <option value="formal">औपचारिक</option>
+                                                <option value="traditional">पारंपरिक</option>
+                                                <option value="school">स्कूल</option>
+                                                <option value="sports">खेल</option>
+                                                <option value="winter">सर्दी</option>
+                                            </select>
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>शर्ट रंग</label>
+                                            <input type="color" id="shirtColor" class="color-input" value="#42a5f5">
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>पैंट रंग</label>
+                                            <input type="color" id="pantsColor" class="color-input" value="#1565c0">
+                                        </div>
+                                        <div class="customize-row">
+                                            <label>जूते रंग</label>
+                                            <input type="color" id="shoesColor" class="color-input" value="#ffffff">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="editor-section">
                             <label class="label">पृष्ठभूमि</label>
                             <input type="text" id="sceneBackground" class="input" placeholder="जंगल, नदी, पेड़">
@@ -254,33 +386,270 @@
 
                 <div class="animation-settings">
                     <h3>एनिमेशन सेटिंग्स</h3>
-                    <div class="settings-grid">
-                        <div class="setting-item">
-                            <label class="label" for="animationSpeed">गति</label>
-                            <input type="range" id="animationSpeed" min="0.5" max="2" step="0.1" value="1" class="slider">
-                            <span id="speedValue">1x</span>
+                    
+                    <!-- Professional 3D Controls -->
+                    <div class="pro-controls">
+                        <div class="pro-tabs">
+                            <button class="pro-tab-btn active" data-pro-tab="animation">एनिमेशन</button>
+                            <button class="pro-tab-btn" data-pro-tab="camera">3D कैमरा</button>
+                            <button class="pro-tab-btn" data-pro-tab="lighting">लाइटिंग</button>
+                            <button class="pro-tab-btn" data-pro-tab="background">पृष्ठभूमि</button>
+                            <button class="pro-tab-btn" data-pro-tab="scene">सीन एडिट</button>
                         </div>
-                        <div class="setting-item">
-                            <label class="label" for="cameraMovement">कैमरा मूवमेंट</label>
-                            <select id="cameraMovement" class="select">
-                                <option value="gentle">धीमा पैन/ज़ूम</option>
-                                <option value="dynamic">डायनामिक</option>
-                                <option value="static">स्थिर</option>
-                            </select>
-                        </div>
-                        <div class="setting-item">
-                            <label class="label" for="transitionType">ट्रांजिशन</label>
-                            <select id="transitionType" class="select">
-                                <option value="paper-flip">पेपर फ्लिप</option>
-                                <option value="slide">स्लाइड</option>
-                                <option value="fade">फेड</option>
-                                <option value="zoom">ज़ूम</option>
-                            </select>
-                        </div>
-                        <div class="setting-item">
-                            <label class="label" for="paperThickness">पेपर मोटाई</label>
-                            <input type="range" id="paperThickness" min="1" max="10" step="1" value="3" class="slider">
-                            <span id="thicknessValue">3</span>
+                        
+                        <div class="pro-tab-content">
+                            <!-- Animation Tab -->
+                            <div class="pro-tab-panel active" id="pro-tab-animation">
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label class="label" for="animationSpeed">गति</label>
+                                        <input type="range" id="animationSpeed" min="0.5" max="2" step="0.1" value="1" class="slider">
+                                        <span id="speedValue">1x</span>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="transitionType">ट्रांजिशन</label>
+                                        <select id="transitionType" class="select">
+                                            <option value="paper-flip">पेपर फ्लिप</option>
+                                            <option value="slide">स्लाइड</option>
+                                            <option value="fade">फेड</option>
+                                            <option value="zoom">ज़ूम</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label">ग्लोबल एनिमेशन</label>
+                                        <select id="globalAnimation" class="select">
+                                            <option value="none">कोई नहीं</option>
+                                            <option value="walk">चलना</option>
+                                            <option value="run">दौड़ना</option>
+                                            <option value="idle">इडल</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Camera Tab -->
+                            <div class="pro-tab-panel" id="pro-tab-camera">
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label class="label" for="cameraType">कैमरा प्रकार</label>
+                                        <select id="cameraType" class="select">
+                                            <option value="perspective">परिप्रेक्ष्य (3D)</option>
+                                            <option value="orthographic">ऑर्थोग्राफिक (2.5D)</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="cameraFOV">FOV <span id="fovValue">50</span></label>
+                                        <input type="range" id="cameraFOV" min="20" max="100" step="1" value="50" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="cameraDistance">दूरी <span id="camDistValue">15</span></label>
+                                        <input type="range" id="cameraDistance" min="5" max="50" step="1" value="15" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="cameraHeight">ऊंचाई <span id="camHeightValue">5</span></label>
+                                        <input type="range" id="cameraHeight" min="-10" max="20" step="1" value="5" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="cameraAngle">कोण <span id="camAngleValue">0</span></label>
+                                        <input type="range" id="cameraAngle" min="-180" max="180" step="1" value="0" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="cameraMovement">मूवमेंट</label>
+                                        <select id="cameraMovement" class="select">
+                                            <option value="static">स्थिर</option>
+                                            <option value="orbit">ऑर्बिट</option>
+                                            <option value="dolly">डॉली</option>
+                                            <option value="crane">क्रेन</option>
+                                            <option value="handheld">हैंडहेल्ड</option>
+                                            <option value="tracking">ट्रैकिंग</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="cameraSpeed">गति <span id="camSpeedValue">1.0</span></label>
+                                        <input type="range" id="cameraSpeed" min="0.1" max="3" step="0.1" value="1.0" class="slider">
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">लुक-एट टारगेट</label>
+                                        <div class="vector-inputs">
+                                            <input type="number" id="lookAtX" class="input-small" placeholder="X" step="0.1" value="0">
+                                            <input type="number" id="lookAtY" class="input-small" placeholder="Y" step="0.1" value="0">
+                                            <input type="number" id="lookAtZ" class="input-small" placeholder="Z" step="0.1" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Lighting Tab -->
+                            <div class="pro-tab-panel" id="pro-tab-lighting">
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label class="label">पर्यावरण</label>
+                                        <select id="environmentPreset" class="select">
+                                            <option value="studio">स्टूडियो</option>
+                                            <option value="outdoor">आउटडोर</option>
+                                            <option value="indoor">इंडोर</option>
+                                            <option value="sunset">सूर्यास्त</option>
+                                            <option value="night">रात</option>
+                                            <option value="custom">कस्टम</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="ambientIntensity">एम्बिएंट <span id="ambientValue">0.6</span></label>
+                                        <input type="range" id="ambientIntensity" min="0" max="2" step="0.1" value="0.6" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="ambientColor">एम्बिएंट रंग</label>
+                                        <input type="color" id="ambientColor" class="color-input" value="#ffffff">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="keyIntensity">की लाइट <span id="keyValue">1.0</span></label>
+                                        <input type="range" id="keyIntensity" min="0" max="3" step="0.1" value="1.0" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="keyColor">की लाइट रंग</label>
+                                        <input type="color" id="keyColor" class="color-input" value="#ffffff">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="keyAngle">की लाइट कोण <span id="keyAngleValue">45</span></label>
+                                        <input type="range" id="keyAngle" min="0" max="360" step="1" value="45" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="fillIntensity">फिल लाइट <span id="fillValue">0.5</span></label>
+                                        <input type="range" id="fillIntensity" min="0" max="2" step="0.1" value="0.5" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="fillColor">फिल रंग</label>
+                                        <input type="color" id="fillColor" class="color-input" value="#ffeedd">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="rimIntensity">रिम लाइट <span id="rimValue">0.3</span></label>
+                                        <input type="range" id="rimIntensity" min="0" max="2" step="0.1" value="0.3" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="rimColor">रिम रंग</label>
+                                        <input type="color" id="rimColor" class="color-input" value="#ffaa00">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="shadowQuality">छाया गुणवत्ता</label>
+                                        <select id="shadowQuality" class="select">
+                                            <option value="low">कम</option>
+                                            <option value="medium" selected>मध्यम</option>
+                                            <option value="high">उच्च</option>
+                                            <option value="ultra">अल्ट्रा</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="exposure">एक्सपोजर <span id="exposureValue">1.2</span></label>
+                                        <input type="range" id="exposure" min="0.5" max="3" step="0.1" value="1.2" class="slider">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Background Tab -->
+                            <div class="pro-tab-panel" id="pro-tab-background">
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label class="label">पृष्ठभूमि प्रकार</label>
+                                        <select id="backgroundType" class="select">
+                                            <option value="color">सॉलिड रंग</option>
+                                            <option value="gradient">ग्रेडिएंट</option>
+                                            <option value="sky">स्काईबॉक्स</option>
+                                            <option value="hdri">HDRI</option>
+                                            <option value="scene3d">3D सीन</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="bgColor1">रंग 1</label>
+                                        <input type="color" id="bgColor1" class="color-input" value="#87ceeb">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="bgColor2">रंग 2</label>
+                                        <input type="color" id="bgColor2" class="color-input" value="#e0f7fa">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="bgRotation">रोटेशन <span id="bgRotValue">0</span></label>
+                                        <input type="range" id="bgRotation" min="0" max="360" step="1" value="0" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label">स्काई प्रीसेट</label>
+                                        <select id="skyPreset" class="select">
+                                            <option value="clear">साफ आसमान</option>
+                                            <option value="cloudy">बादल</option>
+                                            <option value="sunset">सूर्यास्त</option>
+                                            <option value="night">तारों वाली रात</option>
+                                            <option value="storm">तूफान</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="fogDensity">कोहरा <span id="fogValue">0</span></label>
+                                        <input type="range" id="fogDensity" min="0" max="0.1" step="0.001" value="0" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="fogColor">कोहरा रंग</label>
+                                        <input type="color" id="fogColor" class="color-input" value="#87ceeb">
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">ग्राउंड प्लेन</label>
+                                        <div class="toggle-group">
+                                            <label class="toggle-label"><input type="checkbox" id="showGround" checked> ग्राउंड दिखाएं</label>
+                                            <label class="toggle-label"><input type="checkbox" id="groundShadows" checked> छाया प्राप्त करें</label>
+                                        </div>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="groundColor">ग्राउंड रंग</label>
+                                        <input type="color" id="groundColor" class="color-input" value="#4caf50">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="groundRoughness">रफनेस <span id="groundRoughValue">0.8</span></label>
+                                        <input type="range" id="groundRoughness" min="0" max="1" step="0.1" value="0.8" class="slider">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Scene Edit Tab -->
+                            <div class="pro-tab-panel" id="pro-tab-scene">
+                                <div class="settings-grid">
+                                    <div class="setting-item full-width">
+                                        <label class="label">सीन चुनें</label>
+                                        <select id="sceneSelector" class="select"></select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">पात्र स्थिति</label>
+                                        <div id="characterPositionControls"></div>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">पात्र एनिमेशन</label>
+                                        <div id="characterAnimationControls"></div>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label" for="sceneDuration">अवधि <span id="sceneDurValue">8</span>s</label>
+                                        <input type="range" id="sceneDuration" min="3" max="30" step="1" value="8" class="slider">
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label">ट्रांजिशन इन</label>
+                                        <select id="transitionIn" class="select">
+                                            <option value="none">कोई नहीं</option>
+                                            <option value="fade">फेड इन</option>
+                                            <option value="slide-left">स्लाइड लेफ्ट</option>
+                                            <option value="slide-right">स्लाइड राइट</option>
+                                            <option value="zoom">ज़ूम इन</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="label">ट्रांजिशन आउट</label>
+                                        <select id="transitionOut" class="select">
+                                            <option value="none">कोई नहीं</option>
+                                            <option value="fade">फेड आउट</option>
+                                            <option value="slide-left">स्लाइड लेफ्ट</option>
+                                            <option value="slide-right">स्लाइड राइट</option>
+                                            <option value="zoom">ज़ूम आउट</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <button class="btn btn-secondary" id="applySceneSettings">सीन सेटिंग्स लागू करें</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

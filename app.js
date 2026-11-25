@@ -1,16 +1,21 @@
 /**
- * 3D Paper Animation Video Creator
+ * AI Animation Studio - 3D Human Character Animation Video Creator
  * Main Application Module
  * 
  * Features:
  * - Hindi UI for story input
  * - Automatic scene division
- * - 3D paper-cutout rendering with Three.js
- * - Animation system with character movement, camera, transitions
+ * - Real 3D human characters with full customization
+ * - Professional 3D camera, lighting, background controls
+ * - Animations: walk, run, talk, sit, expressions
  * - Hindi TTS using Web Speech API
  * - Video export with MediaRecorder
- * - Mobile-responsive
+ * - Mobile-responsive, PWA support
  */
+
+// Import 3D Character System
+import { Character3D } from './character3d.js';
+import { CLOTHING_PRESETS, SKIN_TONES, HAIR_COLORS, EYE_COLORS } from './characters.js';
 
 // ========================================
 // Global State Management
@@ -48,7 +53,8 @@ const AppState = {
         composer: null,
         animationId: null,
         objects: [],
-        characters: [],
+        characters: [],  // Legacy paper-cutout characters
+        characters3d: [],  // New 3D human characters
         backgrounds: [],
         currentScene: 0,
         transitionProgress: 0,
@@ -57,7 +63,45 @@ const AppState = {
         subtitleCanvas: null,
         subtitleCtx: null,
         subtitleTexture: null,
-        subtitleSprite: null
+        subtitleSprite: null,
+        // Professional 3D controls
+        cameraControls: {
+            type: 'perspective',
+            fov: 50,
+            distance: 15,
+            height: 5,
+            angle: 0,
+            movement: 'static',
+            speed: 1.0,
+            lookAt: new THREE.Vector3(0, 0, 0)
+        },
+        lighting: {
+            environment: 'studio',
+            ambientIntensity: 0.6,
+            ambientColor: 0xffffff,
+            keyIntensity: 1.0,
+            keyColor: 0xffffff,
+            keyAngle: 45,
+            fillIntensity: 0.5,
+            fillColor: 0xffeedd,
+            rimIntensity: 0.3,
+            rimColor: 0xffaa00,
+            shadowQuality: 'medium',
+            exposure: 1.2
+        },
+        background: {
+            type: 'color',
+            color1: 0x87ceeb,
+            color2: 0xe0f7fa,
+            rotation: 0,
+            skyPreset: 'clear',
+            fogDensity: 0,
+            fogColor: 0x87ceeb,
+            showGround: true,
+            groundShadows: true,
+            groundColor: 0x4caf50,
+            groundRoughness: 0.8
+        }
     },
     audio: {
         synth: null,
@@ -503,7 +547,7 @@ function extractBackground(text) {
 }
 
 // ========================================
-// Three.js 3D Paper Cutout Renderer
+// Three.js 3D Professional Renderer
 // ========================================
 async function initThreeJS() {
     const THREE = await import('three');
@@ -514,20 +558,12 @@ async function initThreeJS() {
     const { FXAAShader } = await import('three/addons/shaders/FXAAShader.js');
 
     AppState.three.scene = new THREE.Scene();
-    AppState.three.scene.background = new THREE.Color(0x87ceeb);
+    
+    // Initialize background
+    updateBackground();
 
-    const aspect = window.innerWidth / window.innerHeight;
-    const frustumSize = 10;
-    AppState.three.camera = new THREE.OrthographicCamera(
-        frustumSize * aspect / -2,
-        frustumSize * aspect / 2,
-        frustumSize / 2,
-        frustumSize / -2,
-        0.1,
-        100
-    );
-    AppState.three.camera.position.set(0, 0, 20);
-    AppState.three.camera.lookAt(0, 0, 0);
+    // Create camera based on settings
+    createCamera();
 
     const canvas = $('#previewCanvas');
     AppState.three.renderer = new THREE.WebGLRenderer({ 
@@ -541,7 +577,7 @@ async function initThreeJS() {
     AppState.three.renderer.shadowMap.enabled = true;
     AppState.three.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     AppState.three.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    AppState.three.renderer.toneMappingExposure = 1.2;
+    AppState.three.renderer.toneMappingExposure = AppState.three.lighting.exposure;
 
     AppState.three.composer = new EffectComposer(AppState.three.renderer);
     AppState.three.composer.addPass(new RenderPass(AppState.three.scene, AppState.three.camera));
@@ -550,25 +586,11 @@ async function initThreeJS() {
     fxaaPass.material.uniforms['resolution'].value.set(1 / canvas.clientWidth, 1 / canvas.clientHeight);
     AppState.three.composer.addPass(fxaaPass);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    AppState.three.scene.add(ambientLight);
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(5, 10, 7);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
-    dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 50;
-    dirLight.shadow.camera.left = -15;
-    dirLight.shadow.camera.right = 15;
-    dirLight.shadow.camera.top = 15;
-    dirLight.shadow.camera.bottom = -15;
-    AppState.three.scene.add(dirLight);
-
-    const fillLight = new THREE.DirectionalLight(0xffeedd, 0.3);
-    fillLight.position.set(-5, 5, -5);
-    AppState.three.scene.add(fillLight);
+    // Initialize professional lighting
+    setupLighting();
+    
+    // Create ground plane
+    createGroundPlane();
 
     window.addEventListener('resize', onThreeResize);
     
@@ -577,23 +599,449 @@ async function initThreeJS() {
     
     animateThree();
     
-    console.log('Three.js initialized');
+    console.log('Three.js initialized with professional 3D controls');
+}
+
+function createCamera() {
+    const { cameraControls } = AppState.three;
+    const aspect = window.innerWidth / window.innerHeight;
+    
+    if (cameraControls.type === 'perspective') {
+        AppState.three.camera = new THREE.PerspectiveCamera(
+            cameraControls.fov,
+            aspect,
+            0.1,
+            1000
+        );
+        // Position camera based on distance, height, angle
+        const angleRad = THREE.MathUtils.degToRad(cameraControls.angle);
+        AppState.three.camera.position.set(
+            Math.sin(angleRad) * cameraControls.distance,
+            cameraControls.height,
+            Math.cos(angleRad) * cameraControls.distance
+        );
+    } else {
+        const frustumSize = 15;
+        AppState.three.camera = new THREE.OrthographicCamera(
+            frustumSize * aspect / -2,
+            frustumSize * aspect / 2,
+            frustumSize / 2,
+            frustumSize / -2,
+            0.1,
+            1000
+        );
+        AppState.three.camera.position.set(0, cameraControls.height, cameraControls.distance);
+    }
+    
+    AppState.three.camera.lookAt(cameraControls.lookAt);
+}
+
+function setupLighting() {
+    const { scene, lighting } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    // Clear existing lights
+    scene.children = scene.children.filter(child => 
+        !(child.isLight || child.isAmbientLight || child.isDirectionalLight || child.isPointLight || child.isSpotLight || child.isHemisphereLight)
+    );
+    
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(lighting.ambientColor, lighting.ambientIntensity);
+    scene.add(ambientLight);
+    AppState.three.ambientLight = ambientLight;
+    
+    // Key light (main directional light)
+    const keyAngleRad = THREE.MathUtils.degToRad(lighting.keyAngle);
+    const keyLight = new THREE.DirectionalLight(lighting.keyColor, lighting.keyIntensity);
+    keyLight.position.set(
+        Math.sin(keyAngleRad) * 10,
+        10,
+        Math.cos(keyAngleRad) * 10
+    );
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = lighting.shadowQuality === 'ultra' ? 4096 : 
+                                   lighting.shadowQuality === 'high' ? 2048 : 
+                                   lighting.shadowQuality === 'medium' ? 1024 : 512;
+    keyLight.shadow.mapSize.height = keyLight.shadow.mapSize.width;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 50;
+    keyLight.shadow.camera.left = -20;
+    keyLight.shadow.camera.right = 20;
+    keyLight.shadow.camera.top = 20;
+    keyLight.shadow.camera.bottom = -20;
+    keyLight.shadow.bias = -0.0005;
+    scene.add(keyLight);
+    AppState.three.keyLight = keyLight;
+    
+    // Fill light
+    const fillLight = new THREE.DirectionalLight(lighting.fillColor, lighting.fillIntensity);
+    fillLight.position.set(-5, 5, -5);
+    scene.add(fillLight);
+    AppState.three.fillLight = fillLight;
+    
+    // Rim light (backlight)
+    const rimLight = new THREE.DirectionalLight(lighting.rimColor, lighting.rimIntensity);
+    rimLight.position.set(0, 5, -10);
+    scene.add(rimLight);
+    AppState.three.rimLight = rimLight;
+    
+    // Hemisphere light for environment
+    if (lighting.environment === 'outdoor' || lighting.environment === 'sunset') {
+        const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x8fbc8f, 0.4);
+        scene.add(hemiLight);
+        AppState.three.hemiLight = hemiLight;
+    }
+    
+    // Update shadow quality for all shadow-casting lights
+    updateShadowQuality();
+}
+
+function updateShadowQuality() {
+    const quality = AppState.three.lighting.shadowQuality;
+    const size = quality === 'ultra' ? 4096 : quality === 'high' ? 2048 : quality === 'medium' ? 1024 : 512;
+    
+    if (AppState.three.keyLight) {
+        AppState.three.keyLight.shadow.mapSize.width = size;
+        AppState.three.keyLight.shadow.mapSize.height = size;
+        AppState.three.keyLight.shadow.map = null; // Force recreation
+        AppState.three.keyLight.shadow.needsUpdate = true;
+    }
+}
+
+function createGroundPlane() {
+    const { scene, background } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    // Remove existing ground
+    if (AppState.three.groundPlane) {
+        scene.remove(AppState.three.groundPlane);
+        AppState.three.groundPlane.geometry.dispose();
+        AppState.three.groundPlane.material.dispose();
+    }
+    
+    if (!background.showGround) return;
+    
+    const groundGeo = new THREE.PlaneGeometry(100, 100);
+    const groundMat = new THREE.MeshStandardMaterial({
+        color: background.groundColor,
+        roughness: background.groundRoughness,
+        metalness: 0.0,
+        shadowSide: THREE.DoubleSide
+    });
+    
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.01;
+    ground.receiveShadow = background.groundShadows;
+    ground.name = 'GroundPlane';
+    
+    scene.add(ground);
+    AppState.three.groundPlane = ground;
+}
+
+function updateBackground() {
+    const { scene, background, renderer } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    switch (background.type) {
+        case 'color':
+            scene.background = new THREE.Color(background.color1);
+            break;
+            
+        case 'gradient':
+            // Create gradient background using a plane
+            if (AppState.three.bgPlane) {
+                scene.remove(AppState.three.bgPlane);
+                AppState.three.bgPlane.geometry.dispose();
+                AppState.three.bgPlane.material.dispose();
+            }
+            
+            const bgGeo = new THREE.PlaneGeometry(200, 200);
+            const bgMat = new THREE.MeshBasicMaterial({
+                vertexColors: true,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            
+            // We'll use a shader for gradient
+            const gradientMat = new THREE.ShaderMaterial({
+                uniforms: {
+                    color1: { value: new THREE.Color(background.color1) },
+                    color2: { value: new THREE.Color(background.color2) },
+                    rotation: { value: background.rotation }
+                },
+                vertexShader: `
+                    varying vec2 vUv;
+                    void main() {
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform vec3 color1;
+                    uniform vec3 color2;
+                    uniform float rotation;
+                    varying vec2 vUv;
+                    void main() {
+                        float angle = rotation;
+                        vec2 rotatedUv = vec2(
+                            cos(angle) * (vUv.x - 0.5) - sin(angle) * (vUv.y - 0.5) + 0.5,
+                            sin(angle) * (vUv.x - 0.5) + cos(angle) * (vUv.y - 0.5) + 0.5
+                        );
+                        gl_FragColor = vec4(mix(color1, color2, rotatedUv.y), 1.0);
+                    }
+                `,
+                depthWrite: false
+            });
+            
+            const bgPlane = new THREE.Mesh(bgGeo, gradientMat);
+            bgPlane.position.z = -50;
+            bgPlane.renderOrder = -100;
+            scene.add(bgPlane);
+            AppState.three.bgPlane = bgPlane;
+            scene.background = null;
+            break;
+            
+        case 'sky':
+            createSkyBackground();
+            break;
+            
+        case 'hdri':
+            // Placeholder for HDRI - would need RGBELoader
+            scene.background = new THREE.Color(background.color1);
+            break;
+            
+        case 'scene3d':
+            // 3D scene background - add environmental objects
+            create3DSceneBackground();
+            break;
+    }
+    
+    // Fog
+    if (background.fogDensity > 0) {
+        scene.fog = new THREE.FogExp2(background.fogColor, background.fogDensity);
+    } else {
+        scene.fog = null;
+    }
+}
+
+function createSkyBackground() {
+    const { scene, background } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    // Remove old sky
+    if (AppState.three.skySphere) {
+        scene.remove(AppState.three.skySphere);
+        AppState.three.skySphere.geometry.dispose();
+        AppState.three.skySphere.material.dispose();
+    }
+    
+    const skyGeo = new THREE.SphereGeometry(500, 32, 32);
+    skyGeo.scale(-1, 1, 1); // Invert normals for inside view
+    
+    let skyColor1 = 0x87ceeb;
+    let skyColor2 = 0xffffff;
+    
+    switch (background.skyPreset) {
+        case 'clear':
+            skyColor1 = 0x87ceeb;
+            skyColor2 = 0xe0f7fa;
+            break;
+        case 'cloudy':
+            skyColor1 = 0x90a4ae;
+            skyColor2 = 0xb0bec5;
+            break;
+        case 'sunset':
+            skyColor1 = 0xff7043;
+            skyColor2 = 0xffcc80;
+            break;
+        case 'night':
+            skyColor1 = 0x0d0d2b;
+            skyColor2 = 0x1a1a3e;
+            break;
+        case 'storm':
+            skyColor1 = 0x37474f;
+            skyColor2 = 0x455a64;
+            break;
+    }
+    
+    const skyMat = new THREE.ShaderMaterial({
+        uniforms: {
+            topColor: { value: new THREE.Color(skyColor1) },
+            bottomColor: { value: new THREE.Color(skyColor2) },
+            offset: { value: 0.5 },
+            exponent: { value: 0.6 }
+        },
+        vertexShader: `
+            varying vec3 vWorldPosition;
+            void main() {
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPosition.xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 topColor;
+            uniform vec3 bottomColor;
+            uniform float offset;
+            uniform float exponent;
+            varying vec3 vWorldPosition;
+            void main() {
+                float h = normalize(vWorldPosition + offset).y;
+                gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+            }
+        `,
+        side: THREE.BackSide,
+        depthWrite: false
+    });
+    
+    const skySphere = new THREE.Mesh(skyGeo, skyMat);
+    skySphere.renderOrder = -100;
+    scene.add(skySphere);
+    AppState.three.skySphere = skySphere;
+    
+    // Add stars for night
+    if (background.skyPreset === 'night') {
+        addStars();
+    }
+    
+    scene.background = null;
+}
+
+function addStars() {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    const starsGeo = new THREE.BufferGeometry();
+    const positions = [];
+    const colors = [];
+    const sizes = [];
+    
+    for (let i = 0; i < 5000; i++) {
+        const radius = 400 + Math.random() * 100;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        
+        positions.push(
+            radius * Math.sin(phi) * Math.cos(theta),
+            radius * Math.sin(phi) * Math.sin(theta),
+            radius * Math.cos(phi)
+        );
+        
+        const starColor = Math.random() > 0.5 ? 0xffffff : 0xfff0e0;
+        colors.push(
+            (starColor >> 16 & 255) / 255,
+            (starColor >> 8 & 255) / 255,
+            (starColor & 255) / 255
+        );
+        
+        sizes.push(Math.random() * 2 + 0.5);
+    }
+    
+    starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    starsGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    starsGeo.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+    
+    const starsMat = new THREE.PointsMaterial({
+        size: 2,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+        sizeAttenuation: true
+    });
+    
+    const stars = new THREE.Points(starsGeo, starsMat);
+    stars.renderOrder = -100;
+    scene.add(stars);
+    AppState.three.stars = stars;
+}
+
+function create3DSceneBackground() {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    // Add some environmental objects for 3D scene background
+    // Trees
+    for (let i = 0; i < 20; i++) {
+        createTree(
+            (Math.random() - 0.5) * 80,
+            (Math.random() - 0.5) * 80
+        );
+    }
+    
+    // Rocks
+    for (let i = 0; i < 10; i++) {
+        createRock(
+            (Math.random() - 0.5) * 60,
+            (Math.random() - 0.5) * 60
+        );
+    }
+}
+
+function createTree(x, z) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    const trunkGeo = new THREE.CylinderGeometry(0.2, 0.4, 2, 8);
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a2c1a, roughness: 0.9 });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.set(x, 1, z);
+    trunk.castShadow = true;
+    trunk.receiveShadow = true;
+    scene.add(trunk);
+    
+    const leavesGeo = new THREE.ConeGeometry(1.5, 3, 8);
+    const leavesMat = new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.8 });
+    const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+    leaves.position.set(x, 3.5, z);
+    leaves.castShadow = true;
+    leaves.receiveShadow = true;
+    scene.add(leaves);
+    
+    const leaves2 = new THREE.Mesh(leavesGeo, leavesMat);
+    leaves2.position.set(x, 5, z);
+    leaves2.scale.set(0.7, 0.7, 0.7);
+    leaves2.castShadow = true;
+    scene.add(leaves2);
+}
+
+function createRock(x, z) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    const rockGeo = new THREE.DodecahedronGeometry(Math.random() * 1.5 + 0.5);
+    const rockMat = new THREE.MeshStandardMaterial({ 
+        color: 0x757575, 
+        roughness: 0.9,
+        flatShading: true
+    });
+    const rock = new THREE.Mesh(rockGeo, rockMat);
+    rock.position.set(x, rockGeo.parameters.radius, z);
+    rock.rotation.set(Math.random(), Math.random(), Math.random());
+    rock.castShadow = true;
+    rock.receiveShadow = true;
+    scene.add(rock);
 }
 
 function onThreeResize() {
-    const { camera, renderer, composer } = AppState.three;
+    const { camera, renderer, composer, cameraControls } = AppState.three;
     const canvas = $('#previewCanvas');
     
     if (!camera || !renderer) return;
     
     const aspect = canvas.clientWidth / canvas.clientHeight;
-    const frustumSize = 10;
     
-    camera.left = frustumSize * aspect / -2;
-    camera.right = frustumSize * aspect / 2;
-    camera.top = frustumSize / 2;
-    camera.bottom = frustumSize / -2;
-    camera.updateProjectionMatrix();
+    if (cameraControls.type === 'perspective' && camera.isPerspectiveCamera) {
+        camera.aspect = aspect;
+        camera.updateProjectionMatrix();
+    } else if (camera.isOrthographicCamera) {
+        const frustumSize = 15;
+        camera.left = frustumSize * aspect / -2;
+        camera.right = frustumSize * aspect / 2;
+        camera.top = frustumSize / 2;
+        camera.bottom = frustumSize / -2;
+        camera.updateProjectionMatrix();
+    }
     
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     composer.setSize(canvas.clientWidth, canvas.clientHeight);
@@ -605,14 +1053,23 @@ function onThreeResize() {
 }
 
 function animateThree() {
-    const { scene, camera, renderer, composer, animationId } = AppState.three;
+    const { scene, camera, renderer, composer, animationId, characters3d } = AppState.three;
     
     AppState.three.animationId = requestAnimationFrame(animateThree);
     
     if (!scene || !camera) return;
     
+    const deltaTime = 1/60; // Fixed timestep for animation
     const time = performance.now() * 0.001 * AppState.settings.animationSpeed;
     
+    // Update 3D characters
+    characters3d.forEach(char => {
+        if (char.character3d && char.character3d.mixer) {
+            char.character3d.update(deltaTime * AppState.settings.animationSpeed);
+        }
+    });
+    
+    // Update legacy paper-cutout characters
     animateObjects(time);
     
     if (AppState.three.isTransitioning) {
@@ -713,34 +1170,73 @@ function animateObjects(time) {
 }
 
 function updateCameraMovement(time) {
-    const { camera, currentScene } = AppState.three;
+    const { camera, cameraControls } = AppState.three;
     const settings = AppState.settings;
     
     if (!camera) return;
     
-    const baseX = 0;
-    const baseY = 0;
-    const baseZ = 20;
+    const speed = cameraControls.speed * 0.5;
     
-    switch (settings.cameraMovement) {
-        case 'gentle':
-            camera.position.x = baseX + Math.sin(time * 0.15) * 0.8;
-            camera.position.y = baseY + Math.cos(time * 0.1) * 0.5;
+    switch (cameraControls.movement) {
+        case 'orbit':
+            // Orbit around lookAt target
+            const orbitRadius = cameraControls.distance;
+            const orbitAngle = time * speed;
+            camera.position.x = cameraControls.lookAt.x + Math.sin(orbitAngle) * orbitRadius;
+            camera.position.z = cameraControls.lookAt.z + Math.cos(orbitAngle) * orbitRadius;
+            camera.position.y = cameraControls.height + Math.sin(time * speed * 0.5) * 1;
             break;
-        case 'dynamic':
-            camera.position.x = baseX + Math.sin(time * 0.3) * 2;
-            camera.position.y = baseY + Math.cos(time * 0.2) * 1.5;
-            camera.position.z = baseZ + Math.sin(time * 0.1) * 2;
+            
+        case 'dolly':
+            // Dolly in/out
+            const dollyDist = cameraControls.distance + Math.sin(time * speed * 0.3) * 3;
+            const dollyAngle = THREE.MathUtils.degToRad(cameraControls.angle);
+            camera.position.x = cameraControls.lookAt.x + Math.sin(dollyAngle) * dollyDist;
+            camera.position.z = cameraControls.lookAt.z + Math.cos(dollyAngle) * dollyDist;
+            camera.position.y = cameraControls.height;
             break;
+            
+        case 'crane':
+            // Crane up/down
+            camera.position.x = cameraControls.lookAt.x + Math.sin(time * speed * 0.2) * 2;
+            camera.position.y = cameraControls.height + Math.sin(time * speed * 0.4) * 5;
+            camera.position.z = cameraControls.lookAt.z + cameraControls.distance;
+            break;
+            
+        case 'handheld':
+            // Handheld shake
+            camera.position.x = cameraControls.lookAt.x + Math.sin(time * speed * 5) * 0.1 + Math.sin(time * speed * 7) * 0.05;
+            camera.position.y = cameraControls.height + Math.cos(time * speed * 3) * 0.1 + Math.cos(time * speed * 11) * 0.05;
+            camera.position.z = cameraControls.lookAt.z + cameraControls.distance + Math.sin(time * speed * 2) * 0.1;
+            break;
+            
+        case 'tracking':
+            // Tracking shot - move parallel to subject
+            camera.position.x = cameraControls.lookAt.x + Math.sin(time * speed) * 10;
+            camera.position.y = cameraControls.height;
+            camera.position.z = cameraControls.lookAt.z + cameraControls.distance;
+            break;
+            
         case 'static':
         default:
-            camera.position.x = baseX;
-            camera.position.y = baseY;
-            camera.position.z = baseZ;
+            const angleRad = THREE.MathUtils.degToRad(cameraControls.angle);
+            camera.position.x = cameraControls.lookAt.x + Math.sin(angleRad) * cameraControls.distance;
+            camera.position.y = cameraControls.height;
+            camera.position.z = cameraControls.lookAt.z + Math.cos(angleRad) * cameraControls.distance;
             break;
     }
     
-    camera.lookAt(baseX, baseY, 0);
+    // Smooth lookAt
+    const targetLookAt = cameraControls.lookAt.clone();
+    // Add slight offset for character focus
+    if (AppState.three.characters3d.length > 0) {
+        const mainChar = AppState.three.characters3d[0];
+        if (mainChar && mainChar.character3d) {
+            targetLookAt.y = Math.max(targetLookAt.y, 1.5); // Focus on character upper body
+        }
+    }
+    
+    camera.lookAt(targetLookAt);
 }
 
 function updateTransition(time) {
@@ -1226,6 +1722,85 @@ async function buildBackground(bgName, colors, sceneIndex) {
 }
 
 async function buildCharacter(charName, colors, sceneIndex, charIndex) {
+    const sceneData = AppState.scenes[sceneIndex];
+    if (!sceneData) return;
+    
+    // Check if we have 3D character data for this character
+    const char3dData = sceneData.characters3d && sceneData.characters3d[charIndex];
+    
+    if (char3dData) {
+        // Build 3D human character
+        await buildCharacter3D(charName, char3dData, sceneIndex, charIndex);
+    } else {
+        // Fallback to paper cutout for backward compatibility
+        await buildCharacterLegacy(charName, colors, sceneIndex, charIndex);
+    }
+}
+
+async function buildCharacter3D(charName, char3dData, sceneIndex, charIndex) {
+    // Create Character3D instance
+    const character3d = new Character3D({
+        id: char3dData.id || `char_${sceneIndex}_${charIndex}`,
+        name: charName,
+        preset: char3dData.bodyType || 'adult',
+        skinTone: char3dData.skinTone !== undefined ? char3dData.skinTone : 2,
+        hairStyle: char3dData.hairStyle || 'short',
+        hairColor: char3dData.hairColor !== undefined ? char3dData.hairColor : 0,
+        eyeColor: char3dData.eyeColor !== undefined ? char3dData.eyeColor : 0,
+        clothing: char3dData.clothing || 'casual',
+        bodyScale: char3dData.bodyScale || { height: 1.0, width: 1.0, depth: 1.0 },
+        headScale: char3dData.headScale || 1.0,
+        limbLength: char3dData.limbLength || 1.0
+    });
+    
+    // Position character
+    const spacing = 3;
+    const charCount = AppState.scenes[sceneIndex].characters.length;
+    const startX = -((charCount - 1) * spacing) / 2;
+    
+    character3d.group.position.set(
+        startX + charIndex * spacing,
+        0,
+        0
+    );
+    
+    // Add to scene
+    AppState.three.scene.add(character3d.group);
+    
+    // Store character data
+    const charData = {
+        name: charName,
+        character3d: character3d,
+        mesh: character3d.group,
+        sceneIndex,
+        charIndex,
+        animation: char3dData.animation || 'idle',
+        basePosition: character3d.group.position.clone(),
+        // Customization data for persistence
+        customization: {
+            bodyType: char3dData.bodyType || 'adult',
+            skinTone: char3dData.skinTone !== undefined ? char3dData.skinTone : 2,
+            hairStyle: char3dData.hairStyle || 'short',
+            hairColor: char3dData.hairColor !== undefined ? char3dData.hairColor : 0,
+            eyeColor: char3dData.eyeColor !== undefined ? char3dData.eyeColor : 0,
+            clothing: char3dData.clothing || 'casual',
+            bodyScale: char3dData.bodyScale || { height: 1.0, width: 1.0, depth: 1.0 },
+            headScale: char3dData.headScale || 1.0,
+            limbLength: char3dData.limbLength || 1.0,
+            expression: char3dData.expression || 'neutral',
+            expressionIntensity: char3dData.expressionIntensity || 1.0
+        }
+    };
+    
+    AppState.three.characters3d.push(charData);
+    
+    // Play default animation
+    character3d.playAnimation('idle', { loop: true });
+    
+    console.log(`3D Character ${charName} created for scene ${sceneIndex}`);
+}
+
+async function buildCharacterLegacy(charName, colors, sceneIndex, charIndex) {
     const charTemplateMap = {
         'खरगोश': 'rabbit',
         'बिल्ली': 'rabbit',
@@ -1283,6 +1858,7 @@ function clearSceneObjects(sceneIndex) {
         disposeObject(oldBg.group);
     }
     
+    // Clear legacy characters
     const charIndices = [];
     AppState.three.characters.forEach((char, i) => {
         if (char.sceneIndex === sceneIndex) {
@@ -1295,6 +1871,20 @@ function clearSceneObjects(sceneIndex) {
     });
     
     charIndices.reverse().forEach(i => AppState.three.characters.splice(i, 1));
+    
+    // Clear 3D characters
+    const char3dIndices = [];
+    AppState.three.characters3d.forEach((char, i) => {
+        if (char.sceneIndex === sceneIndex) {
+            if (char.character3d) {
+                AppState.three.scene.remove(char.character3d.group);
+                char.character3d.dispose();
+            }
+            char3dIndices.push(i);
+        }
+    });
+    
+    char3dIndices.reverse().forEach(i => AppState.three.characters3d.splice(i, 1));
 }
 
 function disposeObject(obj) {
@@ -1770,6 +2360,9 @@ function showScene(sceneIndex) {
     AppState.three.characters.forEach(char => {
         if (char.mesh) char.mesh.visible = char.sceneIndex === sceneIndex;
     });
+    AppState.three.characters3d.forEach(char => {
+        if (char.character3d) char.character3d.group.visible = char.sceneIndex === sceneIndex;
+    });
     
     AppState.three.currentScene = sceneIndex;
 }
@@ -1955,8 +2548,17 @@ function checkSceneTransitionExport(time) {
 }
 
 function animateObjectsExport(time) {
-    const { characters, backgrounds } = AppState.three;
+    const { characters, characters3d, backgrounds } = AppState.three;
     
+    // Update 3D characters
+    characters3d.forEach(char => {
+        if (char.character3d && char.character3d.mixer) {
+            // Use fixed delta for export
+            char.character3d.update(1/30);
+        }
+    });
+    
+    // Update legacy paper-cutout characters
     characters.forEach(char => {
         if (!char.mesh || !char.template) return;
         
@@ -1998,27 +2600,52 @@ function animateObjectsExport(time) {
 }
 
 function updateCameraMovementExport(time) {
-    const { camera } = AppState.three;
-    const settings = AppState.settings;
+    const { camera, cameraControls } = AppState.three;
     
     if (!camera) return;
     
-    const baseX = 0, baseY = 0, baseZ = 20;
+    const speed = cameraControls.speed * 0.5;
     
-    switch (settings.cameraMovement) {
-        case 'gentle':
-            camera.position.x = baseX + Math.sin(time * 0.15) * 0.8;
-            camera.position.y = baseY + Math.cos(time * 0.1) * 0.5;
+    switch (cameraControls.movement) {
+        case 'orbit':
+            const orbitRadius = cameraControls.distance;
+            const orbitAngle = time * speed;
+            camera.position.x = cameraControls.lookAt.x + Math.sin(orbitAngle) * orbitRadius;
+            camera.position.z = cameraControls.lookAt.z + Math.cos(orbitAngle) * orbitRadius;
+            camera.position.y = cameraControls.height + Math.sin(time * speed * 0.5) * 1;
             break;
-        case 'dynamic':
-            camera.position.x = baseX + Math.sin(time * 0.3) * 2;
-            camera.position.y = baseY + Math.cos(time * 0.2) * 1.5;
-            camera.position.z = baseZ + Math.sin(time * 0.1) * 2;
+        case 'dolly':
+            const dollyDist = cameraControls.distance + Math.sin(time * speed * 0.3) * 3;
+            const dollyAngle = THREE.MathUtils.degToRad(cameraControls.angle);
+            camera.position.x = cameraControls.lookAt.x + Math.sin(dollyAngle) * dollyDist;
+            camera.position.z = cameraControls.lookAt.z + Math.cos(dollyAngle) * dollyDist;
+            camera.position.y = cameraControls.height;
             break;
+        case 'crane':
+            camera.position.x = cameraControls.lookAt.x + Math.sin(time * speed * 0.2) * 2;
+            camera.position.y = cameraControls.height + Math.sin(time * speed * 0.4) * 5;
+            camera.position.z = cameraControls.lookAt.z + cameraControls.distance;
+            break;
+        case 'handheld':
+            camera.position.x = cameraControls.lookAt.x + Math.sin(time * speed * 5) * 0.1 + Math.sin(time * speed * 7) * 0.05;
+            camera.position.y = cameraControls.height + Math.cos(time * speed * 3) * 0.1 + Math.cos(time * speed * 11) * 0.05;
+            camera.position.z = cameraControls.lookAt.z + cameraControls.distance + Math.sin(time * speed * 2) * 0.1;
+            break;
+        case 'tracking':
+            camera.position.x = cameraControls.lookAt.x + Math.sin(time * speed) * 10;
+            camera.position.y = cameraControls.height;
+            camera.position.z = cameraControls.lookAt.z + cameraControls.distance;
+            break;
+        case 'static':
         default:
-            camera.position.set(baseX, baseY, baseZ);
+            const angleRad = THREE.MathUtils.degToRad(cameraControls.angle);
+            camera.position.x = cameraControls.lookAt.x + Math.sin(angleRad) * cameraControls.distance;
+            camera.position.y = cameraControls.height;
+            camera.position.z = cameraControls.lookAt.z + Math.cos(angleRad) * cameraControls.distance;
+            break;
     }
-    camera.lookAt(baseX, baseY, 0);
+    
+    camera.lookAt(cameraControls.lookAt);
 }
 
 function finalizeExport() {
@@ -2073,6 +2700,547 @@ async function shareVideo() {
 }
 
 // ========================================
+// Professional 3D Controls Helpers
+// ========================================
+
+function switchProTab(tabName) {
+    $$('.pro-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.proTab === tabName);
+    });
+    $$('.pro-tab-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === `pro-tab-${tabName}`);
+    });
+    
+    // Load scene controls when scene tab is selected
+    if (tabName === 'scene') {
+        populateSceneSelector();
+    }
+}
+
+function updateKeyLightPosition() {
+    const { keyLight, lighting } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    if (!keyLight) return;
+    
+    const angleRad = THREE.MathUtils.degToRad(lighting.keyAngle);
+    keyLight.position.set(
+        Math.sin(angleRad) * 10,
+        10,
+        Math.cos(angleRad) * 10
+    );
+}
+
+function populateSceneSelector() {
+    const selector = $('#sceneSelector');
+    if (!selector) return;
+    
+    selector.innerHTML = '';
+    AppState.scenes.forEach((scene, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${index + 1}. ${scene.title}`;
+        selector.appendChild(option);
+    });
+    
+    // Load controls for first scene
+    if (AppState.scenes.length > 0) {
+        loadSceneControls(0);
+    }
+}
+
+function loadSceneControls(sceneIndex) {
+    const scene = AppState.scenes[sceneIndex];
+    if (!scene) return;
+    
+    // Update character position controls
+    const posContainer = $('#characterPositionControls');
+    const animContainer = $('#characterAnimationControls');
+    
+    if (posContainer) posContainer.innerHTML = '';
+    if (animContainer) animContainer.innerHTML = '';
+    
+    // Add controls for each character in the scene
+    scene.characters.forEach((charName, charIndex) => {
+        const char3d = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+        
+        if (posContainer) {
+            const row = createElement('div', { class: 'character-control-row' }, [
+                createElement('label', {}, [`${charName} स्थिति`]),
+                createElement('div', { class: 'vector-inputs' }, [
+                    createElement('input', { 
+                        type: 'number', 
+                        class: 'input-small', 
+                        placeholder: 'X', 
+                        step: '0.1', 
+                        value: char3d ? char3d.customization?.position?.x || 0 : 0,
+                        dataset: { sceneIndex, charIndex, prop: 'position.x' }
+                    }),
+                    createElement('input', { 
+                        type: 'number', 
+                        class: 'input-small', 
+                        placeholder: 'Y', 
+                        step: '0.1', 
+                        value: char3d ? char3d.customization?.position?.y || 0 : 0,
+                        dataset: { sceneIndex, charIndex, prop: 'position.y' }
+                    }),
+                    createElement('input', { 
+                        type: 'number', 
+                        class: 'input-small', 
+                        placeholder: 'Z', 
+                        step: '0.1', 
+                        value: char3d ? char3d.customization?.position?.z || 0 : 0,
+                        dataset: { sceneIndex, charIndex, prop: 'position.z' }
+                    })
+                ])
+            ]);
+            posContainer.appendChild(row);
+            
+            // Add input listeners
+            row.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', e => {
+                    const { sceneIndex, charIndex, prop } = e.target.dataset;
+                    updateCharacterPosition(parseInt(sceneIndex), parseInt(charIndex), prop, parseFloat(e.target.value));
+                });
+            });
+        }
+        
+        if (animContainer) {
+            const row = createElement('div', { class: 'character-control-row' }, [
+                createElement('label', {}, [`${charName} एनिमेशन`]),
+                createElement('select', { 
+                    class: 'select', 
+                    dataset: { sceneIndex, charIndex }
+                }, [
+                    createElement('option', { value: 'idle' }, ['इडल']),
+                    createElement('option', { value: 'walk' }, ['चलना']),
+                    createElement('option', { value: 'run' }, ['दौड़ना']),
+                    createElement('option', { value: 'talk' }, ['बोलना']),
+                    createElement('option', { value: 'sit' }, ['बैठना']),
+                    createElement('option', { value: 'wave' }, ['हाथ हिलाना']),
+                    createElement('option', { value: 'point' }, ['इशारा करना']),
+                    createElement('option', { value: 'nod' }, ['सिर हिलाना']),
+                    createElement('option', { value: 'jump' }, ['कूदना'])
+                ])
+            ]);
+            animContainer.appendChild(row);
+            
+            row.querySelector('select').addEventListener('change', e => {
+                const { sceneIndex, charIndex } = e.target.dataset;
+                const char3d = AppState.three.characters3d.find(c => c.sceneIndex === parseInt(sceneIndex) && c.charIndex === parseInt(charIndex));
+                if (char3d && char3d.character3d) {
+                    char3d.character3d.playAnimation(e.target.value, { loop: true });
+                    char3d.animation = e.target.value;
+                }
+            });
+        }
+    });
+}
+
+function applySceneSettings() {
+    const sceneIndex = parseInt($('#sceneSelector').value);
+    const scene = AppState.scenes[sceneIndex];
+    if (!scene) return;
+    
+    scene.duration = AppState.settings.sceneDuration;
+    
+    // Rebuild scene with new settings
+    rebuildSceneForPreview(sceneIndex);
+    
+    showToast('सीन सेटिंग्स लागू की गईं', 'success');
+}
+
+// ========================================
+// 3D Character Customization Helpers
+// ========================================
+
+let currentCustomizingCharacter = null;
+
+function switchCharacterTab(tabName) {
+    $$('#characterCustomization .tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    $$('#characterCustomization .tab-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === `tab-${tabName}`);
+    });
+}
+
+function addCharacterToScene() {
+    const index = AppState.currentSceneIndex;
+    if (index < 0) return;
+    
+    const scene = AppState.scenes[index];
+    const newCharName = `पात्र ${scene.characters.length + 1}`;
+    scene.characters.push(newCharName);
+    
+    // Initialize 3D character data
+    if (!scene.characters3d) scene.characters3d = [];
+    scene.characters3d.push({
+        id: `char_${index}_${scene.characters.length - 1}`,
+        bodyType: 'adult',
+        skinTone: 2,
+        hairStyle: 'short',
+        hairColor: 0,
+        eyeColor: 0,
+        clothing: 'casual',
+        bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
+        headScale: 1.0,
+        limbLength: 1.0,
+        expression: 'neutral',
+        expressionIntensity: 1.0
+    });
+    
+    renderSceneList();
+    openSceneEditor(index);
+    updateCharacter3DList();
+    showToast('नया पात्र जोड़ा गया', 'success');
+}
+
+function updateCharacter3DList() {
+    const container = $('#character3dList');
+    const panel = $('#character3dPanel');
+    const customization = $('#characterCustomization');
+    
+    if (!container || !panel) return;
+    
+    const index = AppState.currentSceneIndex;
+    if (index < 0) {
+        panel.style.display = 'none';
+        return;
+    }
+    
+    const scene = AppState.scenes[index];
+    panel.style.display = 'block';
+    
+    container.innerHTML = '';
+    
+    scene.characters.forEach((charName, charIndex) => {
+        const char3dData = scene.characters3d?.[charIndex] || {};
+        const isActive = currentCustomizingCharacter?.sceneIndex === index && currentCustomizingCharacter?.charIndex === charIndex;
+        
+        const removeBtn = createElement('button', { class: 'btn btn-sm btn-ghost' }, ['हटाएं']);
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeCharacter(index, charIndex);
+        });
+        
+        const item = createElement('div', { 
+            class: `character-item ${isActive ? 'active' : ''}`,
+            dataset: { sceneIndex: index, charIndex }
+        }, [
+            createElement('div', { class: 'character-avatar' }, [getCharacterIcon(charName).slice(0, 1)]),
+            createElement('div', { class: 'character-info' }, [
+                createElement('div', { class: 'character-name' }, [charName]),
+                createElement('div', { class: 'character-details' }, [
+                    `${char3dData.bodyType || 'adult'} • ${getHairStyleName(char3dData.hairStyle || 'short')} • ${getClothingName(char3dData.clothing || 'casual')}`
+                ])
+            ]),
+            createElement('div', { class: 'character-actions' }, [removeBtn])
+        ]);
+        
+        item.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                selectCharacterForCustomization(index, charIndex);
+            }
+        });
+        
+        container.appendChild(item);
+    });
+    
+    // Select first character by default
+    if (scene.characters.length > 0 && !currentCustomizingCharacter) {
+        selectCharacterForCustomization(index, 0);
+    }
+}
+
+function selectCharacterForCustomization(sceneIndex, charIndex) {
+    const scene = AppState.scenes[sceneIndex];
+    const char3dData = scene.characters3d?.[charIndex];
+    
+    if (!char3dData) return;
+    
+    currentCustomizingCharacter = { sceneIndex, charIndex };
+    
+    // Update UI
+    $$('#character3dList .character-item').forEach(item => {
+        item.classList.toggle('active', 
+            parseInt(item.dataset.sceneIndex) === sceneIndex && 
+            parseInt(item.dataset.charIndex) === charIndex
+        );
+    });
+    
+    const customization = $('#characterCustomization');
+    if (customization) customization.style.display = 'block';
+    
+    $('#customizingCharacterName').textContent = `अनुकूलित: ${scene.characters[charIndex]}`;
+    
+    // Populate form with current values
+    $('#charBodyType').value = char3dData.bodyType || 'adult';
+    $('#charHeight').value = char3dData.bodyScale?.height || 1.0;
+    $('#heightValue').textContent = ($('#charHeight').value);
+    $('#charWidth').value = char3dData.bodyScale?.width || 1.0;
+    $('#widthValue').textContent = ($('#charWidth').value);
+    $('#charHeadScale').value = char3dData.headScale || 1.0;
+    $('#headScaleValue').textContent = ($('#charHeadScale').value);
+    $('#charLimbLength').value = char3dData.limbLength || 1.0;
+    $('#limbLengthValue').textContent = ($('#charLimbLength').value);
+    $('#charExpression').value = char3dData.expression || 'neutral';
+    $('#expressionIntensity').value = char3dData.expressionIntensity || 1.0;
+    $('#expressionIntensityValue').textContent = ($('#expressionIntensity').value);
+    $('#charHairStyle').value = char3dData.hairStyle || 'short';
+    $('#charClothing').value = char3dData.clothing || 'casual';
+    
+    // Populate color palettes
+    populateSkinTonePalette(char3dData.skinTone || 2);
+    populateEyeColorPalette(char3dData.eyeColor || 0);
+    populateHairColorPalette(char3dData.hairColor || 0);
+    
+    // Set shirt/pants/shoes colors from clothing preset
+    const clothing = CLOTHING_PRESETS[char3dData.clothing || 'casual'];
+    if (clothing) {
+        $('#shirtColor').value = rgbToHex(clothing.shirt?.color || 0x42a5f5);
+        $('#pantsColor').value = rgbToHex(clothing.pants?.color || 0x1565c0);
+        $('#shoesColor').value = rgbToHex(clothing.shoes?.color || 0xffffff);
+    }
+}
+
+function populateSkinTonePalette(selectedIndex) {
+    const container = $('#skinTonePalette');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    SKIN_TONES.forEach((tone, index) => {
+        const swatch = createElement('div', { 
+            class: `color-swatch ${index === selectedIndex ? 'active' : ''}`,
+            style: `background-color: #${tone.color.toString(16).padStart(6, '0')}`,
+            dataset: { index }
+        });
+        swatch.addEventListener('click', () => selectSkinTone(index));
+        container.appendChild(swatch);
+    });
+}
+
+function populateEyeColorPalette(selectedIndex) {
+    const container = $('#eyeColorPalette');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    EYE_COLORS.forEach((eye, index) => {
+        const swatch = createElement('div', { 
+            class: `color-swatch ${index === selectedIndex ? 'active' : ''}`,
+            style: `background-color: #${eye.iris.toString(16).padStart(6, '0')}`,
+            dataset: { index }
+        });
+        swatch.addEventListener('click', () => selectEyeColor(index));
+        container.appendChild(swatch);
+    });
+}
+
+function populateHairColorPalette(selectedIndex) {
+    const container = $('#hairColorPalette');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    HAIR_COLORS.forEach((hair, index) => {
+        const swatch = createElement('div', { 
+            class: `color-swatch ${index === selectedIndex ? 'active' : ''}`,
+            style: `background-color: #${hair.color.toString(16).padStart(6, '0')}`,
+            dataset: { index }
+        });
+        swatch.addEventListener('click', () => selectHairColor(index));
+        container.appendChild(swatch);
+    });
+}
+
+function updateCharacter3DCustomization(property, value) {
+    if (!currentCustomizingCharacter) return;
+    
+    const { sceneIndex, charIndex } = currentCustomizingCharacter;
+    const scene = AppState.scenes[sceneIndex];
+    const char3dData = scene.characters3d?.[charIndex];
+    const char3d = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+    
+    if (!char3dData) return;
+    
+    switch (property) {
+        case 'bodyType':
+            char3dData.bodyType = value;
+            if (char3d?.character3d) char3d.character3d.setBodyType(value);
+            break;
+        case 'height':
+            char3dData.bodyScale = char3dData.bodyScale || { height: 1, width: 1, depth: 1 };
+            char3dData.bodyScale.height = value;
+            if (char3d?.character3d) char3d.character3d.rebuildBody();
+            break;
+        case 'width':
+            char3dData.bodyScale = char3dData.bodyScale || { height: 1, width: 1, depth: 1 };
+            char3dData.bodyScale.width = value;
+            if (char3d?.character3d) char3d.character3d.rebuildBody();
+            break;
+        case 'headScale':
+            char3dData.headScale = value;
+            if (char3d?.character3d) char3d.character3d.rebuildBody();
+            break;
+        case 'limbLength':
+            char3dData.limbLength = value;
+            if (char3d?.character3d) char3d.character3d.rebuildBody();
+            break;
+        case 'expression':
+            char3dData.expression = value;
+            if (char3d?.character3d) char3d.character3d.setExpression(value, char3dData.expressionIntensity || 1.0);
+            break;
+        case 'expressionIntensity':
+            char3dData.expressionIntensity = value;
+            if (char3d?.character3d) char3d.character3d.setExpression(char3dData.expression || 'neutral', value);
+            break;
+        case 'hairStyle':
+            char3dData.hairStyle = value;
+            if (char3d?.character3d) char3d.character3d.setHairStyle(value);
+            break;
+        case 'clothing':
+            char3dData.clothing = value;
+            if (char3d?.character3d) char3d.character3d.setClothing(value);
+            break;
+        case 'shirtColor':
+        case 'pantsColor':
+        case 'shoesColor':
+            // Update clothing colors
+            if (char3d?.character3d) {
+                // Would need to update clothing materials
+                console.log(`Update ${property} to ${value}`);
+            }
+            break;
+    }
+    
+    // Rebuild scene preview
+    rebuildSceneForPreview(sceneIndex);
+}
+
+function selectSkinTone(index) {
+    if (!currentCustomizingCharacter) return;
+    const { sceneIndex, charIndex } = currentCustomizingCharacter;
+    const scene = AppState.scenes[sceneIndex];
+    const char3dData = scene.characters3d?.[charIndex];
+    const char3d = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+    
+    if (char3dData) {
+        char3dData.skinTone = index;
+        if (char3d?.character3d) char3d.character3d.setSkinTone(index);
+        populateSkinTonePalette(index);
+        rebuildSceneForPreview(sceneIndex);
+    }
+}
+
+function selectEyeColor(index) {
+    if (!currentCustomizingCharacter) return;
+    const { sceneIndex, charIndex } = currentCustomizingCharacter;
+    const scene = AppState.scenes[sceneIndex];
+    const char3dData = scene.characters3d?.[charIndex];
+    const char3d = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+    
+    if (char3dData) {
+        char3dData.eyeColor = index;
+        if (char3d?.character3d) char3d.character3d.setEyeColor(index);
+        populateEyeColorPalette(index);
+        rebuildSceneForPreview(sceneIndex);
+    }
+}
+
+function selectHairColor(index) {
+    if (!currentCustomizingCharacter) return;
+    const { sceneIndex, charIndex } = currentCustomizingCharacter;
+    const scene = AppState.scenes[sceneIndex];
+    const char3dData = scene.characters3d?.[charIndex];
+    const char3d = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+    
+    if (char3dData) {
+        char3dData.hairColor = index;
+        if (char3d?.character3d) char3d.character3d.setHairColor(index);
+        populateHairColorPalette(index);
+        rebuildSceneForPreview(sceneIndex);
+    }
+}
+
+function removeCharacter(sceneIndex, charIndex) {
+    const scene = AppState.scenes[sceneIndex];
+    if (!scene || scene.characters.length <= 1) {
+        showToast('कम से कम एक पात्र होना चाहिए', 'warning');
+        return;
+    }
+    
+    // Remove from scene data
+    scene.characters.splice(charIndex, 1);
+    if (scene.characters3d) {
+        scene.characters3d.splice(charIndex, 1);
+    }
+    
+    // Re-index remaining characters
+    scene.characters3d?.forEach((char, i) => {
+        char.id = `char_${sceneIndex}_${i}`;
+    });
+    
+    // Update UI
+    renderSceneList();
+    openSceneEditor(sceneIndex);
+    updateCharacter3DList();
+    
+    // Rebuild scene preview
+    rebuildSceneForPreview(sceneIndex);
+    
+    showToast('पात्र हटाया गया', 'info');
+}
+
+function updateCharacterPosition(sceneIndex, charIndex, prop, value) {
+    const char3d = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+    if (!char3d || !char3d.character3d) return;
+    
+    const parts = prop.split('.');
+    if (parts[0] === 'position' && parts[1]) {
+        char3d.character3d.group.position[parts[1]] = value;
+        char3d.customization = char3d.customization || {};
+        char3d.customization.position = char3d.customization.position || { x: 0, y: 0, z: 0 };
+        char3d.customization.position[parts[1]] = value;
+    }
+}
+
+function applyGlobalAnimation(animName) {
+    AppState.three.characters3d.forEach(char => {
+        if (char.character3d && animName !== 'none') {
+            char.character3d.playAnimation(animName, { loop: true });
+            char.animation = animName;
+        } else if (char.character3d) {
+            char.character3d.playAnimation('idle', { loop: true });
+            char.animation = 'idle';
+        }
+    });
+}
+
+function getHairStyleName(style) {
+    const names = {
+        'short': 'छोटे', 'medium': 'मध्यम', 'long': 'लंबे',
+        'curly': 'घुंघराले', 'bald': 'गंजा', 'ponytail': 'पोनीटेल',
+        'bun': 'बन', 'dreadlocks': 'ड्रेडलॉक्स'
+    };
+    return names[style] || style;
+}
+
+function getClothingName(clothing) {
+    const names = {
+        'casual': 'कैजुअल', 'formal': 'औपचारिक', 'traditional': 'पारंपरिक',
+        'school': 'स्कूल', 'sports': 'खेल', 'winter': 'सर्दी'
+    };
+    return names[clothing] || clothing;
+}
+
+function rgbToHex(color) {
+    if (typeof color === 'string') return color;
+    return '#' + color.toString(16).padStart(6, '0');
+}
+
+// ========================================
 // UI Event Handlers
 // ========================================
 function initEventListeners() {
@@ -2095,6 +3263,203 @@ function initEventListeners() {
     });
     
     $('#generateScenesBtn').addEventListener('click', handleGenerateScenes);
+    
+    // 3D Character Customization
+    $('#addCharacterBtn').addEventListener('click', addCharacterToScene);
+    $('#charBodyType').addEventListener('change', e => updateCharacter3DCustomization('bodyType', e.target.value));
+    $('#charHeight').addEventListener('input', e => { 
+        updateCharacter3DCustomization('height', parseFloat(e.target.value));
+        $('#heightValue').textContent = e.target.value;
+    });
+    $('#charWidth').addEventListener('input', e => { 
+        updateCharacter3DCustomization('width', parseFloat(e.target.value));
+        $('#widthValue').textContent = e.target.value;
+    });
+    $('#charHeadScale').addEventListener('input', e => { 
+        updateCharacter3DCustomization('headScale', parseFloat(e.target.value));
+        $('#headScaleValue').textContent = e.target.value;
+    });
+    $('#charLimbLength').addEventListener('input', e => { 
+        updateCharacter3DCustomization('limbLength', parseFloat(e.target.value));
+        $('#limbLengthValue').textContent = e.target.value;
+    });
+    $('#charExpression').addEventListener('change', e => updateCharacter3DCustomization('expression', e.target.value));
+    $('#expressionIntensity').addEventListener('input', e => { 
+        updateCharacter3DCustomization('expressionIntensity', parseFloat(e.target.value));
+        $('#expressionIntensityValue').textContent = e.target.value.toFixed(1);
+    });
+    $('#charHairStyle').addEventListener('change', e => updateCharacter3DCustomization('hairStyle', e.target.value));
+    $('#charClothing').addEventListener('change', e => updateCharacter3DCustomization('clothing', e.target.value));
+    $('#shirtColor').addEventListener('input', e => updateCharacter3DCustomization('shirtColor', e.target.value));
+    $('#pantsColor').addEventListener('input', e => updateCharacter3DCustomization('pantsColor', e.target.value));
+    $('#shoesColor').addEventListener('input', e => updateCharacter3DCustomization('shoesColor', e.target.value));
+    
+    // Tab switching for character customization
+    $$('#characterCustomization .tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchCharacterTab(btn.dataset.tab));
+    });
+    
+    // Professional 3D Controls - Animation Tab
+    $('#animationSpeed').addEventListener('input', e => { 
+        AppState.settings.animationSpeed = parseFloat(e.target.value);
+        $('#speedValue').textContent = `${AppState.settings.animationSpeed}x`;
+    });
+    $('#transitionType').addEventListener('change', e => { AppState.settings.transitionType = e.target.value; });
+    $('#globalAnimation').addEventListener('change', e => applyGlobalAnimation(e.target.value));
+    
+    // Professional 3D Controls - Camera Tab
+    $('#cameraType').addEventListener('change', e => { 
+        AppState.three.cameraControls.type = e.target.value; 
+        createCamera(); 
+    });
+    $('#cameraFOV').addEventListener('input', e => { 
+        AppState.three.cameraControls.fov = parseInt(e.target.value);
+        $('#fovValue').textContent = e.target.value;
+        if (AppState.three.camera.isPerspectiveCamera) {
+            AppState.three.camera.fov = AppState.three.cameraControls.fov;
+            AppState.three.camera.updateProjectionMatrix();
+        }
+    });
+    $('#cameraDistance').addEventListener('input', e => { 
+        AppState.three.cameraControls.distance = parseInt(e.target.value);
+        $('#camDistValue').textContent = e.target.value;
+    });
+    $('#cameraHeight').addEventListener('input', e => { 
+        AppState.three.cameraControls.height = parseInt(e.target.value);
+        $('#camHeightValue').textContent = e.target.value;
+    });
+    $('#cameraAngle').addEventListener('input', e => { 
+        AppState.three.cameraControls.angle = parseInt(e.target.value);
+        $('#camAngleValue').textContent = e.target.value;
+    });
+    $('#cameraMovement').addEventListener('change', e => { AppState.three.cameraControls.movement = e.target.value; });
+    $('#cameraSpeed').addEventListener('input', e => { 
+        AppState.three.cameraControls.speed = parseFloat(e.target.value);
+        $('#camSpeedValue').textContent = e.target.value;
+    });
+    $('#lookAtX').addEventListener('input', e => { AppState.three.cameraControls.lookAt.x = parseFloat(e.target.value) || 0; });
+    $('#lookAtY').addEventListener('input', e => { AppState.three.cameraControls.lookAt.y = parseFloat(e.target.value) || 0; });
+    $('#lookAtZ').addEventListener('input', e => { AppState.three.cameraControls.lookAt.z = parseFloat(e.target.value) || 0; });
+    
+    // Professional 3D Controls - Lighting Tab
+    $('#environmentPreset').addEventListener('change', e => { 
+        AppState.three.lighting.environment = e.target.value; 
+        setupLighting(); 
+    });
+    $('#ambientIntensity').addEventListener('input', e => { 
+        AppState.three.lighting.ambientIntensity = parseFloat(e.target.value);
+        $('#ambientValue').textContent = e.target.value;
+        if (AppState.three.ambientLight) AppState.three.ambientLight.intensity = AppState.three.lighting.ambientIntensity;
+    });
+    $('#ambientColor').addEventListener('input', e => { 
+        AppState.three.lighting.ambientColor = parseInt(e.target.value.replace('#', '0x'));
+        if (AppState.three.ambientLight) AppState.three.ambientLight.color.set(AppState.three.lighting.ambientColor);
+    });
+    $('#keyIntensity').addEventListener('input', e => { 
+        AppState.three.lighting.keyIntensity = parseFloat(e.target.value);
+        $('#keyValue').textContent = e.target.value;
+        if (AppState.three.keyLight) AppState.three.keyLight.intensity = AppState.three.lighting.keyIntensity;
+    });
+    $('#keyColor').addEventListener('input', e => { 
+        AppState.three.lighting.keyColor = parseInt(e.target.value.replace('#', '0x'));
+        if (AppState.three.keyLight) AppState.three.keyLight.color.set(AppState.three.lighting.keyColor);
+    });
+    $('#keyAngle').addEventListener('input', e => { 
+        AppState.three.lighting.keyAngle = parseInt(e.target.value);
+        $('#keyAngleValue').textContent = e.target.value;
+        updateKeyLightPosition();
+    });
+    $('#fillIntensity').addEventListener('input', e => { 
+        AppState.three.lighting.fillIntensity = parseFloat(e.target.value);
+        $('#fillValue').textContent = e.target.value;
+        if (AppState.three.fillLight) AppState.three.fillLight.intensity = AppState.three.lighting.fillIntensity;
+    });
+    $('#fillColor').addEventListener('input', e => { 
+        AppState.three.lighting.fillColor = parseInt(e.target.value.replace('#', '0x'));
+        if (AppState.three.fillLight) AppState.three.fillLight.color.set(AppState.three.lighting.fillColor);
+    });
+    $('#rimIntensity').addEventListener('input', e => { 
+        AppState.three.lighting.rimIntensity = parseFloat(e.target.value);
+        $('#rimValue').textContent = e.target.value;
+        if (AppState.three.rimLight) AppState.three.rimLight.intensity = AppState.three.lighting.rimIntensity;
+    });
+    $('#rimColor').addEventListener('input', e => { 
+        AppState.three.lighting.rimColor = parseInt(e.target.value.replace('#', '0x'));
+        if (AppState.three.rimLight) AppState.three.rimLight.color.set(AppState.three.lighting.rimColor);
+    });
+    $('#shadowQuality').addEventListener('change', e => { 
+        AppState.three.lighting.shadowQuality = e.target.value; 
+        updateShadowQuality();
+    });
+    $('#exposure').addEventListener('input', e => { 
+        AppState.three.lighting.exposure = parseFloat(e.target.value);
+        $('#exposureValue').textContent = e.target.value;
+        if (AppState.three.renderer) AppState.three.renderer.toneMappingExposure = AppState.three.lighting.exposure;
+    });
+    
+    // Professional 3D Controls - Background Tab
+    $('#backgroundType').addEventListener('change', e => { 
+        AppState.three.background.type = e.target.value; 
+        updateBackground(); 
+    });
+    $('#bgColor1').addEventListener('input', e => { 
+        AppState.three.background.color1 = parseInt(e.target.value.replace('#', '0x'));
+        updateBackground();
+    });
+    $('#bgColor2').addEventListener('input', e => { 
+        AppState.three.background.color2 = parseInt(e.target.value.replace('#', '0x'));
+        updateBackground();
+    });
+    $('#bgRotation').addEventListener('input', e => { 
+        AppState.three.background.rotation = parseInt(e.target.value);
+        $('#bgRotValue').textContent = e.target.value;
+        updateBackground();
+    });
+    $('#skyPreset').addEventListener('change', e => { 
+        AppState.three.background.skyPreset = e.target.value; 
+        updateBackground();
+    });
+    $('#fogDensity').addEventListener('input', e => { 
+        AppState.three.background.fogDensity = parseFloat(e.target.value);
+        $('#fogValue').textContent = e.target.value;
+        updateBackground();
+    });
+    $('#fogColor').addEventListener('input', e => { 
+        AppState.three.background.fogColor = parseInt(e.target.value.replace('#', '0x'));
+        updateBackground();
+    });
+    $('#showGround').addEventListener('change', e => { 
+        AppState.three.background.showGround = e.target.checked; 
+        createGroundPlane();
+    });
+    $('#groundShadows').addEventListener('change', e => { 
+        AppState.three.background.groundShadows = e.target.checked; 
+        if (AppState.three.groundPlane) AppState.three.groundPlane.receiveShadow = e.target.checked;
+    });
+    $('#groundColor').addEventListener('input', e => { 
+        AppState.three.background.groundColor = parseInt(e.target.value.replace('#', '0x'));
+        if (AppState.three.groundPlane) AppState.three.groundPlane.material.color.set(AppState.three.background.groundColor);
+    });
+    $('#groundRoughness').addEventListener('input', e => { 
+        AppState.three.background.groundRoughness = parseFloat(e.target.value);
+        $('#groundRoughValue').textContent = e.target.value;
+        if (AppState.three.groundPlane) AppState.three.groundPlane.material.roughness = AppState.three.background.groundRoughness;
+    });
+    
+    // Professional 3D Controls - Scene Edit Tab
+    $('#sceneSelector').addEventListener('change', e => loadSceneControls(parseInt(e.target.value)));
+    $('#sceneDuration').addEventListener('input', e => { 
+        AppState.settings.sceneDuration = parseInt(e.target.value);
+        $('#sceneDurValue').textContent = e.target.value;
+    });
+    $('#transitionIn').addEventListener('change', e => { /* transition in */ });
+    $('#transitionOut').addEventListener('change', e => { /* transition out */ });
+    $('#applySceneSettings').addEventListener('click', applySceneSettings);
+    
+    // Pro tabs
+    $$('.pro-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchProTab(btn.dataset.proTab));
+    });
     
     $('#closeEditorBtn').addEventListener('click', closeSceneEditor);
     $('#saveSceneBtn').addEventListener('click', saveSceneEdit);
@@ -2124,12 +3489,7 @@ function initEventListeners() {
     $('#previewCanvas').addEventListener('touchmove', handleCanvasTouchMove, { passive: false });
     $('#previewCanvas').addEventListener('touchend', handleCanvasTouchEnd, { passive: true });
     
-    $('#animationSpeed').addEventListener('input', e => { 
-        AppState.settings.animationSpeed = parseFloat(e.target.value);
-        $('#speedValue').textContent = `${AppState.settings.animationSpeed}x`;
-    });
     $('#cameraMovement').addEventListener('change', e => { AppState.settings.cameraMovement = e.target.value; });
-    $('#transitionType').addEventListener('change', e => { AppState.settings.transitionType = e.target.value; });
     $('#paperThickness').addEventListener('input', e => { 
         AppState.settings.paperThickness = parseInt(e.target.value);
         $('#thicknessValue').textContent = e.target.value;
@@ -2179,6 +3539,25 @@ function handleGenerateScenes() {
     
     setTimeout(() => {
         AppState.scenes = generateScenesFromStory(AppState.story, AppState.settings);
+        
+        // Initialize 3D character data for each scene
+        AppState.scenes.forEach((scene, sceneIndex) => {
+            scene.characters3d = scene.characters.map((_, charIndex) => ({
+                id: `char_${sceneIndex}_${charIndex}`,
+                bodyType: 'adult',
+                skinTone: 2,
+                hairStyle: 'short',
+                hairColor: 0,
+                eyeColor: 0,
+                clothing: 'casual',
+                bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
+                headScale: 1.0,
+                limbLength: 1.0,
+                expression: 'neutral',
+                expressionIntensity: 1.0
+            }));
+        });
+        
         renderSceneList();
         updateGenerateAnimationButton();
         goToStep(2);
@@ -2271,8 +3650,29 @@ function openSceneEditor(index) {
     $('#sceneBackground').value = scene.background;
     $('#sceneHindiText').value = scene.hindiText;
     
+    // Initialize 3D character data if not present
+    if (!scene.characters3d) {
+        scene.characters3d = scene.characters.map((_, i) => ({
+            id: `char_${index}_${i}`,
+            bodyType: 'adult',
+            skinTone: 2,
+            hairStyle: 'short',
+            hairColor: 0,
+            eyeColor: 0,
+            clothing: 'casual',
+            bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
+            headScale: 1.0,
+            limbLength: 1.0,
+            expression: 'neutral',
+            expressionIntensity: 1.0
+        }));
+    }
+    
     $('#sceneEditor').style.display = 'block';
     $('#sceneEditor').scrollIntoView({ behavior: 'smooth' });
+    
+    // Update 3D character list
+    updateCharacter3DList();
 }
 
 function closeSceneEditor() {
@@ -2286,7 +3686,39 @@ function saveSceneEdit() {
     
     const scene = AppState.scenes[index];
     scene.description = $('#sceneDescription').value;
-    scene.characters = $('#sceneCharacters').value.split(',').map(s => s.trim()).filter(Boolean);
+    const newCharacters = $('#sceneCharacters').value.split(',').map(s => s.trim()).filter(Boolean);
+    
+    // Preserve 3D character data for existing characters
+    const oldCharacters3d = scene.characters3d || [];
+    scene.characters = newCharacters;
+    
+    // Ensure characters3d array matches characters array
+    if (!scene.characters3d) scene.characters3d = [];
+    
+    // If characters were added, initialize their 3D data
+    while (scene.characters3d.length < scene.characters.length) {
+        const i = scene.characters3d.length;
+        scene.characters3d.push({
+            id: `char_${index}_${i}`,
+            bodyType: 'adult',
+            skinTone: 2,
+            hairStyle: 'short',
+            hairColor: 0,
+            eyeColor: 0,
+            clothing: 'casual',
+            bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
+            headScale: 1.0,
+            limbLength: 1.0,
+            expression: 'neutral',
+            expressionIntensity: 1.0
+        });
+    }
+    
+    // If characters were removed, trim the 3D data
+    if (scene.characters3d.length > scene.characters.length) {
+        scene.characters3d.length = scene.characters.length;
+    }
+    
     scene.background = $('#sceneBackground').value;
     scene.hindiText = $('#sceneHindiText').value;
     
@@ -2519,6 +3951,7 @@ function rebuildAllScenes() {
         }
     });
     
+    // Clear all characters
     AppState.three.characters.forEach(char => {
         if (char.mesh) {
             AppState.three.scene.remove(char.mesh);
@@ -2526,6 +3959,14 @@ function rebuildAllScenes() {
         }
     });
     AppState.three.characters = [];
+    
+    AppState.three.characters3d.forEach(char => {
+        if (char.character3d) {
+            AppState.three.scene.remove(char.character3d.group);
+            char.character3d.dispose();
+        }
+    });
+    AppState.three.characters3d = [];
     
     AppState.scenes.forEach((scene, i) => {
         scene.characters.forEach((charName, j) => {

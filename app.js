@@ -2883,6 +2883,9 @@ function addCharacterToScene() {
         hairColor: 0,
         eyeColor: 0,
         clothing: 'casual',
+        shirtColor: null,
+        pantsColor: null,
+        shoesColor: null,
         bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
         headScale: 1.0,
         limbLength: 1.0,
@@ -2995,12 +2998,12 @@ function selectCharacterForCustomization(sceneIndex, charIndex) {
     populateEyeColorPalette(char3dData.eyeColor || 0);
     populateHairColorPalette(char3dData.hairColor || 0);
     
-    // Set shirt/pants/shoes colors from clothing preset
+    // Set shirt/pants/shoes colors from clothing preset or custom colors
     const clothing = CLOTHING_PRESETS[char3dData.clothing || 'casual'];
     if (clothing) {
-        $('#shirtColor').value = rgbToHex(clothing.shirt?.color || 0x42a5f5);
-        $('#pantsColor').value = rgbToHex(clothing.pants?.color || 0x1565c0);
-        $('#shoesColor').value = rgbToHex(clothing.shoes?.color || 0xffffff);
+        $('#shirtColor').value = rgbToHex(char3dData.shirtColor || clothing.shirt?.color || 0x42a5f5);
+        $('#pantsColor').value = rgbToHex(char3dData.pantsColor || clothing.pants?.color || 0x1565c0);
+        $('#shoesColor').value = rgbToHex(char3dData.shoesColor || clothing.shoes?.color || 0xffffff);
     }
 }
 
@@ -3105,13 +3108,16 @@ function updateCharacter3DCustomization(property, value) {
             if (char3d?.character3d) char3d.character3d.setClothing(value);
             break;
         case 'shirtColor':
+            char3dData.shirtColor = value;
+            if (char3d?.character3d) char3d.character3d.setShirtColor(value);
+            break;
         case 'pantsColor':
+            char3dData.pantsColor = value;
+            if (char3d?.character3d) char3d.character3d.setPantsColor(value);
+            break;
         case 'shoesColor':
-            // Update clothing colors
-            if (char3d?.character3d) {
-                // Would need to update clothing materials
-                console.log(`Update ${property} to ${value}`);
-            }
+            char3dData.shoesColor = value;
+            if (char3d?.character3d) char3d.character3d.setShoesColor(value);
             break;
     }
     
@@ -3550,6 +3556,9 @@ function handleGenerateScenes() {
                 hairColor: 0,
                 eyeColor: 0,
                 clothing: 'casual',
+                shirtColor: null,
+                pantsColor: null,
+                shoesColor: null,
                 bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
                 headScale: 1.0,
                 limbLength: 1.0,
@@ -3660,6 +3669,9 @@ function openSceneEditor(index) {
             hairColor: 0,
             eyeColor: 0,
             clothing: 'casual',
+            shirtColor: null,
+            pantsColor: null,
+            shoesColor: null,
             bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
             headScale: 1.0,
             limbLength: 1.0,
@@ -3706,6 +3718,9 @@ function saveSceneEdit() {
             hairColor: 0,
             eyeColor: 0,
             clothing: 'casual',
+            shirtColor: null,
+            pantsColor: null,
+            shoesColor: null,
             bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
             headScale: 1.0,
             limbLength: 1.0,

@@ -1850,6 +1850,37 @@ export class Character3D {
         this.materials.iris.color.set(eyeColor.iris);
     }
     
+    // Clothing color update methods
+    setShirtColor(color) {
+        if (this.materials.clothing.shirt) {
+            this.materials.clothing.shirt.color.set(color);
+        }
+        // Also update sleeves if they exist
+        this.group.traverse(child => {
+            if (child.name && child.name.startsWith('Sleeve') && child.material) {
+                child.material.color.set(color);
+            }
+        });
+    }
+    
+    setPantsColor(color) {
+        if (this.materials.clothing.pants) {
+            this.materials.clothing.pants.color.set(color);
+        }
+    }
+    
+    setShoesColor(color) {
+        if (this.materials.clothing.shoes) {
+            this.materials.clothing.shoes.color.set(color);
+        }
+    }
+    
+    setJacketColor(color) {
+        if (this.materials.clothing.jacket) {
+            this.materials.clothing.jacket.color.set(color);
+        }
+    }
+    
     rebuildHair() {
         // Remove old hair
         if (this.parts.hair) {

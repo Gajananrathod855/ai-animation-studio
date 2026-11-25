@@ -653,7 +653,7 @@ function showToast(message, type = 'info', duration = 3000) {
 // ========================================
 // Loading Modal
 // ========================================
-function showLoading(text = 'प्रोसेसिंग...') {
+function showLoading(text = 'Processing...') {
     $('#loadingText').textContent = text;
     $('#loadingModal').style.display = 'flex';
 }
@@ -1919,7 +1919,7 @@ function applyEnvironmentPreset(preset) {
         AppState.scenes[sceneIndex].background = preset;
     }
     
-    showToast(`वातावरण प्रीसेट "${preset}" लागू किया गया`, 'success');
+    showToast(`Environment preset "${preset}" applied`, 'success');
 }
 
 function createEnvironmentFromTemplate(template, presetName) {
@@ -3727,7 +3727,7 @@ function applyWeatherPreset(weather) {
             break;
     }
     
-    showToast(`मौसम "${weather}" लागू किया गया`, 'success');
+    showToast(`Weather "${weather}" applied`, 'success');
 }
 
 function applyTimeOfDayPreset(timeOfDay) {
@@ -3786,7 +3786,7 @@ function applyTimeOfDayPreset(timeOfDay) {
         AppState.three.stars = null;
     }
     
-    showToast(`दिन का समय "${timeOfDay}" लागू किया गया`, 'success');
+    showToast(`Time of day "${timeOfDay}" applied`, 'success');
 }
 
 // Post-processing update
@@ -5792,12 +5792,12 @@ async function startExport() {
     
     // Check if canvas and captureStream are supported
     if (!canvas || !canvas.captureStream) {
-        showToast('वीडियो रेंडरिंग इस ब्राउज़र में समर्थित नहीं है', 'error');
+        showToast('Video rendering not supported in this browser', 'error');
         return;
     }
     
     if (AppState.duration <= 0) {
-        showToast('एनिमेशन की अवधि सेट नहीं है', 'error');
+        showToast('Animation duration not set', 'error');
         return;
     }
     
@@ -5826,14 +5826,14 @@ async function startExport() {
     $('#framesRendered').textContent = '0';
     $('#totalFrames').textContent = AppState.export.totalFrames;
     $('#progressPercent').textContent = '0%';
-    $('#progressStatus').textContent = 'रेंडर हो रहा है...';
+    $('#progressStatus').textContent = 'Rendering...';
     
     let stream;
     try {
         stream = canvas.captureStream(settings.framerate);
     } catch (e) {
         console.error('captureStream failed:', e);
-        showToast('वीडियो स्ट्रीम बनाने में विफल: ' + e.message, 'error');
+        showToast('Failed to create video stream: ' + e.message, 'error');
         AppState.export.isExporting = false;
         $('#exportActions').style.display = 'block';
         $('#exportProgress').style.display = 'none';
@@ -6082,7 +6082,7 @@ function finalizeExport() {
     
     AppState.export.isExporting = false;
     
-    showToast('वीडियो सफलतापूर्वक बन गया!', 'success');
+    showToast('Video created successfully!', 'success');
 }
 
 function downloadVideo() {
@@ -6093,7 +6093,7 @@ function downloadVideo() {
     a.download = `paper-animation-${Date.now()}.${AppState.exportSettings.format === 'mp4' ? 'mp4' : 'webm'}`;
     a.click();
     
-    showToast('डाउनलोड शुरू हो गया', 'success');
+    showToast('Download started', 'success');
 }
 
 async function shareVideo() {
@@ -6105,13 +6105,13 @@ async function shareVideo() {
         });
         
         if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'मेरा पेपर एनिमेशन वीडियो' });
+            await navigator.share({ files: [file], title: 'My Paper Animation Video' });
         } else {
-            showToast('शेयर करने के लिए वीडियो डाउनलोड करें', 'info');
+            showToast('Download video to share', 'info');
         }
     } catch (e) {
         console.error('Share failed:', e);
-        showToast('शेयर नहीं कर सके', 'error');
+        showToast('Could not share', 'error');
     }
 }
 
@@ -6383,7 +6383,7 @@ function addSelectedAssetToScene() {
     if (selectedAssetInstanceId) {
         // Update existing
         assetManager.updateAsset(selectedAssetInstanceId, { position, rotation, scale });
-        showToast('एसेट अपडेट किया गया', 'success');
+        showToast('Asset updated', 'success');
     } else {
         // Add new
         const instanceId = assetManager.addAsset(selectedAssetId, { position, rotation, scale });
@@ -6392,8 +6392,8 @@ function addSelectedAssetToScene() {
             const removeBtn = $('#removeAssetFromScene');
             const addBtn = $('#addAssetToScene');
             if (removeBtn) removeBtn.style.display = 'inline-block';
-            if (addBtn) addBtn.textContent = 'अपडेट करें';
-            showToast('एसेट सीन में जोड़ा गया', 'success');
+            if (addBtn) addBtn.textContent = 'Update';
+            showToast('Asset added to scene', 'success');
         }
     }
 }
@@ -6411,9 +6411,9 @@ function removeSelectedAssetFromScene() {
     const removeBtn = $('#removeAssetFromScene');
     const addBtn = $('#addAssetToScene');
     if (removeBtn) removeBtn.style.display = 'none';
-    if (addBtn) addBtn.textContent = 'सीन में जोड़ें';
+    if (addBtn) addBtn.textContent = 'Add to Scene';
     
-    showToast('एसेट हटाया गया', 'success');
+    showToast('Asset removed', 'success');
 }
 
 // ========================================
@@ -6640,7 +6640,7 @@ function clearSelection() {
 
 function addKeyframeAtTime(time) {
     if (!keyframeState.selectedCharacter) {
-        showToast('पहले पात्र चुनें', 'warning');
+        showToast('Select a character first', 'warning');
         return;
     }
     
@@ -6676,7 +6676,7 @@ function addKeyframeAtTime(time) {
     });
     
     updateKeyframeTracks();
-    showToast('कीफ्रेम जोड़ा गया', 'success');
+    showToast('Keyframe added', 'success');
 }
 
 function deleteSelectedKeyframe() {
@@ -6690,7 +6690,7 @@ function deleteSelectedKeyframe() {
     }
     
     clearSelection();
-    showToast('कीफ्रेम हटाया गया', 'success');
+    showToast('Keyframe deleted', 'success');
 }
 
 function updateSelectedKeyframePose() {
@@ -6704,10 +6704,10 @@ function updateSelectedKeyframePose() {
         const pose = JSON.parse(poseInput.value);
         if (keyframeState.keyframes[trackName] && keyframeState.keyframes[trackName][index]) {
             keyframeState.keyframes[trackName][index].pose = pose;
-            showToast('पोज़ अपडेट किया गया', 'success');
+            showToast('Pose updated', 'success');
         }
     } catch (e) {
-        showToast('अमान्य JSON', 'error');
+        showToast('Invalid JSON', 'error');
     }
 }
 
@@ -6733,13 +6733,13 @@ function loadPresetAnimation(name) {
     // Load preset animation keyframes
     // This would load from ANIMATION_CLIPS
     clearKeyframes();
-    showToast(`${name} एनिमेशन लोड किया गया`, 'info');
+    showToast(`${name} animation loaded`, 'info');
 }
 
 function playKeyframeAnimation() {
     if (keyframeState.isPlaying) return;
     if (!keyframeState.selectedCharacter) {
-        showToast('पात्र चुनें', 'warning');
+        showToast('Select a character', 'warning');
         return;
     }
     
@@ -7046,7 +7046,7 @@ function applyInteraction() {
     const targetId = targetSelect.value;
     
     if (!char1Key || !char2Key) {
-        showToast('दोनों पात्र चुनें', 'warning');
+        showToast('Select both characters', 'warning');
         return;
     }
     
@@ -7054,7 +7054,7 @@ function applyInteraction() {
     const char2 = getCharacter3DByKey(char2Key);
     
     if (!char1 || !char2) {
-        showToast('पात्र नहीं मिला', 'error');
+        showToast('Character not found', 'error');
         return;
     }
     
@@ -7063,7 +7063,7 @@ function applyInteraction() {
         case 'look':
             char1.lookAt(char2.group.position);
             char2.lookAt(char1.group.position);
-            showToast('पात्र एक-दूसरे को देख रहे हैं', 'success');
+            showToast('Characters looking at each other', 'success');
             break;
             
         case 'wave':
@@ -7071,7 +7071,7 @@ function applyInteraction() {
             char2.playAnimation('wave');
             char1.lookAt(char2.group.position);
             char2.lookAt(char1.group.position);
-            showToast('हाथ हिला रहे हैं', 'success');
+            showToast('Waving', 'success');
             break;
             
         case 'talk':
@@ -7079,7 +7079,7 @@ function applyInteraction() {
             char2.playAnimation('idle');
             char1.lookAt(char2.group.position);
             char2.lookAt(char1.group.position);
-            showToast('बातचीत शुरू', 'success');
+            showToast('Conversation started', 'success');
             break;
             
         case 'hug':
@@ -7089,7 +7089,7 @@ function applyInteraction() {
             const midPoint = new THREE.Vector3().addVectors(char1.group.position, char2.group.position).multiplyScalar(0.5);
             char1.walkTo(midPoint.clone().add(new THREE.Vector3(-0.5, 0, 0)));
             char2.walkTo(midPoint.clone().add(new THREE.Vector3(0.5, 0, 0)));
-            showToast('गले लग रहे हैं', 'success');
+            showToast('Hugging', 'success');
             break;
             
         case 'highfive':
@@ -7097,7 +7097,7 @@ function applyInteraction() {
             char2.playAnimation('point');
             char1.lookAt(char2.group.position);
             char2.lookAt(char1.group.position);
-            showToast('हाई-फाइव!', 'success');
+            showToast('High five!', 'success');
             break;
             
         case 'walk_to':
@@ -7107,12 +7107,12 @@ function applyInteraction() {
                     char1.playAnimation('wave');
                 }
             });
-            showToast('पात्र 1 चल रहा है', 'success');
+            showToast('Character 1 walking', 'success');
             break;
             
         case 'give':
             if (!targetId) {
-                showToast('देने के लिए वस्तु चुनें', 'warning');
+                showToast('Select object to give', 'warning');
                 return;
             }
             const object = getObjectByInstanceId(targetId);
@@ -7121,13 +7121,13 @@ function applyInteraction() {
                 setTimeout(() => {
                     char1.giveObject(char2, object);
                 }, 1000);
-                showToast('वस्तु दी जा रही है', 'success');
+                showToast('Giving object', 'success');
             }
             break;
             
         case 'sit':
             if (!targetId) {
-                showToast('बैठने के लिए वस्तु चुनें', 'warning');
+                showToast('Select object to sit on', 'warning');
                 return;
             }
             const sitObject = getObjectByInstanceId(targetId) || createSitObject(targetId);
@@ -7136,7 +7136,7 @@ function applyInteraction() {
                 sitObject.userData.sitPosition = sitObject.position.clone().add(new THREE.Vector3(0, 0.5, 0.5));
                 sitObject.userData.sitRotation = new THREE.Euler(0, Math.PI, 0);
                 char1.sitOn(sitObject);
-                showToast('पात्र बैठ रहा है', 'success');
+                showToast('Character sitting', 'success');
             }
             break;
     }
@@ -7170,7 +7170,7 @@ function stopInteraction() {
         char2.releaseObject();
     }
     
-    showToast('इंटरैक्शन रोकी गई', 'info');
+    showToast('Interaction stopped', 'info');
 }
 
 function getCharacter3DByKey(key) {
@@ -7356,16 +7356,16 @@ function initializeVisualDirector() {
 
 function handleGenerateShotPlan() {
     if (!AppState.scenes || AppState.scenes.length === 0) {
-        showToast('शॉट प्लान के लिए कोई सीन नहीं', 'warning');
+        showToast('No scenes for shot plan', 'warning');
         return;
     }
 
     if (!AppState.three.visualDirector) {
-        showToast('विज़ुअल डायरेक्टर प्रारंभ नहीं हुआ', 'error');
+        showToast('Visual Director not initialized', 'error');
         return;
     }
 
-    showLoading('AI शॉट प्लान जनरेट कर रहा है...');
+    showLoading('Generating AI shot plan...');
 
     setTimeout(() => {
         try {
@@ -7378,18 +7378,18 @@ function handleGenerateShotPlan() {
             
             displayShotPlan(result.shotPlan);
             hideLoading();
-            showToast(`${result.totalShots} शॉट्स का प्लान जनरेट हुआ (${result.totalDuration.toFixed(1)}s)`, 'success');
+            showToast(`${result.totalShots} shots plan generated (${result.totalDuration.toFixed(1)}s)`, 'success');
         } catch (e) {
             hideLoading();
             console.error('Shot plan generation failed:', e);
-            showToast('जनरेशन विफल: ' + e.message, 'error');
+            showToast('Generation failed: ' + e.message, 'error');
         }
     }, 100);
 }
 
 function handleApplyShotPlan() {
     if (!AppState.lastShotPlan || AppState.lastShotPlan.length === 0) {
-        showToast('लागू करने के लिए कोई शॉट प्लान नहीं', 'warning');
+        showToast('No shot plan to apply', 'warning');
         return;
     }
 
@@ -7398,7 +7398,7 @@ function handleApplyShotPlan() {
     const sceneShots = AppState.lastShotPlan.filter(s => s.sceneIndex === sceneIndex);
     
     if (sceneShots.length === 0) {
-        showToast('इस सीन के लिए कोई शॉट नहीं', 'warning');
+        showToast('No shots for this scene', 'warning');
         return;
     }
 
@@ -7410,7 +7410,7 @@ function handleApplyShotPlan() {
     const firstShot = sceneShots[0];
     applyShotToCamera(firstShot);
 
-    showToast(`${sceneShots.length} शॉट्स सीन ${sceneIndex + 1} पर लागू किए गए`, 'success');
+    showToast(`${sceneShots.length} shots applied to scene ${sceneIndex + 1}`, 'success');
 }
 
 function applyShotToCamera(shot) {
@@ -7457,7 +7457,7 @@ function displayShotPlan(shotPlan) {
     container.style.display = 'block';
     
     if (!shotPlan || shotPlan.length === 0) {
-        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">कोई शॉट प्लान नहीं</p>';
+        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">No shot plan</p>';
         return;
     }
     
@@ -7496,13 +7496,13 @@ function displayShotPlan(shotPlan) {
 function handleShowShotSuggestions() {
     const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
     if (sceneIndex === undefined || sceneIndex === null || sceneIndex === '') {
-        showToast('पहले सीन चुनें', 'warning');
+        showToast('Select a scene first', 'warning');
         return;
     }
     
     const scene = AppState.scenes[parseInt(sceneIndex)];
     if (!scene) {
-        showToast('सीन नहीं मिला', 'error');
+        showToast('Scene not found', 'error');
         return;
     }
     
@@ -7517,11 +7517,11 @@ function displayShotSuggestions(suggestions, sceneIndex) {
     container.style.display = 'block';
     
     if (!suggestions || suggestions.length === 0) {
-        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">कोई सुझाव नहीं - शॉट प्लान पूर्ण है!</p>';
+        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">No suggestions - shot plan complete!</p>';
         return;
     }
     
-    let html = '<h4 style="margin: 0 0 12px; font-size: 0.8125rem; color: var(--text-secondary);">शॉट सुझाव</h4>';
+    let html = '<h4 style="margin: 0 0 12px; font-size: 0.8125rem; color: var(--text-secondary);">Shot Suggestions</h4>';
     
     suggestions.forEach((suggestion, index) => {
         const shotType = SHOT_TYPES[suggestion.type];
@@ -7533,7 +7533,7 @@ function displayShotSuggestions(suggestions, sceneIndex) {
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="vd-suggestion-priority ${suggestion.priority}">${suggestion.priority}</span>
-                    <button class="btn vd-suggestion-apply" onclick="applyShotSuggestion(${sceneIndex}, '${suggestion.type}')">लागू करें</button>
+                    <button class="btn vd-suggestion-apply" onclick="applyShotSuggestion(${sceneIndex}, '${suggestion.type}')">Apply</button>
                 </div>
             </div>
         `;
@@ -7570,7 +7570,7 @@ window.applyShotSuggestion = function(sceneIndex, shotType) {
         displayShotPlan(AppState.lastShotPlan);
     }
     
-    showToast(`"${SHOT_TYPES[shotType]?.name || shotType}" शॉट जोड़ा गया`, 'success');
+    showToast(`"${SHOT_TYPES[shotType]?.name || shotType}" shot added`, 'success');
 };
 
 // ========================================
@@ -7611,22 +7611,22 @@ function initializeTimeline() {
     
     // Event listeners for timeline toolbar
     $('#timelineAddVideoTrack').addEventListener('click', () => {
-        const track = AppState.timeline.addTrack('video', `वीडियो ${AppState.timeline.tracks.filter(t => t.type === 'video').length + 1}`);
+        const track = AppState.timeline.addTrack('video', `Video ${AppState.timeline.tracks.filter(t => t.type === 'video').length + 1}`);
         AppState.timelineUI.render();
     });
     
     $('#timelineAddAudioTrack').addEventListener('click', () => {
-        const track = AppState.timeline.addTrack('audio', `ऑडियो ${AppState.timeline.tracks.filter(t => t.type === 'audio').length + 1}`);
+        const track = AppState.timeline.addTrack('audio', `Audio ${AppState.timeline.tracks.filter(t => t.type === 'audio').length + 1}`);
         AppState.timelineUI.render();
     });
     
     $('#timelineAddTextTrack').addEventListener('click', () => {
-        const track = AppState.timeline.addTrack('text', `टेक्स्ट ${AppState.timeline.tracks.filter(t => t.type === 'text').length + 1}`);
+        const track = AppState.timeline.addTrack('text', `Text ${AppState.timeline.tracks.filter(t => t.type === 'text').length + 1}`);
         AppState.timelineUI.render();
     });
     
     $('#timelineAddEffectTrack').addEventListener('click', () => {
-        const track = AppState.timeline.addTrack('effect', `इफेक्ट ${AppState.timeline.tracks.filter(t => t.type === 'effect').length + 1}`);
+        const track = AppState.timeline.addTrack('effect', `Effect ${AppState.timeline.tracks.filter(t => t.type === 'effect').length + 1}`);
         AppState.timelineUI.render();
     });
     
@@ -7634,15 +7634,15 @@ function initializeTimeline() {
     
     $('#timelineAutoSequence').addEventListener('click', () => {
         autoSequenceScenesToTimeline();
-        showToast('सीन ऑटो-सीक्वेंस किए गए', 'success');
+        showToast('Scenes auto-sequenced', 'success');
     });
     
     $('#timelineClearAll').addEventListener('click', () => {
-        if (confirm('सभी ट्रैक और क्लिप हटा दें?')) {
+        if (confirm('Delete all tracks and clips?')) {
             AppState.timeline.tracks = [];
             AppState.timeline.createDefaultTracks();
             AppState.timelineUI.render();
-            showToast('टाइमलाइन रीसेट किया गया', 'info');
+            showToast('Timeline reset', 'info');
         }
     });
     
@@ -7763,10 +7763,10 @@ function addProjectButtonsToStoryStep() {
         storyActions.parentNode.insertBefore(projectGroup, storyActions.nextSibling);
         
         $('#storyNewProject').addEventListener('click', () => {
-            if (AppState.projectManager.hasUnsavedChanges && !confirm('सेव न किए गए बदलाव खो जाएंगे। जारी रखें?')) return;
+            if (AppState.projectManager.hasUnsavedChanges && !confirm('Unsaved changes will be lost. Continue?')) return;
             AppState.projectManager.createNewProject();
             AppState.projectManager.applyProjectData(AppState.projectManager.currentProject);
-            showToast('नया प्रोजेक्ट बनाया गया', 'success');
+            showToast('New project created', 'success');
         });
         
         $('#storyOpenProject').addEventListener('click', () => {
@@ -7781,7 +7781,7 @@ function addProjectButtonsToStoryStep() {
 
 function autoSequenceScenesToTimeline() {
     if (!AppState.scenes || AppState.scenes.length === 0) {
-        showToast('सीक्वेंस करने के लिए कोई सीन नहीं', 'warning');
+        showToast('No scenes to sequence', 'warning');
         return;
     }
     
@@ -7856,9 +7856,9 @@ function handleTimelineImportClips() {
                 AppState.timeline.importJSON(data);
                 AppState.timelineUI.render();
                 updateTimelineTotalDuration();
-                showToast('टाइमलाइन आयात किया गया', 'success');
+                showToast('Timeline imported', 'success');
             } catch (err) {
-                showToast('आयात विफल: ' + err.message, 'error');
+                showToast('Import failed: ' + err.message, 'error');
             }
         };
         reader.readAsText(file);
@@ -7879,22 +7879,22 @@ function updateTimelineSelectionInfo(clipIds) {
     if (!info) return;
     
     if (clipIds.length === 0) {
-        info.textContent = 'कोई क्लिप चयनित नहीं';
+        info.textContent = 'No clip selected';
     } else if (clipIds.length === 1) {
         const track = AppState.timeline.tracks.find(t => t.clips.some(c => c.id === clipIds[0]));
         const clip = track?.clips.find(c => c.id === clipIds[0]);
         if (clip) {
-            info.textContent = `चयनित: ${clip.name} (${clip.startTime.toFixed(1)}s - ${clip.endTime.toFixed(1)}s, ${clip.duration.toFixed(1)}s)`;
+            info.textContent = `Selected: ${clip.name} (${clip.startTime.toFixed(1)}s - ${clip.endTime.toFixed(1)}s, ${clip.duration.toFixed(1)}s)`;
         }
     } else {
-        info.textContent = `${clipIds.length} क्लिप्स चयनित`;
+        info.textContent = `${clipIds.length} clips selected`;
     }
 }
 
 function updateTimelineTotalDuration() {
     const duration = $('#timelineTotalDuration');
     if (duration) {
-        duration.textContent = `कुल अवधि: ${AppState.timeline.duration.toFixed(1)}s`;
+        duration.textContent = `Total Duration: ${AppState.timeline.duration.toFixed(1)}s`;
     }
 }
 
@@ -7914,16 +7914,16 @@ function handleGenerateProp() {
     const size = parseFloat($('#propSize').value);
 
     if (!category || !propType) {
-        showToast('कृपया कैटेगरी और प्रॉप प्रकार चुनें', 'warning');
+        showToast('Please select category and prop type', 'warning');
         return;
     }
 
     if (!AppState.three.propGenerator) {
-        showToast('प्रॉप जेनरेटर प्रारंभ नहीं हुआ', 'error');
+        showToast('Prop generator not initialized', 'error');
         return;
     }
 
-    showLoading('प्रॉप जनरेट किया जा रहा है...');
+    showLoading('Generating prop...');
 
     setTimeout(() => {
         try {
@@ -7959,22 +7959,22 @@ function handleGenerateProp() {
                 AppState.three.generatedPropObjects.push(prop);
 
                 updateGeneratedPropsList();
-                showToast(`"${propType}" (${variation}) प्रॉप जनरेट हुआ!`, 'success');
+                showToast(`"${propType}" (${variation}) prop generated!`, 'success');
             } else {
-                showToast('प्रॉप जनरेट करने में विफल', 'error');
+                showToast('Failed to generate prop', 'error');
             }
             hideLoading();
         } catch (e) {
             hideLoading();
             console.error('Prop generation failed:', e);
-            showToast('जनरेशन विफल: ' + e.message, 'error');
+            showToast('Generation failed: ' + e.message, 'error');
         }
     }, 100);
 }
 
 function handleAddPropToScene() {
     if (!AppState.generatedProps || AppState.generatedProps.length === 0) {
-        showToast('जोड़ने के लिए कोई जनरेटेड प्रॉप नहीं', 'warning');
+        showToast('No generated props to add', 'warning');
         return;
     }
 
@@ -7982,7 +7982,7 @@ function handleAddPropToScene() {
     const sceneData = AppState.scenes[sceneIndex];
     
     if (!sceneData) {
-        showToast('सीन डेटा नहीं मिला', 'error');
+        showToast('Scene data not found', 'error');
         return;
     }
 
@@ -8031,7 +8031,7 @@ function handleAddPropToScene() {
     AppState.generatedProps = [];
     updateGeneratedPropsList();
 
-    showToast(`${added} प्रॉप(s) सीन में जोड़े गए`, 'success');
+    showToast(`${added} prop(s) added to scene`, 'success');
     
     // Rebuild scene preview
     rebuildSceneForPreview(sceneIndex);
@@ -8054,7 +8054,7 @@ function handleClearGeneratedProps() {
     }
     AppState.generatedProps = [];
     updateGeneratedPropsList();
-    showToast('जनरेटेड प्रॉप्स हटा दिए गए', 'info');
+    showToast('Generated props cleared', 'info');
 }
 
 function updateGeneratedPropsList() {
@@ -8062,7 +8062,7 @@ function updateGeneratedPropsList() {
     if (!container) return;
 
     if (!AppState.generatedProps || AppState.generatedProps.length === 0) {
-        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">कोई जनरेटेड प्रॉप नहीं</p>';
+        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">No generated props</p>';
         return;
     }
 
@@ -8072,10 +8072,10 @@ function updateGeneratedPropsList() {
             <div class="generated-prop-item">
                 <div class="generated-prop-info">
                     <span class="generated-prop-name">${genProp.propType} (${genProp.variation})</span>
-                    <span class="generated-prop-details">आकार: ${genProp.customization.size}x | रंग: ${genProp.customization.color} | सामग्री: ${genProp.customization.material}</span>
+                    <span class="generated-prop-details">Size: ${genProp.customization.size}x | Color: ${genProp.customization.color} | Material: ${genProp.customization.material}</span>
                 </div>
                 <div class="generated-prop-actions">
-                    <button class="btn" onclick="removeGeneratedProp(${index})">हटाएं</button>
+                    <button class="btn" onclick="removeGeneratedProp(${index})">Remove</button>
                 </div>
             </div>
         `;
@@ -8102,17 +8102,17 @@ window.removeGeneratedProp = function(index) {
         }
         AppState.generatedProps.splice(index, 1);
         updateGeneratedPropsList();
-        showToast('प्रॉप हटा दिया गया', 'info');
+        showToast('Prop removed', 'info');
     }
 };
 
 function handleRunContinuityCheck() {
     if (!AppState.scenes || AppState.scenes.length === 0) {
-        showToast('जांच के लिए कोई सीन नहीं', 'warning');
+        showToast('No scenes to check', 'warning');
         return;
     }
     
-    showLoading('निरंतरता जांची जा रही है...');
+    showLoading('Checking continuity...');
     
     setTimeout(() => {
         try {
@@ -8125,16 +8125,16 @@ function handleRunContinuityCheck() {
             
             const summary = result.summary;
             if (summary.bySeverity.error > 0) {
-                showToast(`${summary.bySeverity.error} त्रुटियां, ${summary.bySeverity.warning} चेतावनियां मिलीं`, 'error');
+                showToast(`${summary.bySeverity.error} errors, ${summary.bySeverity.warning} warnings found`, 'error');
             } else if (summary.bySeverity.warning > 0) {
-                showToast(`${summary.bySeverity.warning} चेतावनियां मिलीं`, 'warning');
+                showToast(`${summary.bySeverity.warning} warnings found`, 'warning');
             } else {
-                showToast('निरंतरता जांच पास हुई!', 'success');
+                showToast('Continuity check passed!', 'success');
             }
         } catch (e) {
             hideLoading();
             console.error('Continuity check failed:', e);
-            showToast('जांच विफल: ' + e.message, 'error');
+            showToast('Check failed: ' + e.message, 'error');
         }
     }, 100);
 }
@@ -8217,18 +8217,18 @@ function displayContinuityResults(result) {
 
 function handleAutoFixContinuity() {
     if (!AppState.lastContinuityResult) {
-        showToast('पहले निरंतरता जांचें', 'warning');
+        showToast('Run continuity check first', 'warning');
         return;
     }
     
     const suggestions = generateFixSuggestions(AppState.lastContinuityResult);
     
     if (suggestions.length === 0) {
-        showToast('लागू करने के लिए कोई फिक्स नहीं', 'info');
+        showToast('No fixes to apply', 'info');
         return;
     }
     
-    showLoading('ऑटो-फिक्स लागू किए जा रहे हैं...');
+    showLoading('Applying auto-fixes...');
     
     setTimeout(() => {
         let applied = 0;
@@ -8286,9 +8286,9 @@ function handleAutoFixContinuity() {
             if (sceneIndex !== undefined && sceneIndex !== null) {
                 rebuildSceneForPreview(parseInt(sceneIndex));
             }
-            showToast(`${applied} फिक्स लागू किए गए`, 'success');
+            showToast(`${applied} fixes applied`, 'success');
         } else {
-            showToast('कोई फिक्स लागू नहीं किया जा सका', 'warning');
+            showToast('No fixes could be applied', 'warning');
         }
     }, 100);
 }
@@ -8318,25 +8318,25 @@ function handleAutoDirectScene() {
     const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
     
     if (sceneIndex === undefined || sceneIndex === null || sceneIndex === '') {
-        showToast('पहले सीन चुनें', 'warning');
+        showToast('Select a scene first', 'warning');
         return;
     }
     
-    showLoading('सीन डायरेक्ट किया जा रहा है...');
+    showLoading('Directing scene...');
     
     // Use setTimeout to allow loading to show
     setTimeout(() => {
         try {
             const directions = autoDirectScene(parseInt(sceneIndex));
             hideLoading();
-            showToast('सीन ऑटो-डायरेक्ट हो गया!', 'success');
+            showToast('Scene auto-directed!', 'success');
             
             // Update UI to reflect changes
             loadSceneControls(parseInt(sceneIndex));
         } catch (e) {
             hideLoading();
             console.error('Auto-direct failed:', e);
-            showToast('ऑटो-डायरेक्ट विफल: ' + e.message, 'error');
+            showToast('Auto-direct failed: ' + e.message, 'error');
         }
     }, 100);
 }
@@ -8345,7 +8345,7 @@ function handleShowDirectionSuggestions() {
     const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
     
     if (sceneIndex === undefined || sceneIndex === null || sceneIndex === '') {
-        showToast('पहले सीन चुनें', 'warning');
+        showToast('Select a scene first', 'warning');
         return;
     }
     
@@ -8360,7 +8360,7 @@ function handleShowDirectionSuggestions() {
     container.style.display = 'block';
     
     if (suggestions.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">कोई सुझाव नहीं मिला</p>';
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No suggestions found</p>';
         return;
     }
     
@@ -8372,7 +8372,7 @@ function handleShowDirectionSuggestions() {
                 <div class="action">${s.action || s.expression || s.shot || s.mood || ''}</div>
                 <div class="reason">${s.reason}</div>
             </div>
-            <button class="btn apply-btn" onclick="applyDirectionSuggestion(${JSON.stringify(s).replace(/"/g, '"')})">लागू करें</button>
+            <button class="btn apply-btn" onclick="applyDirectionSuggestion(${JSON.stringify(s).replace(/"/g, '"')})">Apply</button>
         </div>
     `).join('');
 }
@@ -8389,7 +8389,7 @@ function applyDirectionSuggestion(suggestion) {
     );
     
     if (!charData || !charData.character3d) {
-        showToast('पात्र नहीं मिला', 'error');
+        showToast('Character not found', 'error');
         return;
     }
     
@@ -8398,11 +8398,11 @@ function applyDirectionSuggestion(suggestion) {
     switch (suggestion.type) {
         case 'animation':
             character3d.playAnimation(suggestion.action);
-            showToast(`${suggestion.character}: ${suggestion.action} एनिमेशन लागू`, 'success');
+            showToast(`${suggestion.character}: ${suggestion.action} animation applied`, 'success');
             break;
         case 'expression':
             character3d.setExpression(suggestion.expression, 1.0);
-            showToast(`${suggestion.character}: ${suggestion.expression} अभिव्यक्ति लागू`, 'success');
+            showToast(`${suggestion.character}: ${suggestion.expression} expression applied`, 'success');
             break;
         case 'interaction':
             // Find target character
@@ -8419,11 +8419,11 @@ function applyDirectionSuggestion(suggestion) {
             break;
         case 'camera':
             applyCameraShot(suggestion.shot);
-            showToast(`कैमरा: ${suggestion.shot}`, 'success');
+            showToast(`Camera: ${suggestion.shot}`, 'success');
             break;
         case 'lighting':
             applyLightingMood(suggestion.mood);
-            showToast(`लाइटिंग: ${suggestion.mood}`, 'success');
+            showToast(`Lighting: ${suggestion.mood}`, 'success');
             break;
     }
 }
@@ -8515,7 +8515,7 @@ function handleNewScript() {
     currentEditingScriptSceneId = null;
     renderScriptScenesList();
     closeScriptEditorPanel();
-    showToast('नई स्क्रिप्ट बनाई गई', 'success');
+    showToast('New script created', 'success');
 }
 
 function handleScriptTemplate() {
@@ -8527,7 +8527,7 @@ function handleScriptTemplate() {
         </button>
     `).join('');
     
-    const modal = createModal('स्क्रिप्ट टेम्पलेट चुनें', templates);
+    const modal = createModal('Choose Script Template', templates);
     modal.querySelectorAll('.template-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const script = createScriptFromTemplate(btn.dataset.template, '');
@@ -8537,7 +8537,7 @@ function handleScriptTemplate() {
                 renderScriptScenesList();
                 closeScriptEditorPanel();
                 modal.remove();
-                showToast(`${SCRIPT_TEMPLATES[btn.dataset.template].name} टेम्पलेट लोड किया गया`, 'success');
+                showToast(`${SCRIPT_TEMPLATES[btn.dataset.template].name} template loaded`, 'success');
             }
         });
     });
@@ -8554,9 +8554,9 @@ function handleImportScript() {
             reader.onload = (event) => {
                 if (scriptManager.importFromJSON(event.target.result)) {
                     renderScriptScenesList();
-                    showToast('स्क्रिप्ट आयात की गई', 'success');
+                    showToast('Script imported', 'success');
                 } else {
-                    showToast('आयात विफल: अमान्य फॉर्मेट', 'error');
+                    showToast('Import failed: Invalid format', 'error');
                 }
             };
             reader.readAsText(file);
@@ -8567,7 +8567,7 @@ function handleImportScript() {
 
 function handleExportScript() {
     if (!scriptManager || scriptManager.script.scenes.length === 0) {
-        showToast('निर्यात करने के लिए कोई स्क्रिप्ट नहीं', 'warning');
+        showToast('No script to export', 'warning');
         return;
     }
     
@@ -8579,17 +8579,17 @@ function handleExportScript() {
     a.download = `${scriptManager.script.title || 'script'}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('स्क्रिप्ट निर्यात की गई', 'success');
+    showToast('Script exported', 'success');
 }
 
 function handleAddScriptScene() {
     const scene = scriptManager.addScene({
-        title: `सीन ${scriptManager.script.scenes.length + 1}`,
+        title: `Scene ${scriptManager.script.scenes.length + 1}`,
         duration: 8
     });
     renderScriptScenesList();
     openScriptSceneEditor(scene.id);
-    showToast('सीन जोड़ा गया', 'success');
+    showToast('Scene added', 'success');
 }
 
 function handleAddDialogue() {
@@ -8632,19 +8632,19 @@ function handleSaveScriptScene() {
     
     scriptManager.updateScene(currentEditingScriptSceneId, updates);
     renderScriptScenesList();
-    showToast('सीन सेव किया गया', 'success');
+    showToast('Scene saved', 'success');
 }
 
 function handleDeleteScriptScene() {
     if (!currentEditingScriptSceneId) return;
     
-    if (!confirm('इस सीन को हटाने से सभी संवाद और क्रियाएं मिट जाएंगी। जारी रखें?')) return;
+    if (!confirm('Deleting this scene will remove all dialogues and actions. Continue?')) return;
     
     scriptManager.deleteScene(currentEditingScriptSceneId);
     currentEditingScriptSceneId = null;
     renderScriptScenesList();
     closeScriptEditorPanel();
-    showToast('सीन हटाया गया', 'success');
+    showToast('Scene deleted', 'success');
 }
 
 function handleCloseScriptEditor() {
@@ -8653,11 +8653,11 @@ function handleCloseScriptEditor() {
 
 function handleGenerateScenesFromScript() {
     if (!scriptManager || scriptManager.script.scenes.length === 0) {
-        showToast('पहले स्क्रिप्ट में सीन जोड़ें', 'warning');
+        showToast('Add scenes to script first', 'warning');
         return;
     }
     
-    showLoading('स्क्रिप्ट से सीन बनाए जा रहे हैं...');
+    showLoading('Creating scenes from script...');
     
     setTimeout(() => {
         // Convert script scenes to app scenes
@@ -8665,8 +8665,8 @@ function handleGenerateScenesFromScript() {
         AppState.scenes = breakdown.map((s, i) => ({
             ...s,
             id: s.id || generateId(),
-            characters: s.characters.length > 0 ? s.characters : ['पात्र'],
-            background: s.background || 'गार्डन'
+            characters: s.characters.length > 0 ? s.characters : ['Character'],
+            background: s.background || 'Garden'
         }));
         
         // Initialize 3D character data
@@ -8697,7 +8697,7 @@ function handleGenerateScenesFromScript() {
         updateGenerateAnimationButton();
         goToStep(3); // Go to scene editor
         hideLoading();
-        showToast(`${AppState.scenes.length} सीन स्क्रिप्ट से बनाए गए`, 'success');
+        showToast(`${AppState.scenes.length} scenes created from script`, 'success');
     }, 100);
 }
 
@@ -8710,8 +8710,8 @@ function renderScriptScenesList() {
     if (scriptManager.script.scenes.length === 0) {
         container.innerHTML = `
             <div style="padding: 40px; text-align: center; color: var(--text-muted);">
-                <p>अभी तक कोई सीन नहीं</p>
-                <p style="font-size: 0.8125rem;">"सीन जोड़ें" पर क्लिक करें</p>
+                <p>No scenes yet</p>
+                <p style="font-size: 0.8125rem;">Click "Add Scene" to start</p>
             </div>
         `;
         return;
@@ -8723,9 +8723,9 @@ function renderScriptScenesList() {
         item.dataset.sceneId = scene.id;
         item.innerHTML = `
             <div class="script-scene-info">
-                <div class="script-scene-number">सीन ${scene.number}</div>
-                <div class="script-scene-title">${scene.title || 'बिना शीर्षक'}</div>
-                <div class="script-scene-duration">${scene.duration}s • ${scene.dialogues.length} संवाद • ${scene.actions.length} क्रियाएं</div>
+                <div class="script-scene-number">Scene ${scene.number}</div>
+                <div class="script-scene-title">${scene.title || 'Untitled'}</div>
+                <div class="script-scene-duration">${scene.duration}s • ${scene.dialogues.length} dialogues • ${scene.actions.length} actions</div>
             </div>
         `;
         item.addEventListener('click', () => openScriptSceneEditor(scene.id));
@@ -9068,7 +9068,7 @@ function applySceneSettings() {
     // Rebuild scene with new settings
     rebuildSceneForPreview(sceneIndex);
     
-    showToast('सीन सेटिंग्स लागू की गईं', 'success');
+    showToast('Scene settings applied', 'success');
 }
 
 // ========================================
@@ -9117,7 +9117,7 @@ function addCharacterToScene() {
     renderSceneList();
     openSceneEditor(index);
     updateCharacter3DList();
-    showToast('नया पात्र जोड़ा गया', 'success');
+    showToast('New character added', 'success');
 }
 
 function updateCharacter3DList() {
@@ -9394,7 +9394,7 @@ function selectHairColor(index) {
 function removeCharacter(sceneIndex, charIndex) {
     const scene = AppState.scenes[sceneIndex];
     if (!scene || scene.characters.length <= 1) {
-        showToast('कम से कम एक पात्र होना चाहिए', 'warning');
+        showToast('At least one character required', 'warning');
         return;
     }
     
@@ -9417,7 +9417,7 @@ function removeCharacter(sceneIndex, charIndex) {
     // Rebuild scene preview
     rebuildSceneForPreview(sceneIndex);
     
-    showToast('पात्र हटाया गया', 'info');
+    showToast('Character removed', 'info');
 }
 
 function updateCharacterPosition(sceneIndex, charIndex, prop, value) {
@@ -9833,14 +9833,14 @@ function initEventListeners() {
                 GENRE_TEMPLATES[genre].tempo = tempo;
             }
             AppState.audioManager.playMusic(genre, 120);
-            showToast(`"${GENRE_TEMPLATES[genre]?.name || genre}" संगीत चल रहा है`, 'success');
+            showToast(`"${GENRE_TEMPLATES[genre]?.name || genre}" music playing`, 'success');
         }
     });
     
     $('#stopMusicBtn').addEventListener('click', () => {
         if (AppState.audioManager) {
             AppState.audioManager.stopMusic();
-            showToast('संगीत रोका गया', 'info');
+            showToast('Music stopped', 'info');
         }
     });
     
@@ -9848,7 +9848,7 @@ function initEventListeners() {
         const genre = $('#musicGenre').value;
         if (AppState.audioManager) {
             AppState.audioManager.crossfadeMusic(genre, 3);
-            showToast(`"${GENRE_TEMPLATES[genre]?.name || genre}" पर क्रॉसफेड`, 'success');
+            showToast(`Crossfading to "${GENRE_TEMPLATES[genre]?.name || genre}"`, 'success');
         }
     });
     
@@ -10018,11 +10018,11 @@ function handleStoryInput() {
 
 function handleGenerateScenes() {
     if (!AppState.story || AppState.story.length === 0) {
-        showToast('कृपया कहानी या विषय लिखें', 'warning');
+        showToast('Please write a story or topic', 'warning');
         return;
     }
     
-    showLoading('सीन बनाए जा रहे हैं...');
+    showLoading('Creating scenes...');
     
     setTimeout(() => {
         AppState.scenes = generateScenesFromStory(AppState.story, AppState.settings);
@@ -10052,7 +10052,7 @@ function handleGenerateScenes() {
         updateGenerateAnimationButton();
         goToStep(2); // Go to script editor
         hideLoading();
-        showToast(`${AppState.scenes.length} सीन बनाए गए`, 'success');
+        showToast(`${AppState.scenes.length} scenes created`, 'success');
     }, 500);
 }
 
@@ -10069,7 +10069,7 @@ function renderSceneList() {
             createElement('div', { class: 'scene-card-header' }, [
                 createElement('div', { class: 'scene-number' }, [String(index + 1)]),
                 createElement('h4', { class: 'scene-title' }, [scene.title]),
-                createElement('span', { class: 'scene-duration' }, [`${scene.duration} सेकंड`])
+                createElement('span', { class: 'scene-duration' }, [`${scene.duration} seconds`])
             ]),
             
             // Visual preview area
@@ -10230,7 +10230,7 @@ function saveSceneEdit() {
     rebuildSceneForPreview(index);
     
     closeSceneEditor();
-    showToast('सीन सेव हो गया', 'success');
+    showToast('Scene saved', 'success');
 }
 
 function regenerateScene() {
@@ -10239,9 +10239,9 @@ function regenerateScene() {
     
     const scene = AppState.scenes[index];
     const variations = [
-        `${scene.description} और भी दिलचस्प तरीके से।`,
-        `यह सीन अब नए पात्रों के साथ: ${['नया पात्र', 'दोस्त', 'साथी'][Math.floor(Math.random() * 3)]}।`,
-        `${scene.background} में एक नया रोमांच शुरू होता है।`
+        `${scene.description} in an even more interesting way.`,
+        `This scene now with new characters: ${['New Character', 'Friend', 'Companion'][Math.floor(Math.random() * 3)]}.`,
+        `A new adventure begins in ${scene.background}.`
     ];
     
     scene.description = variations[Math.floor(Math.random() * variations.length)];
@@ -10250,17 +10250,17 @@ function regenerateScene() {
     $('#sceneDescription').value = scene.description;
     $('#sceneHindiText').value = scene.hindiText;
     
-    showToast('सीन पुनः बनाया गया', 'info');
+    showToast('Scene regenerated', 'info');
 }
 
 function handleGenerateAnimation() {
-    showLoading('एनिमेशन तैयार हो रही है...');
+    showLoading('Preparing animation...');
     
     setTimeout(() => {
         buildAnimationTimeline();
         goToStep(4); // Animation preview
         hideLoading();
-        showToast('एनिमेशन तैयार! प्ले बटन दबाएं', 'success');
+        showToast('Animation ready! Press play', 'success');
     }, 1000);
 }
 
@@ -10398,22 +10398,22 @@ function goToStep(step) {
     
     // Step 2: Script Editor - need script
     if (step === 2 && (!AppState.scriptManager || AppState.scriptManager.script.scenes.length === 0)) {
-        showToast('पहले स्क्रिप्ट बनाएं', 'warning');
+        showToast('Create script first', 'warning');
         return;
     }
     // Step 3: Scene Editor - need scenes
     if (step === 3 && AppState.scenes.length === 0) {
-        showToast('पहले सीन बनाएं', 'warning');
+        showToast('Create scenes first', 'warning');
         return;
     }
     // Step 4: Animation Preview - need animation
     if (step === 4 && !AppState.animationData) {
-        showToast('पहले एनिमेशन बनाएं', 'warning');
+        showToast('Create animation first', 'warning');
         return;
     }
     // Step 5: Video Export - need animation
     if (step === 5 && !AppState.animationData) {
-        showToast('पहले एनिमेशन बनाएं', 'warning');
+        showToast('Create animation first', 'warning');
         return;
     }
     
@@ -10522,7 +10522,7 @@ async function init() {
     $('#storyInput').focus();
     
     console.log('App initialized successfully');
-    showToast('ऐप तैयार है! अपनी कहानी लिखें', 'info');
+    showToast('App ready! Write your story', 'info');
 }
 
 document.addEventListener('DOMContentLoaded', init);

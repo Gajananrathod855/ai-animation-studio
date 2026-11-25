@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#4a90d9">
-    <meta name="description" content="3D पेपर एनिमेशन वीडियो क्रिएटर - अपनी कहानियों को रंगीन 3D पेपर कटआउट एनिमेशन में बदलें">
-    <title>3D पेपर एनिमेशन वीडियो क्रिएटर</title>
+    <meta name="description" content="3D Paper Animation Video Creator - Transform your stories into colorful 3D paper cutout animations">
+    <title>3D Paper Animation Video Creator</title>
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,10 +20,10 @@
                 <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
-                <h1 class="app-title">पेपर एनिमेशन</h1>
+                <h1 class="app-title">Paper Animation</h1>
             </div>
             <div class="header-right">
-                <button class="btn-icon" id="themeToggle" aria-label="थीम बदलें">
+                <button class="btn-icon" id="themeToggle" aria-label="Toggle Theme">
                     <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"/>
                         <line x1="12" y1="1" x2="12" y2="3"/>
@@ -46,19 +46,23 @@
         <nav class="progress-nav" id="progressNav">
             <div class="progress-step active" data-step="1">
                 <span class="step-number">1</span>
-                <span class="step-label">कहानी</span>
+                <span class="step-label">Story</span>
             </div>
             <div class="progress-step" data-step="2">
                 <span class="step-number">2</span>
-                <span class="step-label">सीन</span>
+                <span class="step-label">Script</span>
             </div>
             <div class="progress-step" data-step="3">
                 <span class="step-number">3</span>
-                <span class="step-label">एनिमेशन</span>
+                <span class="step-label">Scenes</span>
             </div>
             <div class="progress-step" data-step="4">
                 <span class="step-number">4</span>
-                <span class="step-label">वीडियो</span>
+                <span class="step-label">Animation</span>
+            </div>
+            <div class="progress-step" data-step="5">
+                <span class="step-number">5</span>
+                <span class="step-label">Video</span>
             </div>
         </nav>
 
@@ -67,55 +71,55 @@
             <!-- Step 1: Story Input -->
             <section class="step-panel active" id="step1" data-step="1">
                 <div class="panel-header">
-                    <h2>अपनी कहानी लिखें</h2>
-                    <p class="panel-subtitle">कहानी या शैक्षिक विषय दर्ज करें, हम इसे सीन में बाँट देंगे</p>
+                    <h2>Write Your Story</h2>
+                    <p class="panel-subtitle">Enter a story or educational topic, and we'll break it into scenes</p>
                 </div>
                 
                 <div class="input-section">
-                    <label class="label" for="storyInput">कहानी / विषय</label>
+                    <label class="label" for="storyInput">Story / Topic</label>
                     <textarea 
                         id="storyInput" 
                         class="textarea" 
-                        placeholder="उदाहरण: एक छोटा खरगोश जंगल में रहता था। उसे गाजर बहुत पसंद थी। एक दिन वह गाजर ढूंढते हुए एक नदी के पास पहुँचा..."
+                        placeholder="Example: A little rabbit lived in the forest. He loved carrots. One day while searching for carrots, he reached a river..."
                         rows="8"
                     ></textarea>
                     <div class="input-hints">
-                        <span class="hint">💡 कितनी भी लंबी कहानी लिखें</span>
-                        <span class="hint">🎓 शैक्षिक विषय के लिए: "पानी का चक्र समझाएं"</span>
+                        <span class="hint">💡 Write a story of any length</span>
+                        <span class="hint">🎓 For educational topics: "Explain the water cycle"</span>
                     </div>
                 </div>
 
                 <div class="options-section">
-                    <h3>वीडियो सेटिंग्स</h3>
+                    <h3>Video Settings</h3>
                     <div class="options-grid">
                         <div class="option-group">
-                            <label class="label" for="videoStyle">स्टाइल</label>
+                            <label class="label" for="videoStyle">Style</label>
                             <select id="videoStyle" class="select">
-                                <option value="paper-cutout">पेपर कटआउट (डिफ़ॉल्ट)</option>
-                                <option value="origami">ऑरिगेमी</option>
-                                <option value="pop-up">पॉप-अप बुक</option>
+                                <option value="paper-cutout">Paper Cutout (Default)</option>
+                                <option value="origami">Origami</option>
+                                <option value="pop-up">Pop-up Book</option>
                             </select>
                         </div>
                         <div class="option-group">
-                            <label class="label" for="colorTheme">रंग थीम</label>
+                            <label class="label" for="colorTheme">Color Theme</label>
                             <select id="colorTheme" class="select">
-                                <option value="vibrant">जीवंत रंगीन</option>
-                                <option value="pastel">पेस्टल</option>
-                                <option value="monochrome">मोनोक्रोम</option>
-                                <option value="earthy">पृथ्वी टोन</option>
+                                <option value="vibrant">Vibrant</option>
+                                <option value="pastel">Pastel</option>
+                                <option value="monochrome">Monochrome</option>
+                                <option value="earthy">Earthy</option>
                             </select>
                         </div>
                         <div class="option-group">
-                            <label class="label" for="aspectRatio">आस्पेक्ट रेश्यो</label>
+                            <label class="label" for="aspectRatio">Aspect Ratio</label>
                             <select id="aspectRatio" class="select">
-                                <option value="16:9">16:9 (यूट्यूब)</option>
-                                <option value="9:16">9:16 (रील्स/शॉर्ट्स)</option>
-                                <option value="1:1">1:1 (इंस्टाग्राम)</option>
-                                <option value="4:3">4:3 (क्लासिक)</option>
+                                <option value="16:9">16:9 (YouTube)</option>
+                                <option value="9:16">9:16 (Reels/Shorts)</option>
+                                <option value="1:1">1:1 (Instagram)</option>
+                                <option value="4:3">4:3 (Classic)</option>
                             </select>
                         </div>
                         <div class="option-group">
-                            <label class="label" for="sceneDuration">प्रति सीन अवधि (सेकंड)</label>
+                            <label class="label" for="sceneDuration">Duration per Scene (seconds)</label>
                             <input type="number" id="sceneDuration" class="input" value="8" min="3" max="30">
                         </div>
                     </div>
@@ -127,82 +131,215 @@
                             <polyline points="16 18 22 12 16 6"/>
                             <polyline points="8 18 2 12 8 6"/>
                         </svg>
-                        सीन बनाएं और आगे बढ़ें
+                        Create Scenes & Continue
                     </button>
                 </div>
             </section>
 
-            <!-- Step 2: Scene Editor -->
+            <!-- Step 2: Script Editor -->
             <section class="step-panel" id="step2" data-step="2">
                 <div class="panel-header">
-                    <h2>सीन संपादित करें</h2>
-                    <p class="panel-subtitle">प्रत्येक सीन की कहानी, पात्र और पृष्ठभूमि एडजस्ट करें</p>
+                    <h2>Script & Narration Planner</h2>
+                    <p class="panel-subtitle">Turn your story into a detailed script - dialogues, narration, and actions</p>
+                </div>
+
+                <div class="script-editor">
+                    <div class="script-toolbar">
+                        <div class="toolbar-group">
+                            <button class="btn btn-secondary" id="newScriptBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                New Script
+                            </button>
+                            <button class="btn btn-secondary" id="scriptTemplateBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6"/><path d="M9 15h6"/></svg>
+                                From Template
+                            </button>
+                            <button class="btn btn-secondary" id="importScriptBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>
+                                Import
+                            </button>
+                            <button class="btn btn-secondary" id="exportScriptBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                Export
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <label class="label" style="margin-bottom: 4px;">Language</label>
+                            <select id="scriptLanguage" class="select" style="width: auto;">
+                                <option value="hi">Hindi</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="script-main">
+                        <div class="script-scenes-panel">
+                            <div class="panel-header-inline">
+                                <h3>Scene List</h3>
+                                <button class="btn btn-sm btn-primary" id="addScriptSceneBtn">+ Add Scene</button>
+                            </div>
+                            <div class="script-scenes-list" id="scriptScenesList"></div>
+                        </div>
+
+                        <div class="script-editor-panel" id="scriptEditorPanel" style="display: none;">
+                            <div class="editor-header">
+                                <h3 id="editingScriptSceneTitle">Edit Scene</h3>
+                                <button class="btn btn-ghost" id="closeScriptEditorBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    Close
+                                </button>
+                            </div>
+                            <div class="editor-content">
+                                <div class="editor-section">
+                                    <label class="label">Scene Title</label>
+                                    <input type="text" id="scriptSceneTitle" class="input" placeholder="Scene title">
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">Location</label>
+                                    <input type="text" id="scriptSceneLocation" class="input" placeholder="Forest, home, school...">
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">Time of Day</label>
+                                    <select id="scriptSceneTimeOfDay" class="select">
+                                        <option value="day">Day</option>
+                                        <option value="night">Night</option>
+                                        <option value="morning">Morning</option>
+                                        <option value="evening">Evening</option>
+                                    </select>
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">Duration (seconds)</label>
+                                    <input type="number" id="scriptSceneDuration" class="input" value="8" min="3" max="60">
+                                </div>
+
+                                <div class="editor-section">
+                                    <label class="label">Narration</label>
+                                    <textarea id="scriptSceneNarration" class="textarea" rows="4" placeholder="Narration or description..."></textarea>
+                                </div>
+
+                                <div class="editor-section">
+                                    <label class="label">Dialogues</label>
+                                    <div class="dialogues-list" id="scriptDialoguesList"></div>
+                                    <button class="btn btn-sm btn-secondary" id="addDialogueBtn">+ Add Dialogue</button>
+                                </div>
+
+                                <div class="editor-section">
+                                    <label class="label">Actions</label>
+                                    <div class="actions-list" id="scriptActionsList"></div>
+                                    <button class="btn btn-sm btn-secondary" id="addActionBtn">+ Add Action</button>
+                                </div>
+
+                                <div class="editor-section">
+                                    <label class="label">Camera Notes</label>
+                                    <textarea id="scriptCameraNotes" class="textarea" rows="2" placeholder="Camera directions..."></textarea>
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">Lighting Notes</label>
+                                    <textarea id="scriptLightingNotes" class="textarea" rows="2" placeholder="Lighting directions..."></textarea>
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">Sound Notes</label>
+                                    <textarea id="scriptSoundNotes" class="textarea" rows="2" placeholder="Sound/music directions..."></textarea>
+                                </div>
+
+                                <div class="editor-actions">
+                                    <button class="btn btn-danger" id="deleteScriptSceneBtn">Delete Scene</button>
+                                    <button class="btn btn-primary" id="saveScriptSceneBtn">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="backToStoryFromScriptBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        Back
+                    </button>
+                    <button class="btn btn-primary btn-lg" id="generateScenesFromScriptBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 18 2 12 8 6"/>
+                        </svg>
+                        Create Scenes & Continue
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 3: Scene Editor -->
+            <section class="step-panel" id="step3" data-step="3">
+                <div class="panel-header">
+                    <h2>Edit Scenes</h2>
+                    <p class="panel-subtitle">Adjust story, characters, and background for each scene</p>
                 </div>
 
                 <div class="scene-list" id="sceneList"></div>
 
                 <div class="scene-editor" id="sceneEditor" style="display: none;">
                     <div class="editor-header">
-                        <h3 id="editingSceneTitle">सीन संपादित करें</h3>
+                        <h3 id="editingSceneTitle">Edit Scene</h3>
                         <button class="btn btn-ghost" id="closeEditorBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            बंद करें
+                            Close
                         </button>
                     </div>
                     <div class="editor-content">
                         <div class="editor-section">
-                            <label class="label">सीन विवरण</label>
-                            <textarea id="sceneDescription" class="textarea" rows="4" placeholder="इस सीन में क्या होता है..."></textarea>
+                            <label class="label">Scene Description</label>
+                            <textarea id="sceneDescription" class="textarea" rows="4" placeholder="What happens in this scene..."></textarea>
                         </div>
                         <div class="editor-section">
-                            <label class="label">पात्र (कॉमा से अलग करें)</label>
-                            <input type="text" id="sceneCharacters" class="input" placeholder="खरगोश, गाजर, तितली">
+                            <label class="label">Characters (comma separated)</label>
+                            <input type="text" id="sceneCharacters" class="input" placeholder="Rabbit, carrot, butterfly">
                         </div>
                         
                         <!-- 3D Character Customization Panel -->
                         <div class="editor-section" id="character3dPanel" style="display: none;">
                             <div class="section-header">
-                                <h4>3D पात्र अनुकूलन</h4>
-                                <button class="btn btn-sm btn-ghost" id="addCharacterBtn">+ पात्र जोड़ें</button>
+                                <h4>3D Character Customization</h4>
+                                <button class="btn btn-sm btn-ghost" id="addCharacterBtn">+ Add Character</button>
                             </div>
                             <div class="character-list" id="character3dList"></div>
                             
                             <div class="character-customization" id="characterCustomization" style="display: none;">
-                                <h4 id="customizingCharacterName">पात्र अनुकूलित करें</h4>
+                                <h4 id="customizingCharacterName">Customize Character</h4>
                                 
                                 <div class="customization-tabs">
-                                    <button class="tab-btn active" data-tab="body">शरीर</button>
-                                    <button class="tab-btn" data-tab="face">चेहरा</button>
-                                    <button class="tab-btn" data-tab="hair">बाल</button>
-                                    <button class="tab-btn" data-tab="clothes">कपड़े</button>
+                                    <button class="tab-btn active" data-tab="body">Body</button>
+                                    <button class="tab-btn" data-tab="face">Face</button>
+                                    <button class="tab-btn" data-tab="hair">Hair</button>
+                                    <button class="tab-btn" data-tab="clothes">Clothes</button>
                                 </div>
                                 
                                 <div class="tab-content">
                                     <!-- Body Tab -->
                                     <div class="tab-panel active" id="tab-body">
                                         <div class="customize-row">
-                                            <label>बॉडी टाइप</label>
+                                            <label>Body Type</label>
                                             <select id="charBodyType" class="select">
-                                                <option value="child">बच्चा</option>
-                                                <option value="teen">किशोर</option>
-                                                <option value="adult" selected>वयस्क</option>
-                                                <option value="elderly">बुजुर्ग</option>
+                                                <option value="child">Child</option>
+                                                <option value="teen">Teen</option>
+                                                <option value="adult" selected>Adult</option>
+                                                <option value="elderly">Elderly</option>
                                             </select>
                                         </div>
                                         <div class="customize-row">
-                                            <label>ऊंचाई <span id="heightValue">1.0</span></label>
+                                            <label>Height <span id="heightValue">1.0</span></label>
                                             <input type="range" id="charHeight" min="0.5" max="1.5" step="0.05" value="1.0" class="slider">
                                         </div>
                                         <div class="customize-row">
-                                            <label>चौड़ाई <span id="widthValue">1.0</span></label>
+                                            <label>Width <span id="widthValue">1.0</span></label>
                                             <input type="range" id="charWidth" min="0.5" max="1.5" step="0.05" value="1.0" class="slider">
                                         </div>
                                         <div class="customize-row">
-                                            <label>सिर का आकार <span id="headScaleValue">1.0</span></label>
+                                            <label>Head Size <span id="headScaleValue">1.0</span></label>
                                             <input type="range" id="charHeadScale" min="0.7" max="1.3" step="0.05" value="1.0" class="slider">
                                         </div>
                                         <div class="customize-row">
-                                            <label>अंग की लंबाई <span id="limbLengthValue">1.0</span></label>
+                                            <label>Limb Length <span id="limbLengthValue">1.0</span></label>
                                             <input type="range" id="charLimbLength" min="0.7" max="1.3" step="0.05" value="1.0" class="slider">
                                         </div>
                                     </div>
@@ -210,31 +347,31 @@
                                     <!-- Face Tab -->
                                     <div class="tab-panel" id="tab-face">
                                         <div class="customize-row">
-                                            <label>त्वचा का रंग</label>
+                                            <label>Skin Tone</label>
                                             <div class="color-palette" id="skinTonePalette"></div>
                                         </div>
                                         <div class="customize-row">
-                                            <label>आंखों का रंग</label>
+                                            <label>Eye Color</label>
                                             <div class="color-palette" id="eyeColorPalette"></div>
                                         </div>
                                         <div class="customize-row">
-                                            <label>अभिव्यक्ति</label>
+                                            <label>Expression</label>
                                             <select id="charExpression" class="select">
-                                                <option value="neutral">तटस्थ</option>
-                                                <option value="happy">खुश</option>
-                                                <option value="sad">उदास</option>
-                                                <option value="angry">गुस्सा</option>
-                                                <option value="surprised">आश्चर्य</option>
-                                                <option value="fear">डर</option>
-                                                <option value="disgusted">घृणा</option>
-                                                <option value="confused">उलझन</option>
-                                                <option value="thinking">सोच</option>
-                                                <option value="sleepy">नींद</option>
-                                                <option value="wink">विंक</option>
+                                                <option value="neutral">Neutral</option>
+                                                <option value="happy">Happy</option>
+                                                <option value="sad">Sad</option>
+                                                <option value="angry">Angry</option>
+                                                <option value="surprised">Surprised</option>
+                                                <option value="fear">Fear</option>
+                                                <option value="disgusted">Disgusted</option>
+                                                <option value="confused">Confused</option>
+                                                <option value="thinking">Thinking</option>
+                                                <option value="sleepy">Sleepy</option>
+                                                <option value="wink">Wink</option>
                                             </select>
                                         </div>
                                         <div class="customize-row">
-                                            <label>तीव्रता <span id="expressionIntensityValue">1.0</span></label>
+                                            <label>Intensity <span id="expressionIntensityValue">1.0</span></label>
                                             <input type="range" id="expressionIntensity" min="0" max="1" step="0.1" value="1.0" class="slider">
                                         </div>
                                     </div>
@@ -242,20 +379,20 @@
                                     <!-- Hair Tab -->
                                     <div class="tab-panel" id="tab-hair">
                                         <div class="customize-row">
-                                            <label>हेयर स्टाइल</label>
+                                            <label>Hair Style</label>
                                             <select id="charHairStyle" class="select">
-                                                <option value="short">छोटे</option>
-                                                <option value="medium">मध्यम</option>
-                                                <option value="long">लंबे</option>
-                                                <option value="curly">घुंघराले</option>
-                                                <option value="bald">गंजा</option>
-                                                <option value="ponytail">पोनीटेल</option>
-                                                <option value="bun">बन</option>
-                                                <option value="dreadlocks">ड्रेडलॉक्स</option>
+                                                <option value="short">Short</option>
+                                                <option value="medium">Medium</option>
+                                                <option value="long">Long</option>
+                                                <option value="curly">Curly</option>
+                                                <option value="bald">Bald</option>
+                                                <option value="ponytail">Ponytail</option>
+                                                <option value="bun">Bun</option>
+                                                <option value="dreadlocks">Dreadlocks</option>
                                             </select>
                                         </div>
                                         <div class="customize-row">
-                                            <label>बालों का रंग</label>
+                                            <label>Hair Color</label>
                                             <div class="color-palette" id="hairColorPalette"></div>
                                         </div>
                                     </div>
@@ -263,26 +400,26 @@
                                     <!-- Clothes Tab -->
                                     <div class="tab-panel" id="tab-clothes">
                                         <div class="customize-row">
-                                            <label>पोशाक प्रीसेट</label>
+                                            <label>Outfit Preset</label>
                                             <select id="charClothing" class="select">
-                                                <option value="casual">कैजुअल</option>
-                                                <option value="formal">औपचारिक</option>
-                                                <option value="traditional">पारंपरिक</option>
-                                                <option value="school">स्कूल</option>
-                                                <option value="sports">खेल</option>
-                                                <option value="winter">सर्दी</option>
+                                                <option value="casual">Casual</option>
+                                                <option value="formal">Formal</option>
+                                                <option value="traditional">Traditional</option>
+                                                <option value="school">School</option>
+                                                <option value="sports">Sports</option>
+                                                <option value="winter">Winter</option>
                                             </select>
                                         </div>
                                         <div class="customize-row">
-                                            <label>शर्ट रंग</label>
+                                            <label>Shirt Color</label>
                                             <input type="color" id="shirtColor" class="color-input" value="#42a5f5">
                                         </div>
                                         <div class="customize-row">
-                                            <label>पैंट रंग</label>
+                                            <label>Pants Color</label>
                                             <input type="color" id="pantsColor" class="color-input" value="#1565c0">
                                         </div>
                                         <div class="customize-row">
-                                            <label>जूते रंग</label>
+                                            <label>Shoes Color</label>
                                             <input type="color" id="shoesColor" class="color-input" value="#ffffff">
                                         </div>
                                     </div>
@@ -291,12 +428,12 @@
                         </div>
                         
                         <div class="editor-section">
-                            <label class="label">पृष्ठभूमि</label>
-                            <input type="text" id="sceneBackground" class="input" placeholder="जंगल, नदी, पेड़">
+                            <label class="label">Background</label>
+                            <input type="text" id="sceneBackground" class="input" placeholder="Forest, river, trees">
                         </div>
                         <div class="editor-section">
-                            <label class="label">हिंदी टेक्स्ट / सबटाइटल</label>
-                            <textarea id="sceneHindiText" class="textarea" rows="3" placeholder="हिंदी में संवाद या कथन..."></textarea>
+                            <label class="label">Hindi Text / Subtitle</label>
+                            <textarea id="sceneHindiText" class="textarea" rows="3" placeholder="Dialogue or narration in Hindi..."></textarea>
                         </div>
                         <div class="editor-actions">
                             <button class="btn btn-secondary" id="regenerateSceneBtn">
@@ -304,9 +441,9 @@
                                     <polyline points="23 4 23 10 17 10"/>
                                     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                                 </svg>
-                                AI से पुनः बनाएं
+                                Regenerate with AI
                             </button>
-                            <button class="btn btn-primary" id="saveSceneBtn">सेव करें</button>
+                            <button class="btn btn-primary" id="saveSceneBtn">Save</button>
                         </div>
                     </div>
                 </div>
@@ -317,23 +454,23 @@
                             <line x1="19" y1="12" x2="5" y2="12"/>
                             <polyline points="12 19 5 12 12 5"/>
                         </svg>
-                        वापस
+                        Back
                     </button>
                     <button class="btn btn-primary btn-lg" id="generateAnimationBtn" disabled>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
                             <polyline points="16 18 22 12 16 6"/>
                             <polyline points="8 18 2 12 8 6"/>
                         </svg>
-                        एनिमेशन बनाएं
+                        Create Animation
                     </button>
                 </div>
             </section>
 
-            <!-- Step 3: Animation Preview -->
-            <section class="step-panel" id="step3" data-step="3">
+            <!-- Step 4: Animation Preview -->
+            <section class="step-panel" id="step4" data-step="4">
                 <div class="panel-header">
-                    <h2>एनिमेशन पूर्वावलोकन</h2>
-                    <p class="panel-subtitle">अपनी एनिमेशन देखें और सेटिंग्स एडजस्ट करें</p>
+                    <h2>Animation Preview</h2>
+                    <p class="panel-subtitle">Watch your animation and adjust settings</p>
                 </div>
 
                 <div class="preview-container">
@@ -344,21 +481,21 @@
                                 <svg class="overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <polygon points="5 3 19 12 5 21 5 3"/>
                                 </svg>
-                                <p>प्ले बटन दबाएं</p>
+                                <p>Press play button</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="preview-controls">
                         <div class="control-group">
-                            <button class="btn-icon-large" id="playPauseBtn" aria-label="प्ले/पॉज">
+                            <button class="btn-icon-large" id="playPauseBtn" aria-label="Play/Pause">
                                 <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                             </button>
-                            <button class="btn-icon-large" id="stopBtn" aria-label="रोकें">
+                            <button class="btn-icon-large" id="stopBtn" aria-label="Stop">
                                 <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="12" height="16"/></svg>
                             </button>
-                            <button class="btn-icon-large" id="restartBtn" aria-label="शुरू से">
+                            <button class="btn-icon-large" id="restartBtn" aria-label="Restart">
                                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2v4l4 4"/><path d="M2 12a10 10 0 0 1 10-10"/></svg>
                             </button>
                         </div>
@@ -370,7 +507,7 @@
                             <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
                         </div>
                         <div class="control-group">
-                            <button class="btn-icon-large" id="muteBtn" aria-label="म्यूट/अनम्यूट">
+                            <button class="btn-icon-large" id="muteBtn" aria-label="Mute/Unmute">
                                 <svg class="icon-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 11 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                                 <svg class="icon-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a7 7 0 0 0 12 0v-3"/></svg>
                             </button>
@@ -378,23 +515,26 @@
                                 <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.7" class="volume-slider">
                             </div>
                         </div>
-                        <button class="btn-icon-large" id="fullscreenBtn" aria-label="फुलस्क्रीन">
+                        <button class="btn-icon-large" id="fullscreenBtn" aria-label="Fullscreen">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                         </button>
                     </div>
                 </div>
 
                 <div class="animation-settings">
-                    <h3>एनिमेशन सेटिंग्स</h3>
+                    <h3>Animation Settings</h3>
                     
                     <!-- Professional 3D Controls -->
                     <div class="pro-controls">
                         <div class="pro-tabs">
-                            <button class="pro-tab-btn active" data-pro-tab="animation">एनिमेशन</button>
-                            <button class="pro-tab-btn" data-pro-tab="camera">3D कैमरा</button>
-                            <button class="pro-tab-btn" data-pro-tab="lighting">लाइटिंग</button>
-                            <button class="pro-tab-btn" data-pro-tab="background">पृष्ठभूमि</button>
-                            <button class="pro-tab-btn" data-pro-tab="scene">सीन एडिट</button>
+                            <button class="pro-tab-btn active" data-pro-tab="animation">Animation</button>
+                            <button class="pro-tab-btn" data-pro-tab="camera">3D Camera</button>
+                            <button class="pro-tab-btn" data-pro-tab="lighting">Lighting</button>
+                            <button class="pro-tab-btn" data-pro-tab="background">Background</button>
+                            <button class="pro-tab-btn" data-pro-tab="assets">Asset Library</button>
+                            <button class="pro-tab-btn" data-pro-tab="interactions">Interactions</button>
+                            <button class="pro-tab-btn" data-pro-tab="scene">Scene Edit</button>
+                            <button class="pro-tab-btn" data-pro-tab="timeline">Timeline</button>
                         </div>
                         
                         <div class="pro-tab-content">
@@ -402,27 +542,82 @@
                             <div class="pro-tab-panel active" id="pro-tab-animation">
                                 <div class="settings-grid">
                                     <div class="setting-item">
-                                        <label class="label" for="animationSpeed">गति</label>
+                                        <label class="label" for="animationSpeed">Speed</label>
                                         <input type="range" id="animationSpeed" min="0.5" max="2" step="0.1" value="1" class="slider">
                                         <span id="speedValue">1x</span>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="transitionType">ट्रांजिशन</label>
+                                        <label class="label" for="transitionType">Transition</label>
                                         <select id="transitionType" class="select">
-                                            <option value="paper-flip">पेपर फ्लिप</option>
-                                            <option value="slide">स्लाइड</option>
-                                            <option value="fade">फेड</option>
-                                            <option value="zoom">ज़ूम</option>
+                                            <option value="paper-flip">Paper Flip</option>
+                                            <option value="slide">Slide</option>
+                                            <option value="fade">Fade</option>
+                                            <option value="zoom">Zoom</option>
                                         </select>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label">ग्लोबल एनिमेशन</label>
+                                        <label class="label">Global Animation</label>
                                         <select id="globalAnimation" class="select">
-                                            <option value="none">कोई नहीं</option>
-                                            <option value="walk">चलना</option>
-                                            <option value="run">दौड़ना</option>
-                                            <option value="idle">इडल</option>
+                                            <option value="none">None</option>
+                                            <option value="walk">Walk</option>
+                                            <option value="run">Run</option>
+                                            <option value="idle">Idle</option>
                                         </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Keyframe Animation Editor -->
+                                <div class="keyframe-editor-section">
+                                    <h4>Keyframe Animation Editor</h4>
+                                    
+                                    <div class="setting-item full-width">
+                                        <label class="label">Select Character</label>
+                                        <select id="keyframeCharacter" class="select"></select>
+                                    </div>
+                                    
+                                    <div class="setting-item full-width">
+                                        <label class="label">Select Animation</label>
+                                        <select id="keyframeAnimation" class="select">
+                                            <option value="custom">Custom Animation</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="keyframe-timeline-container">
+                                        <div class="keyframe-timeline" id="keyframeTimeline">
+                                            <div class="keyframe-timeline-ruler" id="keyframeRuler"></div>
+                                            <div class="keyframe-timeline-tracks" id="keyframeTracks"></div>
+                                            <div class="keyframe-playhead" id="keyframePlayhead"></div>
+                                        </div>
+                                        <div class="keyframe-controls">
+                                            <button class="btn btn-sm" id="keyframeAdd">+ Add Keyframe</button>
+                                            <button class="btn btn-sm" id="keyframeDelete">Delete</button>
+                                            <button class="btn btn-sm btn-secondary" id="keyframePlay">▶ Play</button>
+                                            <button class="btn btn-sm btn-secondary" id="keyframeStop">■ Stop</button>
+                                            <span class="keyframe-time">Time: <span id="keyframeCurrentTime">0.00</span>s / <span id="keyframeDuration">2.00</span>s</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="keyframe-properties" id="keyframeProperties" style="display: none;">
+                                        <h5>Keyframe Properties</h5>
+                                        <div class="settings-grid">
+                                            <div class="setting-item">
+                                                <label class="label">Time <span id="kfTimeVal">0.00</span>s</label>
+                                                <input type="range" id="kfTime" min="0" max="10" step="0.01" value="0" class="slider">
+                                            </div>
+                                            <div class="setting-item">
+                                                <label class="label">Easing</label>
+                                                <select id="kfEasing" class="select">
+                                                    <option value="linear">Linear</option>
+                                                    <option value="easeIn">Ease In</option>
+                                                    <option value="easeOut">Ease Out</option>
+                                                    <option value="easeInOut">Ease In-Out</option>
+                                                </select>
+                                            </div>
+                                            <div class="setting-item full-width">
+                                                <label class="label">Pose (JSON)</label>
+                                                <textarea id="kfPose" class="textarea" rows="4" placeholder='{"position": [0,0,0], "rotation": [0,0,0], "scale": [1,1,1]}'></textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -431,10 +626,10 @@
                             <div class="pro-tab-panel" id="pro-tab-camera">
                                 <div class="settings-grid">
                                     <div class="setting-item">
-                                        <label class="label" for="cameraType">कैमरा प्रकार</label>
+                                        <label class="label" for="cameraType">Camera Type</label>
                                         <select id="cameraType" class="select">
-                                            <option value="perspective">परिप्रेक्ष्य (3D)</option>
-                                            <option value="orthographic">ऑर्थोग्राफिक (2.5D)</option>
+                                            <option value="perspective">Perspective (3D)</option>
+                                            <option value="orthographic">Orthographic (2.5D)</option>
                                         </select>
                                     </div>
                                     <div class="setting-item">
@@ -442,34 +637,34 @@
                                         <input type="range" id="cameraFOV" min="20" max="100" step="1" value="50" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="cameraDistance">दूरी <span id="camDistValue">15</span></label>
+                                        <label class="label" for="cameraDistance">Distance <span id="camDistValue">15</span></label>
                                         <input type="range" id="cameraDistance" min="5" max="50" step="1" value="15" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="cameraHeight">ऊंचाई <span id="camHeightValue">5</span></label>
+                                        <label class="label" for="cameraHeight">Height <span id="camHeightValue">5</span></label>
                                         <input type="range" id="cameraHeight" min="-10" max="20" step="1" value="5" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="cameraAngle">कोण <span id="camAngleValue">0</span></label>
+                                        <label class="label" for="cameraAngle">Angle <span id="camAngleValue">0</span></label>
                                         <input type="range" id="cameraAngle" min="-180" max="180" step="1" value="0" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="cameraMovement">मूवमेंट</label>
+                                        <label class="label" for="cameraMovement">Movement</label>
                                         <select id="cameraMovement" class="select">
-                                            <option value="static">स्थिर</option>
-                                            <option value="orbit">ऑर्बिट</option>
-                                            <option value="dolly">डॉली</option>
-                                            <option value="crane">क्रेन</option>
-                                            <option value="handheld">हैंडहेल्ड</option>
-                                            <option value="tracking">ट्रैकिंग</option>
+                                            <option value="static">Static</option>
+                                            <option value="orbit">Orbit</option>
+                                            <option value="dolly">Dolly</option>
+                                            <option value="crane">Crane</option>
+                                            <option value="handheld">Handheld</option>
+                                            <option value="tracking">Tracking</option>
                                         </select>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="cameraSpeed">गति <span id="camSpeedValue">1.0</span></label>
+                                        <label class="label" for="cameraSpeed">Speed <span id="camSpeedValue">1.0</span></label>
                                         <input type="range" id="cameraSpeed" min="0.1" max="3" step="0.1" value="1.0" class="slider">
                                     </div>
                                     <div class="setting-item full-width">
-                                        <label class="label">लुक-एट टारगेट</label>
+                                        <label class="label">Look-At Target</label>
                                         <div class="vector-inputs">
                                             <input type="number" id="lookAtX" class="input-small" placeholder="X" step="0.1" value="0">
                                             <input type="number" id="lookAtY" class="input-small" placeholder="Y" step="0.1" value="0">
@@ -483,63 +678,63 @@
                             <div class="pro-tab-panel" id="pro-tab-lighting">
                                 <div class="settings-grid">
                                     <div class="setting-item">
-                                        <label class="label">पर्यावरण</label>
+                                        <label class="label">Environment</label>
                                         <select id="environmentPreset" class="select">
-                                            <option value="studio">स्टूडियो</option>
-                                            <option value="outdoor">आउटडोर</option>
-                                            <option value="indoor">इंडोर</option>
-                                            <option value="sunset">सूर्यास्त</option>
-                                            <option value="night">रात</option>
-                                            <option value="custom">कस्टम</option>
+                                            <option value="studio">Studio</option>
+                                            <option value="outdoor">Outdoor</option>
+                                            <option value="indoor">Indoor</option>
+                                            <option value="sunset">Sunset</option>
+                                            <option value="night">Night</option>
+                                            <option value="custom">Custom</option>
                                         </select>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="ambientIntensity">एम्बिएंट <span id="ambientValue">0.6</span></label>
+                                        <label class="label" for="ambientIntensity">Ambient <span id="ambientValue">0.6</span></label>
                                         <input type="range" id="ambientIntensity" min="0" max="2" step="0.1" value="0.6" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="ambientColor">एम्बिएंट रंग</label>
+                                        <label class="label" for="ambientColor">Ambient Color</label>
                                         <input type="color" id="ambientColor" class="color-input" value="#ffffff">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="keyIntensity">की लाइट <span id="keyValue">1.0</span></label>
+                                        <label class="label" for="keyIntensity">Key Light <span id="keyValue">1.0</span></label>
                                         <input type="range" id="keyIntensity" min="0" max="3" step="0.1" value="1.0" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="keyColor">की लाइट रंग</label>
+                                        <label class="label" for="keyColor">Key Light Color</label>
                                         <input type="color" id="keyColor" class="color-input" value="#ffffff">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="keyAngle">की लाइट कोण <span id="keyAngleValue">45</span></label>
+                                        <label class="label" for="keyAngle">Key Light Angle <span id="keyAngleValue">45</span></label>
                                         <input type="range" id="keyAngle" min="0" max="360" step="1" value="45" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="fillIntensity">फिल लाइट <span id="fillValue">0.5</span></label>
+                                        <label class="label" for="fillIntensity">Fill Light <span id="fillValue">0.5</span></label>
                                         <input type="range" id="fillIntensity" min="0" max="2" step="0.1" value="0.5" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="fillColor">फिल रंग</label>
+                                        <label class="label" for="fillColor">Fill Color</label>
                                         <input type="color" id="fillColor" class="color-input" value="#ffeedd">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="rimIntensity">रिम लाइट <span id="rimValue">0.3</span></label>
+                                        <label class="label" for="rimIntensity">Rim Light <span id="rimValue">0.3</span></label>
                                         <input type="range" id="rimIntensity" min="0" max="2" step="0.1" value="0.3" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="rimColor">रिम रंग</label>
+                                        <label class="label" for="rimColor">Rim Color</label>
                                         <input type="color" id="rimColor" class="color-input" value="#ffaa00">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="shadowQuality">छाया गुणवत्ता</label>
+                                        <label class="label" for="shadowQuality">Shadow Quality</label>
                                         <select id="shadowQuality" class="select">
-                                            <option value="low">कम</option>
-                                            <option value="medium" selected>मध्यम</option>
-                                            <option value="high">उच्च</option>
-                                            <option value="ultra">अल्ट्रा</option>
+                                            <option value="low">Low</option>
+                                            <option value="medium" selected>Medium</option>
+                                            <option value="high">High</option>
+                                            <option value="ultra">Ultra</option>
                                         </select>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="exposure">एक्सपोजर <span id="exposureValue">1.2</span></label>
+                                        <label class="label" for="exposure">Exposure <span id="exposureValue">1.2</span></label>
                                         <input type="range" id="exposure" min="0.5" max="3" step="0.1" value="1.2" class="slider">
                                     </div>
                                 </div>
@@ -549,59 +744,364 @@
                             <div class="pro-tab-panel" id="pro-tab-background">
                                 <div class="settings-grid">
                                     <div class="setting-item">
-                                        <label class="label">पृष्ठभूमि प्रकार</label>
+                                        <label class="label">Background Type</label>
                                         <select id="backgroundType" class="select">
-                                            <option value="color">सॉलिड रंग</option>
-                                            <option value="gradient">ग्रेडिएंट</option>
-                                            <option value="sky">स्काईबॉक्स</option>
+                                            <option value="color">Solid Color</option>
+                                            <option value="gradient">Gradient</option>
+                                            <option value="sky">Skybox</option>
                                             <option value="hdri">HDRI</option>
-                                            <option value="scene3d">3D सीन</option>
+                                            <option value="scene3d">3D Scene</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- 3D Scene Background Generator -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">3D Environment Preset</label>
+                                        <select id="environmentPreset3D" class="select">
+                                            <option value="">None (Custom)</option>
+                                            <optgroup label="Natural">
+                                                <option value="forest">Forest</option>
+                                                <option value="garden">Garden</option>
+                                                <option value="river">River</option>
+                                                <option value="mountain">Mountain</option>
+                                                <option value="beach">Beach</option>
+                                                <option value="desert">Desert</option>
+                                                <option value="underwater">Underwater</option>
+                                            </optgroup>
+                                            <optgroup label="Urban">
+                                                <option value="city">City</option>
+                                                <option value="village">Village</option>
+                                                <option value="park">Park</option>
+                                                <option value="marketplace">Marketplace</option>
+                                                <option value="railway">Railway Station</option>
+                                                <option value="airport">Airport</option>
+                                            </optgroup>
+                                            <optgroup label="Buildings">
+                                                <option value="classroom">Classroom</option>
+                                                <option value="school_building">School Building</option>
+                                                <option value="hospital">Hospital</option>
+                                                <option value="temple">Temple</option>
+                                            </optgroup>
+                                            <optgroup label="Seasonal">
+                                                <option value="spring">Spring</option>
+                                                <option value="autumn">Autumn</option>
+                                                <option value="snowy">Snowy</option>
+                                                <option value="rainy">Rainy</option>
+                                            </optgroup>
+                                            <optgroup label="Special">
+                                                <option value="space">Space</option>
+                                                <option value="farm">Farm</option>
+                                                <option value="sunset">Sunset</option>
+                                                <option value="night">Night</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Weather & Atmosphere -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">Weather & Atmosphere</label>
+                                        <div class="weather-controls">
+                                            <select id="weatherPreset" class="select">
+                                                <optgroup label="Clear/Cloudy">
+                                                    <option value="clear">☀️ Clear</option>
+                                                    <option value="cloudy">☁️ Cloudy</option>
+                                                    <option value="overcast">☁️ Overcast</option>
+                                                </optgroup>
+                                                <optgroup label="Rain">
+                                                    <option value="lightRain">🌦️ Light Rain</option>
+                                                    <option value="rain">🌧️ Rain</option>
+                                                    <option value="heavyRain">⛈️ Heavy Rain</option>
+                                                    <option value="thunderstorm">⛈️ Thunderstorm</option>
+                                                </optgroup>
+                                                <optgroup label="Snow">
+                                                    <option value="lightSnow">🌨️ Light Snow</option>
+                                                    <option value="snow">❄️ Snow</option>
+                                                    <option value="blizzard">🌨️ Blizzard</option>
+                                                </optgroup>
+                                                <optgroup label="Atmosphere">
+                                                    <option value="foggy">🌫️ Foggy</option>
+                                                    <option value="misty">🌫️ Misty</option>
+                                                    <option value="dusty">🌪️ Dusty</option>
+                                                    <option value="sandstorm">🌪️ Sandstorm</option>
+                                                </optgroup>
+                                                <optgroup label="Special">
+                                                    <option value="underwater">🌊 Underwater</option>
+                                                    <option value="volcanic">🌋 Volcanic/Ash</option>
+                                                    <option value="magical">✨ Magical</option>
+                                                </optgroup>
+                                                <optgroup label="Night">
+                                                    <option value="nightClear">🌙 Clear Night</option>
+                                                    <option value="nightRain">🌧️🌙 Night Rain</option>
+                                                </optgroup>
+                                                <optgroup label="Sunset">
+                                                    <option value="sunset">🌅 Sunset</option>
+                                                    <option value="goldenHour">🌄 Golden Hour</option>
+                                                </optgroup>
+                                            </select>
+                                            <input type="range" id="weatherIntensity" min="0" max="1" step="0.1" value="0.5" class="slider" style="flex: 1;">
+                                            <span id="weatherIntensityValue">50%</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Visual Effects -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">Visual Effects</label>
+                                        <div class="effects-controls">
+                                            <div class="effect-toggle">
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="enableBloom"> Bloom (Glow)
+                                                </label>
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="enableVignette"> Vignette
+                                                </label>
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="enableFilmGrain"> Film Grain
+                                                </label>
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="enableChromaticAberration"> Chromatic Aberration
+                                                </label>
+                                            </div>
+                                            <div class="effect-sliders">
+                                                <div class="setting-item">
+                                                    <label class="label">Saturation <span id="saturationValue">1.0</span></label>
+                                                    <input type="range" id="saturation" min="0" max="2" step="0.05" value="1" class="slider">
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Contrast <span id="contrastValue">1.0</span></label>
+                                                    <input type="range" id="contrast" min="0.5" max="2" step="0.05" value="1" class="slider">
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Brightness <span id="brightnessValue">0</span></label>
+                                                    <input type="range" id="brightness" min="-0.5" max="0.5" step="0.05" value="0" class="slider">
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Temperature <span id="temperatureValue">0</span></label>
+                                                    <input type="range" id="temperature" min="-500" max="500" step="50" value="0" class="slider">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Music & Sound Effects -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">Music & Sound Effects</label>
+                                        <div class="audio-controls">
+                                            <div class="audio-section">
+                                                <h4>Procedural Music</h4>
+                                                <div class="setting-item">
+                                                    <label class="label">Music Genre</label>
+                                                    <select id="musicGenre" class="select">
+                                                        <option value="cinematic">🎬 Cinematic</option>
+                                                        <option value="happy">😊 Happy/Upbeat</option>
+                                                        <option value="sad">😢 Sad/Emotional</option>
+                                                        <option value="mysterious">🔮 Mysterious</option>
+                                                        <option value="epic">⚔️ Epic/Heroic</option>
+                                                        <option value="peaceful">🧘 Peaceful/Meditative</option>
+                                                        <option value="indian">🇮🇳 Indian Style</option>
+                                                        <option value="electronic">🎵 Electronic</option>
+                                                        <option value="ambient">🌌 Ambient/Atmospheric</option>
+                                                        <option value="horror">👻 Horror/Tension</option>
+                                                        <option value="romantic">💕 Romantic</option>
+                                                        <option value="comedy">😄 Comedy/Funny</option>
+                                                    </select>
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Tempo <span id="musicTempoValue">80</span> BPM</label>
+                                                    <input type="range" id="musicTempo" min="40" max="180" step="1" value="80" class="slider">
+                                                </div>
+                                                <div class="audio-buttons">
+                                                    <button class="btn btn-primary" id="playMusicBtn">Play Music</button>
+                                                    <button class="btn btn-secondary" id="stopMusicBtn">Stop</button>
+                                                    <button class="btn btn-secondary" id="crossfadeMusicBtn">Crossfade</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="audio-section">
+                                                <h4>Sound Effects Test</h4>
+                                                <div class="sfx-grid">
+                                                    <button class="btn btn-small sfx-btn" data-sfx="click">Click</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="pop">Pop</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="success">Success</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="error">Error</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="notification">Notification</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="footsteps">Footsteps</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="jump">Jump</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="pickup">Pickup</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="magicSparkle">Magic</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="whooshFast">Whoosh</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="birdChirp">Bird</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="thunder">Thunder</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="audio-section">
+                                                <h4>Volume Controls</h4>
+                                                <div class="volume-controls">
+                                                    <div class="setting-item">
+                                                        <label class="label">Master <span id="masterVolValue">100%</span></label>
+                                                        <input type="range" id="masterVolume" min="0" max="1" step="0.05" value="1" class="slider">
+                                                    </div>
+                                                    <div class="setting-item">
+                                                        <label class="label">Music <span id="musicVolValue">70%</span></label>
+                                                        <input type="range" id="musicVolume" min="0" max="1" step="0.05" value="0.7" class="slider">
+                                                    </div>
+                                                    <div class="setting-item">
+                                                        <label class="label">SFX <span id="sfxVolValue">80%</span></label>
+                                                        <input type="range" id="sfxVolume" min="0" max="1" step="0.05" value="0.8" class="slider">
+                                                    </div>
+                                                    <div class="setting-item">
+                                                        <label class="label">Voice <span id="voiceVolValue">100%</span></label>
+                                                        <input type="range" id="voiceVolume" min="0" max="1" step="0.05" value="1" class="slider">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Time of Day -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">Time of Day</label>
+                                        <select id="timeOfDayPreset" class="select">
+                                            <option value="dawn">Dawn (5-6 AM)</option>
+                                            <option value="morning">Morning (7-10 AM)</option>
+                                            <option value="noon">Noon (11 AM-2 PM)</option>
+                                            <option value="afternoon">Afternoon (3-5 PM)</option>
+                                            <option value="goldenHour">Golden Hour (6-7 PM)</option>
+                                            <option value="sunset">Sunset (8-9 PM)</option>
+                                            <option value="dusk">Dusk (10-11 PM)</option>
+                                            <option value="night">Night (12-4 AM)</option>
                                         </select>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="bgColor1">रंग 1</label>
+                                        <label class="label" for="bgColor1">Color 1</label>
                                         <input type="color" id="bgColor1" class="color-input" value="#87ceeb">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="bgColor2">रंग 2</label>
+                                        <label class="label" for="bgColor2">Color 2</label>
                                         <input type="color" id="bgColor2" class="color-input" value="#e0f7fa">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="bgRotation">रोटेशन <span id="bgRotValue">0</span></label>
+                                        <label class="label" for="bgRotation">Rotation <span id="bgRotValue">0</span></label>
                                         <input type="range" id="bgRotation" min="0" max="360" step="1" value="0" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label">स्काई प्रीसेट</label>
+                                        <label class="label">Sky Preset</label>
                                         <select id="skyPreset" class="select">
-                                            <option value="clear">साफ आसमान</option>
-                                            <option value="cloudy">बादल</option>
-                                            <option value="sunset">सूर्यास्त</option>
-                                            <option value="night">तारों वाली रात</option>
-                                            <option value="storm">तूफान</option>
+                                            <option value="clear">Clear Sky</option>
+                                            <option value="cloudy">Cloudy</option>
+                                            <option value="sunset">Sunset</option>
+                                            <option value="night">Starry Night</option>
+                                            <option value="storm">Storm</option>
                                         </select>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="fogDensity">कोहरा <span id="fogValue">0</span></label>
+                                        <label class="label" for="fogDensity">Fog <span id="fogValue">0</span></label>
                                         <input type="range" id="fogDensity" min="0" max="0.1" step="0.001" value="0" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="fogColor">कोहरा रंग</label>
+                                        <label class="label" for="fogColor">Fog Color</label>
                                         <input type="color" id="fogColor" class="color-input" value="#87ceeb">
                                     </div>
                                     <div class="setting-item full-width">
-                                        <label class="label">ग्राउंड प्लेन</label>
+                                        <label class="label">Ground Plane</label>
                                         <div class="toggle-group">
-                                            <label class="toggle-label"><input type="checkbox" id="showGround" checked> ग्राउंड दिखाएं</label>
-                                            <label class="toggle-label"><input type="checkbox" id="groundShadows" checked> छाया प्राप्त करें</label>
+                                            <label class="toggle-label"><input type="checkbox" id="showGround" checked> Show Ground</label>
+                                            <label class="toggle-label"><input type="checkbox" id="groundShadows" checked> Receive Shadows</label>
                                         </div>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="groundColor">ग्राउंड रंग</label>
+                                        <label class="label" for="groundColor">Ground Color</label>
                                         <input type="color" id="groundColor" class="color-input" value="#4caf50">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="groundRoughness">रफनेस <span id="groundRoughValue">0.8</span></label>
+                                        <label class="label" for="groundRoughness">Roughness <span id="groundRoughValue">0.8</span></label>
                                         <input type="range" id="groundRoughness" min="0" max="1" step="0.1" value="0.8" class="slider">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Assets Tab -->
+                            <div class="pro-tab-panel" id="pro-tab-assets">
+                                <div class="settings-grid">
+                                    <div class="setting-item full-width">
+                                        <label class="label">Search Assets</label>
+                                        <input type="text" id="assetSearch" class="input" placeholder="Type asset name...">
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">Category</label>
+                                        <select id="assetCategory" class="select">
+                                            <option value="all">All Categories</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <div id="assetGrid" class="asset-grid"></div>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <div id="selectedAssetInfo" class="selected-asset-info" style="display: none;">
+                                            <h4>Selected: <span id="selectedAssetName"></span></h4>
+                                            <div class="asset-transform-controls">
+                                                <label>Position X <span id="assetPosXVal">0</span></label>
+                                                <input type="range" id="assetPosX" min="-10" max="10" step="0.1" value="0" class="slider">
+                                                <label>Position Y <span id="assetPosYVal">0</span></label>
+                                                <input type="range" id="assetPosY" min="0" max="10" step="0.1" value="0" class="slider">
+                                                <label>Position Z <span id="assetPosZVal">0</span></label>
+                                                <input type="range" id="assetPosZ" min="-10" max="10" step="0.1" value="0" class="slider">
+                                                <label>Rotation Y <span id="assetRotYVal">0</span>°</label>
+                                                <input type="range" id="assetRotY" min="-180" max="180" step="1" value="0" class="slider">
+                                                <label>Scale <span id="assetScaleVal">1.0</span></label>
+                                                <input type="range" id="assetScale" min="0.1" max="5" step="0.1" value="1.0" class="slider">
+                                            </div>
+                                            <div class="asset-actions">
+                                                <button class="btn btn-primary" id="addAssetToScene">Add to Scene</button>
+                                                <button class="btn btn-danger" id="removeAssetFromScene" style="display: none;">Remove</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Interactions Tab -->
+                            <div class="pro-tab-panel" id="pro-tab-interactions">
+                                <div class="settings-grid">
+                                    <div class="setting-item full-width">
+                                        <label class="label">Character 1</label>
+                                        <select id="interactionChar1" class="select"></select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">Character 2</label>
+                                        <select id="interactionChar2" class="select"></select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">Interaction Type</label>
+                                        <select id="interactionType" class="select">
+                                            <option value="look">Look at Each Other</option>
+                                            <option value="wave">Wave</option>
+                                            <option value="talk">Talk</option>
+                                            <option value="hug">Hug</option>
+                                            <option value="highfive">High Five</option>
+                                            <option value="walk_to">Character 1 Walks to Character 2</option>
+                                            <option value="give">Give Object</option>
+                                            <option value="sit">Sit</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">Target Object (for give/sit)</label>
+                                        <select id="interactionTargetObject" class="select">
+                                            <option value="">None</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <div class="interaction-preview">
+                                            <button class="btn btn-primary" id="applyInteraction">Apply Interaction</button>
+                                            <button class="btn btn-secondary" id="previewInteraction">Preview</button>
+                                            <button class="btn btn-danger" id="stopInteraction">Stop</button>
+                                        </div>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">Walk Path Preview</label>
+                                        <div id="walkPathPreview" class="walk-path-preview" style="display: none;">
+                                            <canvas id="walkPathCanvas" width="400" height="200"></canvas>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -610,46 +1110,172 @@
                             <div class="pro-tab-panel" id="pro-tab-scene">
                                 <div class="settings-grid">
                                     <div class="setting-item full-width">
-                                        <label class="label">सीन चुनें</label>
+                                        <label class="label">Select Scene</label>
                                         <select id="sceneSelector" class="select"></select>
                                     </div>
+                                    
+                                    <!-- Auto-Direct Section -->
                                     <div class="setting-item full-width">
-                                        <label class="label">पात्र स्थिति</label>
+                                        <label class="label">Auto-Direction</label>
+                                        <div class="auto-direct-panel">
+                                            <button class="btn btn-primary" id="autoDirectScene">Auto-Direct Scene</button>
+                                            <button class="btn btn-secondary" id="showDirectionSuggestions">Show Suggestions</button>
+                                            <div id="directionSuggestions" class="direction-suggestions" style="display: none;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Continuity Validation Section -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">Continuity Check</label>
+                                        <div class="continuity-panel">
+                                            <button class="btn btn-primary" id="runContinuityCheck">Check Continuity</button>
+                                            <button class="btn btn-secondary" id="autoFixContinuity">Apply Auto-Fix</button>
+                                            <div id="continuityResults" class="continuity-results" style="display: none;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Prop Generator Section -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">Prop Generator</label>
+                                        <div class="prop-generator-panel">
+                                            <div class="prop-category-selector">
+                                                <label class="label small-label">Category</label>
+                                                <select id="propCategory" class="select">
+                                                    <option value="">Select Prop Category</option>
+                                                </select>
+                                            </div>
+                                            <div class="prop-type-selector">
+                                                <label class="label small-label">Prop Type</label>
+                                                <select id="propType" class="select" disabled>
+                                                    <option value="">Select Category First</option>
+                                                </select>
+                                            </div>
+                                            <div class="prop-variation-selector">
+                                                <label class="label small-label">Variation</label>
+                                                <select id="propVariation" class="select" disabled>
+                                                    <option value="">Select Prop First</option>
+                                                </select>
+                                            </div>
+                                            <div class="prop-customization-grid">
+                                                <div class="setting-item">
+                                                    <label class="label">Color</label>
+                                                    <input type="color" id="propColor" class="color-input" value="#8b4513">
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Material</label>
+                                                    <select id="propMaterial" class="select"></select>
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Size <span id="propSizeValue">1.0</span></label>
+                                                    <input type="range" id="propSize" min="0.5" max="2" step="0.1" value="1" class="slider">
+                                                </div>
+                                            </div>
+                                            <div class="prop-position-grid">
+                                                <div class="setting-item">
+                                                    <label class="label">X Position <span id="propPosXValue">0</span></label>
+                                                    <input type="range" id="propPosX" min="-20" max="20" step="1" value="0" class="slider">
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Y Position <span id="propPosYValue">-4.5</span></label>
+                                                    <input type="range" id="propPosY" min="-10" max="10" step="0.5" value="-4.5" class="slider">
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Z Position <span id="propPosZValue">-10</span></label>
+                                                    <input type="range" id="propPosZ" min="-30" max="10" step="1" value="-10" class="slider">
+                                                </div>
+                                            </div>
+                                            <div class="prop-actions">
+                                                <button class="btn btn-primary" id="generateProp">Generate Prop</button>
+                                                <button class="btn btn-secondary" id="addPropToScene">Add to Scene</button>
+                                                <button class="btn btn-danger" id="clearGeneratedProps">Clear Generated Props</button>
+                                            </div>
+                                            <div id="generatedPropsList" class="generated-props-list"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Visual Director Section -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">AI Visual Director</label>
+                                        <div class="visual-director-panel">
+                                            <div class="vd-controls">
+                                                <button class="btn btn-primary" id="generateShotPlan">Generate Shot Plan</button>
+                                                <button class="btn btn-secondary" id="applyShotPlan">Apply Shot Plan</button>
+                                                <button class="btn btn-secondary" id="showShotSuggestions">Shot Suggestions</button>
+                                            </div>
+                                            <div class="vd-shot-list" id="shotPlanList" style="display: none;"></div>
+                                            <div class="vd-suggestions" id="shotSuggestions" style="display: none;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="setting-item full-width">
+                                        <label class="label">Character Position</label>
                                         <div id="characterPositionControls"></div>
                                     </div>
                                     <div class="setting-item full-width">
-                                        <label class="label">पात्र एनिमेशन</label>
+                                        <label class="label">Character Animation</label>
                                         <div id="characterAnimationControls"></div>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label" for="sceneDurationPerScene">अवधि <span id="sceneDurValue">8</span>s</label>
-                                        <input type="range" id="sceneDurationPerScene" min="3" max="30" step="1" value="8" class="slider">
+                                        <label class="label" for="sceneDuration">Duration <span id="sceneDurValue">8</span>s</label>
+                                        <input type="range" id="sceneDuration" min="3" max="30" step="1" value="8" class="slider">
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label">ट्रांजिशन इन</label>
+                                        <label class="label">Transition In</label>
                                         <select id="transitionIn" class="select">
-                                            <option value="none">कोई नहीं</option>
-                                            <option value="fade">फेड इन</option>
-                                            <option value="slide-left">स्लाइड लेफ्ट</option>
-                                            <option value="slide-right">स्लाइड राइट</option>
-                                            <option value="zoom">ज़ूम इन</option>
+                                            <option value="none">None</option>
+                                            <option value="fade">Fade In</option>
+                                            <option value="slide-left">Slide Left</option>
+                                            <option value="slide-right">Slide Right</option>
+                                            <option value="zoom">Zoom In</option>
                                         </select>
                                     </div>
                                     <div class="setting-item">
-                                        <label class="label">ट्रांजिशन आउट</label>
+                                        <label class="label">Transition Out</label>
                                         <select id="transitionOut" class="select">
-                                            <option value="none">कोई नहीं</option>
-                                            <option value="fade">फेड आउट</option>
-                                            <option value="slide-left">स्लाइड लेफ्ट</option>
-                                            <option value="slide-right">स्लाइड राइट</option>
-                                            <option value="zoom">ज़ूम आउट</option>
+                                            <option value="none">None</option>
+                                            <option value="fade">Fade Out</option>
+                                            <option value="slide-left">Slide Left</option>
+                                            <option value="slide-right">Slide Right</option>
+                                            <option value="zoom">Zoom Out</option>
                                         </select>
                                     </div>
                                     <div class="setting-item full-width">
-                                        <button class="btn btn-secondary" id="applySceneSettings">सीन सेटिंग्स लागू करें</button>
+                                        <button class="btn btn-secondary" id="applySceneSettings">Apply Scene Settings</button>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Tab -->
+                <div class="pro-tab-panel" id="pro-tab-timeline">
+                    <div class="timeline-editor-container">
+                        <div class="timeline-toolbar">
+                            <div class="toolbar-group">
+                                <button class="btn btn-primary" id="timelineAddVideoTrack">➕ Video Track</button>
+                                <button class="btn btn-secondary" id="timelineAddAudioTrack">🔊 Audio Track</button>
+                                <button class="btn btn-secondary" id="timelineAddTextTrack">📝 Text Track</button>
+                                <button class="btn btn-secondary" id="timelineAddEffectTrack">✨ Effect Track</button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button class="btn btn-secondary" id="timelineImportClips">📥 Import Clips</button>
+                                <button class="btn btn-secondary" id="timelineAutoSequence">🔄 Auto-Sequence</button>
+                                <button class="btn btn-danger" id="timelineClearAll">🗑️ Clear All</button>
+                            </div>
+                            <div class="toolbar-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="timelineSnap" checked> Snap to Grid
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="timelineLoop"> Loop
+                                </label>
+                            </div>
+                        </div>
+                        <div id="timelineContainer" class="timeline-container-wrapper"></div>
+                        <div class="timeline-info-bar">
+                            <span id="timelineSelectedInfo">No clip selected</span>
+                            <span id="timelineTotalDuration">Total Duration: 0s</span>
                         </div>
                     </div>
                 </div>
@@ -660,7 +1286,7 @@
                             <line x1="19" y1="12" x2="5" y2="12"/>
                             <polyline points="12 19 5 12 12 5"/>
                         </svg>
-                        वापस
+                        Back
                     </button>
                     <button class="btn btn-primary btn-lg" id="exportVideoBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
@@ -668,39 +1294,43 @@
                             <polyline points="7 10 12 15 17 10"/>
                             <line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
-                        वीडियो एक्सपोर्ट करें
+                        Export Video
                     </button>
                 </div>
             </section>
 
-            <!-- Step 4: Video Export -->
-            <section class="step-panel" id="step4" data-step="4">
+            <!-- Step 5: Video Export -->
+            <section class="step-panel" id="step5" data-step="5">
                 <div class="panel-header">
-                    <h2>वीडियो एक्सपोर्ट</h2>
-                    <p class="panel-subtitle">अपना वीडियो रेंडर करें और डाउनलोड करें</p>
+                    <h2>Video Export</h2>
+                    <p class="panel-subtitle">Render and download your video</p>
                 </div>
 
-                <div class="export-options">
+                <!-- Export Wizard Container -->
+                <div id="exportWizardContainer"></div>
+
+                <!-- Legacy Export Options (fallback) -->
+                <div class="export-options legacy-export" id="legacyExportOptions" style="display: none;">
                     <div class="option-card">
-                        <h4>रिज़ॉल्यूशन</h4>
+                        <h4>Resolution</h4>
                         <div class="radio-group" id="resolutionOptions">
-                            <label class="radio-label"><input type="radio" name="resolution" value="720p" checked> 720p (1280×720) - तेज़</label>
+                            <label class="radio-label"><input type="radio" name="resolution" value="720p" checked> 720p (1280×720) - Fast</label>
                             <label class="radio-label"><input type="radio" name="resolution" value="1080p"> 1080p (1920×1080) - HD</label>
-                            <label class="radio-label"><input type="radio" name="resolution" value="4k"> 4K (3840×2160) - धीमा</label>
+                            <label class="radio-label"><input type="radio" name="resolution" value="4k"> 4K (3840×2160) - Slow</label>
                         </div>
                     </div>
                     <div class="option-card">
-                        <h4>फ्रेम रेट</h4>
+                        <h4>Frame Rate</h4>
                         <div class="radio-group">
                             <label class="radio-label"><input type="radio" name="framerate" value="30" checked> 30 FPS</label>
                             <label class="radio-label"><input type="radio" name="framerate" value="60"> 60 FPS</label>
                         </div>
                     </div>
                     <div class="option-card">
-                        <h4>फॉर्मेट</h4>
+                        <h4>Format</h4>
                         <div class="radio-group">
                             <label class="radio-label"><input type="radio" name="format" value="webm" checked> WebM (VP9)</label>
-                            <label class="radio-label"><input type="radio" name="format" value="mp4"> MP4 (H.264) - ब्राउज़र सपोर्ट पर निर्भर</label>
+                            <label class="radio-label"><input type="radio" name="format" value="mp4"> MP4 (H.264) - Browser Support Dependent</label>
                         </div>
                     </div>
                 </div>
@@ -713,12 +1343,12 @@
                         </svg>
                         <div class="progress-text">
                             <span id="progressPercent">0%</span>
-                            <p id="progressStatus">तैयार हो रहा है...</p>
+                            <p id="progressStatus">Preparing...</p>
                         </div>
                     </div>
                     <div class="progress-details">
-                        <div class="detail-row"><span>फ्रेम:</span> <span id="framesRendered">0</span> / <span id="totalFrames">0</span></div>
-                        <div class="detail-row"><span>समय बचा:</span> <span id="timeRemaining">--:--</span></div>
+                        <div class="detail-row"><span>Frames:</span> <span id="framesRendered">0</span> / <span id="totalFrames">0</span></div>
+                        <div class="detail-row"><span>Time Remaining:</span> <span id="timeRemaining">--:--</span></div>
                     </div>
                 </div>
 
@@ -726,8 +1356,8 @@
                     <div class="result-icon success">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></div>
                     </div>
-                    <h3>वीडियो तैयार है!</h3>
-                    <p>आपका एनिमेशन वीडियो बनकर तैयार है</p>
+                    <h3>Video Ready!</h3>
+                    <p>Your animation video is ready</p>
                     <video id="exportedVideo" controls style="max-width: 100%; border-radius: 12px; margin: 16px 0;"></video>
                     <div class="action-buttons">
                         <button class="btn btn-primary btn-lg" id="downloadVideoBtn">
@@ -736,7 +1366,7 @@
                                 <polyline points="7 10 12 15 17 10"/>
                                 <line x1="12" y1="15" x2="12" y2="3"/>
                             </svg>
-                            डाउनलोड करें
+                            Download
                         </button>
                         <button class="btn btn-secondary" id="shareVideoBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
@@ -746,7 +1376,7 @@
                                 <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
                                 <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
                             </svg>
-                            शेयर करें
+                            Share
                         </button>
                     </div>
                 </div>
@@ -757,14 +1387,14 @@
                             <line x1="19" y1="12" x2="5" y2="12"/>
                             <polyline points="12 19 5 12 12 5"/>
                         </svg>
-                        वापस
+                        Back
                     </button>
                     <button class="btn btn-primary btn-lg" id="startExportBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
                             <rect x="2" y="2" width="20" height="20" rx="2"/>
                             <path d="M6 12l4 4 8-8"/>
                         </svg>
-                        रेंडर शुरू करें
+                        Start Render
                     </button>
                 </div>
             </section>
@@ -774,19 +1404,23 @@
         <nav class="bottom-nav" id="bottomNav">
             <button class="nav-item active" data-step="1">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <span>कहानी</span>
+                <span>Story</span>
             </button>
             <button class="nav-item" data-step="2">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                <span>सीन</span>
+                <span>Script</span>
             </button>
             <button class="nav-item" data-step="3">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M8 10l4 4 8-8"/></svg>
-                <span>एनिमेशन</span>
+                <span>Scenes</span>
             </button>
             <button class="nav-item" data-step="4">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>
-                <span>एक्सपोर्ट</span>
+                <span>Animation</span>
+            </button>
+            <button class="nav-item" data-step="5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>
+                <span>Export</span>
             </button>
         </nav>
 
@@ -797,7 +1431,7 @@
         <div class="modal-overlay" id="loadingModal" style="display: none;">
             <div class="modal loading-modal">
                 <div class="spinner"></div>
-                <p id="loadingText">प्रोसेसिंग...</p>
+                <p id="loadingText">Processing...</p>
             </div>
         </div>
     </div>
@@ -807,7 +1441,11 @@
     {
         "imports": {
             "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+            "@ffmpeg/ffmpeg": "https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js",
+            "@ffmpeg/util": "https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js",
+            "gif.js": "https://unpkg.com/gif.js@0.2.0/dist/gif.js",
+            "jszip": "https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"
         }
     }
     </script>

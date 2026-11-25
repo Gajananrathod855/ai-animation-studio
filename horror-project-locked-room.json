@@ -1,0 +1,999 @@
+{
+  "version": "2.0",
+  "title": "बंद कमरे में कौन था?",
+  "createdAt": 1732540800000,
+  "updatedAt": 1732540800000,
+  "settings": {
+    "videoStyle": "paper-cutout",
+    "colorTheme": "monochrome",
+    "aspectRatio": "16:9",
+    "sceneDuration": 12,
+    "animationSpeed": 1,
+    "transitionType": "fade",
+    "paperThickness": 3
+  },
+  "exportSettings": {
+    "resolution": "1080p",
+    "framerate": 30,
+    "format": "mp4"
+  },
+  "story": "एक छोटे से भारतीय गाँव में 26 साल का अमन अपने पुराने पुश्तैनी घर में अकेला रहता था। उसके पिता की मृत्यु के बाद घर के पिछले हिस्से का एक कमरा हमेशा बंद रहता था।\n\nएक रात करीब 12 बजे अमन को उस बंद कमरे से किसी के रोने की आवाज सुनाई दी।\n\nपहले उसने सोचा कि शायद बाहर कोई जानवर होगा। लेकिन कुछ देर बाद आवाज फिर आई। इस बार किसी ने साफ कहा, \"अमन... दरवाजा खोलो।\"\n\nअमन के पैरों तले जमीन खिसक गई। क्योंकि उस कमरे की चाबी उसके पास थी और पिछले तीन साल से वह कमरा बंद था।\n\nअगली सुबह उसने पड़ोस में रहने वाले बुजुर्ग शंकर काका से इस बारे में पूछा। अमन की बात सुनकर उनके चेहरे का रंग बदल गया। उन्होंने सिर्फ इतना कहा, \"बेटा, उस कमरे को कभी मत खोलना।\"\n\nलेकिन अमन के मन में सवाल बढ़ते जा रहे थे।\n\nउसी रात उसने मोबाइल का कैमरा चालू किया और कमरे के दरवाजे के सामने रख दिया। रात के ठीक 12 बजे अंदर से तीन बार दस्तक हुई।\n\nफिर अचानक दरवाजे के नीचे से एक पुरानी तस्वीर बाहर सरक आई।\n\nअमन ने तस्वीर उठाई। उसमें उसके पिता खड़े थे और उनके बगल में बिल्कुल अमन जैसा दिखने वाला एक दूसरा युवक था।\n\nतस्वीर के पीछे तारीख लिखी थी—आज से ठीक 26 साल पहले।\n\nअमन घबराकर शंकर काका के घर पहुँचा। बहुत पूछने पर उन्होंने एक ऐसा सच बताया जिसने अमन की जिंदगी बदल दी।\n\nअमन के जन्म के दिन उसके माता-पिता को अस्पताल में दो जुड़वाँ बच्चे हुए थे। लेकिन कुछ ही दिनों बाद दूसरा बच्चा रहस्यमय तरीके से गायब हो गया था। परिवार ने इस बात को हमेशा छिपाकर रखा।\n\nअमन तुरंत घर लौटा। बंद कमरे के अंदर से अब किसी के रोने की आवाज नहीं आ रही थी।\n\nउसने कांपते हाथों से ताला खोला।\n\nकमरे के अंदर एक पुराना बिस्तर, धूल से भरी तस्वीरें और दीवार पर लगी एक बड़ी अलमारी थी।\n\nतभी अलमारी के अंदर से किसी ने तीन बार दस्तक दी।\n\nअमन धीरे-धीरे उसके पास पहुँचा।\n\nअलमारी का दरवाजा अपने आप खुला।\n\nअंदर कोई नहीं था।\n\nलेकिन दीवार पर एक नया फोटो लगा था। उसमें अमन खड़ा था और उसके पीछे वही दूसरा युवक मुस्कुरा रहा था।\n\nअमन ने तुरंत पीछे मुड़कर देखा।\n\nकमरा खाली था।\n\nतभी उसके मोबाइल पर एक अनजान नंबर से संदेश आया—\n\n\"अब तुम्हें पता चल गया कि तुम इस घर में अकेले नहीं हो।\"",
+  "script": {
+    "title": "बंद कमरे में कौन था?",
+    "language": "hi",
+    "scenes": [
+      {
+        "id": "scene_1",
+        "number": 1,
+        "title": "पुश्तैनी घर और बंद कमरा",
+        "location": "पुराना पुश्तैनी घर - बाहरी दृश्य",
+        "timeOfDay": "night",
+        "duration": 10,
+        "narration": "एक छोटे से भारतीय गाँव में 26 साल का अमन अपने पुराने पुश्तैनी घर में अकेला रहता था। उसके पिता की मृत्यु के बाद घर के पिछले हिस्से का एक कमरा हमेशा बंद रहता था।",
+        "dialogues": [],
+        "actions": [
+          {
+            "character": "अमन",
+            "action": "idle",
+            "target": "",
+            "description": "घर के बाहर खड़ा, बंद कमरे की ओर देख रहा है"
+          }
+        ],
+        "cameraNotes": "Wide shot of ancestral house at night, slow dolly toward locked room window",
+        "lightingNotes": "Moonlit, cool blue tones, long shadows",
+        "soundNotes": "Night ambient - crickets, distant owl, wind",
+        "background": "ancestral_house_exterior",
+        "characters": ["अमन"],
+        "duration": 10
+      },
+      {
+        "id": "scene_2",
+        "number": 2,
+        "title": "आधी रात की आवाजें",
+        "location": "अमन का कमरा - रात",
+        "timeOfDay": "night",
+        "duration": 12,
+        "narration": "एक रात करीब 12 बजे अमन को उस बंद कमरे से किसी के रोने की आवाज सुनाई दी। पहले उसने सोचा कि शायद बाहर कोई जानवर होगा। लेकिन कुछ देर बाद आवाज फिर आई। इस बार किसी ने साफ कहा, \"अमन... दरवाजा खोलो।\"",
+        "dialogues": [
+          {
+            "speaker": "अज्ञात आवाज",
+            "text": "अमन... दरवाजा खोलो।",
+            "emotion": "fear",
+            "animation": "talk"
+          }
+        ],
+        "actions": [
+          {
+            "character": "अमन",
+            "action": "idle",
+            "target": "",
+            "description": "बिस्तर पर बैठा, डरा हुआ, दरवाजे की ओर देख रहा है"
+          }
+        ],
+        "cameraNotes": "Close-up on Aman's face, fear reaction. Slow zoom on locked room door",
+        "lightingNotes": "Dim bedroom light, moonlight through window, dramatic shadows",
+        "soundNotes": "Crying sound from behind door, then clear voice whispering 'Aman...', heartbeat sound",
+        "background": "bedroom_night",
+        "characters": ["अमन"],
+        "duration": 12
+      },
+      {
+        "id": "scene_3",
+        "number": 3,
+        "title": "शंकर काका की चेतावनी",
+        "location": "शंकर काका का घर - सुबह",
+        "timeOfDay": "morning",
+        "duration": 10,
+        "narration": "अगली सुबह उसने पड़ोस में रहने वाले बुजुर्ग शंकर काका से इस बारे में पूछा। अमन की बात सुनकर उनके चेहरे का रंग बदल गया। उन्होंने सिर्फ इतना कहा, \"बेटा, उस कमरे को कभी मत खोलना।\"",
+        "dialogues": [
+          {
+            "speaker": "शंकर काका",
+            "text": "बेटा, उस कमरे को कभी मत खोलना।",
+            "emotion": "fear",
+            "animation": "talk"
+          }
+        ],
+        "actions": [
+          {
+            "character": "अमन",
+            "action": "talk",
+            "target": "शंकर काका",
+            "description": "सवाल पूछता हुआ, चिंतित"
+          },
+          {
+            "character": "शंकर काका",
+            "action": "talk",
+            "target": "अमन",
+            "description": "चेहरा गंभीर, चेतावनी देता हुआ"
+          }
+        ],
+        "cameraNotes": "Medium two-shot, over-shoulder from Shankar Kaka, focus on his fearful expression",
+        "lightingNotes": "Morning light through window, warm but ominous",
+        "soundNotes": "Subtle tension music, birds outside contrasting",
+        "background": "village_house_interior",
+        "characters": ["अमन", "शंकर काका"],
+        "duration": 10
+      },
+      {
+        "id": "scene_4",
+        "number": 4,
+        "title": "मोबाइल कैमरा और तस्वीर",
+        "location": "बंद कमरे के सामने - रात",
+        "timeOfDay": "night",
+        "duration": 14,
+        "narration": "उसी रात उसने मोबाइल का कैमरा चालू किया और कमरे के दरवाजे के सामने रख दिया। रात के ठीक 12 बजे अंदर से तीन बार दस्तक हुई। फिर अचानक दरवाजे के नीचे से एक पुरानी तस्वीर बाहर सरक आई।",
+        "dialogues": [],
+        "actions": [
+          {
+            "character": "अमन",
+            "action": "idle",
+            "target": "",
+            "description": "मोबाइल सेट करता हुआ, फिर तस्वीर उठाता हुआ"
+          }
+        ],
+        "cameraNotes": "POV shot from phone camera on floor. Static wide. Then close-up on photo sliding under door",
+        "lightingNotes": "Very dark, only phone screen light, dramatic",
+        "soundNotes": "Three loud knocks from inside room. Photo sliding sound. Tension builds",
+        "background": "hallway_locked_room",
+        "characters": ["अमन"],
+        "duration": 14
+      },
+      {
+        "id": "scene_5",
+        "number": 5,
+        "title": "तस्वीर का रहस्य",
+        "location": "अमन का कमरा - तस्वीर देखते हुए",
+        "timeOfDay": "night",
+        "duration": 12,
+        "narration": "अमन ने तस्वीर उठाई। उसमें उसके पिता खड़े थे और उनके बगल में बिल्कुल अमन जैसा दिखने वाला एक दूसरा युवक था। तस्वीर के पीछे तारीख लिखी थी—आज से ठीक 26 साल पहले।",
+        "dialogues": [
+          {
+            "speaker": "अमन (मन में)",
+            "text": "ये कौन है... जो मेरे जैसा दिखता है? और ये तारीख... 26 साल पहले?",
+            "emotion": "surprised",
+            "animation": "talk"
+          }
+        ],
+        "actions": [
+          {
+            "character": "अमन",
+            "action": "talk",
+            "target": "",
+            "description": "तस्वीर को गौर से देखता हुआ, हैरान"
+          }
+        ],
+        "cameraNotes": "Extreme close-up on photo. Rack focus from photo to Aman's eyes",
+        "lightingNotes": "Single lamp light, photo illuminated, rest in shadow",
+        "soundNotes": "Quiet, tension music, paper handling sounds",
+        "background": "bedroom_night",
+        "characters": ["अमन"],
+        "duration": 12
+      },
+      {
+        "id": "scene_6",
+        "number": 6,
+        "title": "शंकर काका का सच",
+        "location": "शंकर काका का घर - दिन",
+        "timeOfDay": "day",
+        "duration": 14,
+        "narration": "अमन घबराकर शंकर काका के घर पहुँचा। बहुत पूछने पर उन्होंने एक ऐसा सच बताया जिसने अमन की जिंदगी बदल दी। अमन के जन्म के दिन उसके माता-पिता को अस्पताल में दो जुड़वाँ बच्चे हुए थे। लेकिन कुछ ही दिनों बाद दूसरा बच्चा रहस्यमय तरीके से गायब हो गया था। परिवार ने इस बात को हमेशा छिपाकर रखा।",
+        "dialogues": [
+          {
+            "speaker": "शंकर काका",
+            "text": "तुम्हारे जन्म के दिन दो जुड़वाँ बच्चे हुए थे। दूसरा बच्चा... गायब हो गया था। हमने सबसे छुपाया।",
+            "emotion": "sad",
+            "animation": "talk"
+          }
+        ],
+        "actions": [
+          {
+            "character": "अमन",
+            "action": "idle",
+            "target": "",
+            "description": "स्तब्ध खड़ा, सुन रहा है"
+          },
+          {
+            "character": "शंकर काका",
+            "action": "talk",
+            "target": "अमन",
+            "description": "भारी मन से सच बता रहा है"
+          }
+        ],
+        "cameraNotes": "Slow push-in on Shankar Kaka, then reaction shot of Aman. Dutch angle for unease",
+        "lightingNotes": "Harsh daylight, high contrast, shadows on faces",
+        "soundNotes": "Heavy silence, then low drone music",
+        "background": "village_house_interior",
+        "characters": ["अमन", "शंकर काका"],
+        "duration": 14
+      },
+      {
+        "id": "scene_7",
+        "number": 7,
+        "title": "कमरे का ताला खोलना",
+        "location": "बंद कमरा - अंदर",
+        "timeOfDay": "night",
+        "duration": 15,
+        "narration": "अमन तुरंत घर लौटा। बंद कमरे के अंदर से अब किसी के रोने की आवाज नहीं आ रही थी। उसने कांपते हाथों से ताला खोला। कमरे के अंदर एक पुराना बिस्तर, धूल से भरी तस्वीरें और दीवार पर लगी एक बड़ी अलमारी थी। तभी अलमारी के अंदर से किसी ने तीन बार दस्तक दी।",
+        "dialogues": [],
+        "actions": [
+          {
+            "character": "अमन",
+            "action": "walk",
+            "target": "locked_room_door",
+            "description": "कांपते हाथों से ताला खोलता हुआ, अंदर प्रवेश करता है"
+          }
+        ],
+        "cameraNotes": "Handheld, shaky. POV from Aman's perspective. Slow reveal of room interior. Focus on wardrobe",
+        "lightingNotes": "Flashlight beam only, dust motes dancing, very dark",
+        "soundNotes": "Lock turning, door creaking open. Three knocks from wardrobe. Loud, echoing",
+        "background": "locked_room_interior",
+        "characters": ["अमन"],
+        "duration": 15
+      },
+      {
+        "id": "scene_8",
+        "number": 8,
+        "title": "अलमारी का रहस्य और अंत",
+        "location": "बंद कमरा - अलमारी के सामने",
+        "timeOfDay": "night",
+        "duration": 15,
+        "narration": "अमन धीरे-धीरे उसके पास पहुँचा। अलमारी का दरवाजा अपने आप खुला। अंदर कोई नहीं था। लेकिन दीवार पर एक नया फोटो लगा था। उसमें अमन खड़ा था और उसके पीछे वही दूसरा युवक मुस्कुरा रहा था। अमन ने तुरंत पीछे मुड़कर देखा। कमरा खाली था। तभी उसके मोबाइल पर एक अनजान नंबर से संदेश आया— \"अब तुम्हें पता चल गया कि तुम इस घर में अकेले नहीं हो।\"",
+        "dialogues": [
+          {
+            "speaker": "SMS संदेश",
+            "text": "अब तुम्हें पता चल गया कि तुम इस घर में अकेले नहीं हो।",
+            "emotion": "fear",
+            "animation": "idle"
+          }
+        ],
+        "actions": [
+          {
+            "character": "अमन",
+            "action": "walk",
+            "target": "wardrobe",
+            "description": "अलमारी की ओर धीरे-धीरे बढ़ता हुआ"
+          },
+          {
+            "character": "जुड़वाँ (आत्मा)",
+            "action": "idle",
+            "target": "",
+            "description": "फोटो में मुस्कुराता हुआ, फिर गायब"
+          }
+        ],
+        "cameraNotes": "Slow approach to wardrobe. Door opens on its own (supernatural). Reveal photo on wall. Whip pan to empty room. Close-up on phone screen with message. Fade to black",
+        "lightingNotes": "Wardrobe opens - bright light spills out. Then sudden darkness. Phone screen illuminates face",
+        "soundNotes": "Wardrobe creaking open. Supernatural whoosh. Phone notification sound. Final silence. End title",
+        "background": "locked_room_interior",
+        "characters": ["अमन", "जुड़वाँ"],
+        "duration": 15
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "scene_1",
+      "title": "पुश्तैनी घर और बंद कमरा",
+      "description": "एक छोटे से भारतीय गाँव में 26 साल का अमन अपने पुराने पुश्तैनी घर में अकेला रहता था। उसके पिता की मृत्यु के बाद घर के पिछले हिस्से का एक कमरा हमेशा बंद रहता था।",
+      "characters": ["अमन"],
+      "background": "ancestral_house_exterior",
+      "hindiText": "एक छोटे से भारतीय गाँव में 26 साल का अमन अपने पुराने पुश्तैनी घर में अकेला रहता था।",
+      "duration": 10,
+      "characters3d": [
+        {
+          "id": "char_0_0",
+          "bodyType": "adult",
+          "skinTone": 2,
+          "hairStyle": "short",
+          "hairColor": 0,
+          "eyeColor": 0,
+          "clothing": "casual",
+          "shirtColor": "#2c3e50",
+          "pantsColor": "#1a1a2e",
+          "shoesColor": "#0f0f1a",
+          "bodyScale": { "height": 1.0, "width": 0.9, "depth": 0.9 },
+          "headScale": 1.0,
+          "limbLength": 1.0,
+          "expression": "neutral",
+          "expressionIntensity": 0.8
+        }
+      ],
+      "camera": {
+        "type": "perspective",
+        "fov": 45,
+        "distance": 18,
+        "height": 4,
+        "angle": -15,
+        "movement": "dolly",
+        "speed": 0.5,
+        "lookAt": { "x": 0, "y": 1.5, "z": -5 }
+      },
+      "lighting": {
+        "preset": "night",
+        "ambientIntensity": 0.15,
+        "ambientColor": 0x1a1a3e,
+        "keyIntensity": 0.8,
+        "keyColor": 0x87ceeb,
+        "keyAngle": 220,
+        "fillIntensity": 0.05,
+        "fillColor": 0x0a0a2a,
+        "rimIntensity": 0.3,
+        "rimColor": 0x4444aa,
+        "shadowQuality": "high",
+        "exposure": 0.7
+      },
+      "environment": "night",
+      "weather": "clear",
+      "weatherIntensity": 0.3,
+      "timeOfDay": "night",
+      "effects": {
+        "bloom": true,
+        "vignette": true,
+        "filmGrain": true,
+        "chromaticAberration": false,
+        "saturation": 0.6,
+        "contrast": 1.3,
+        "brightness": -0.1,
+        "temperature": -200
+      },
+      "transitionIn": "fade",
+      "transitionOut": "fade"
+    },
+    {
+      "id": "scene_2",
+      "title": "आधी रात की आवाजें",
+      "description": "एक रात करीब 12 बजे अमन को उस बंद कमरे से किसी के रोने की आवाज सुनाई दी। इस बार किसी ने साफ कहा, \"अमन... दरवाजा खोलो।\"",
+      "characters": ["अमन"],
+      "background": "bedroom_night",
+      "hindiText": "एक रात करीब 12 बजे अमन को उस बंद कमरे से किसी के रोने की आवाज सुनाई दी।",
+      "duration": 12,
+      "characters3d": [
+        {
+          "id": "char_1_0",
+          "bodyType": "adult",
+          "skinTone": 2,
+          "hairStyle": "short",
+          "hairColor": 0,
+          "eyeColor": 0,
+          "clothing": "casual",
+          "shirtColor": "#2c3e50",
+          "pantsColor": "#1a1a2e",
+          "shoesColor": "#0f0f1a",
+          "bodyScale": { "height": 1.0, "width": 0.9, "depth": 0.9 },
+          "headScale": 1.0,
+          "limbLength": 1.0,
+          "expression": "fear",
+          "expressionIntensity": 1.0
+        }
+      ],
+      "camera": {
+        "type": "perspective",
+        "fov": 35,
+        "distance": 6,
+        "height": 1.5,
+        "angle": 0,
+        "movement": "static",
+        "speed": 0.3,
+        "lookAt": { "x": 0, "y": 1.6, "z": 0 }
+      },
+      "lighting": {
+        "preset": "night",
+        "ambientIntensity": 0.1,
+        "ambientColor": 0x0d0d1a,
+        "keyIntensity": 1.2,
+        "keyColor": 0xff6633,
+        "keyAngle": 180,
+        "fillIntensity": 0.02,
+        "fillColor": 0x000000,
+        "rimIntensity": 0.4,
+        "rimColor": 0xff3300,
+        "shadowQuality": "ultra",
+        "exposure": 0.6
+      },
+      "environment": "night",
+      "weather": "foggy",
+      "weatherIntensity": 0.2,
+      "timeOfDay": "night",
+      "effects": {
+        "bloom": true,
+        "vignette": true,
+        "filmGrain": true,
+        "chromaticAberration": true,
+        "saturation": 0.4,
+        "contrast": 1.5,
+        "brightness": -0.2,
+        "temperature": -300
+      },
+      "transitionIn": "fade",
+      "transitionOut": "fade"
+    },
+    {
+      "id": "scene_3",
+      "title": "शंकर काका की चेतावनी",
+      "description": "अगली सुबह उसने पड़ोस में रहने वाले बुजुर्ग शंकर काका से इस बारे में पूछा। उनके चेहरे का रंग बदल गया। उन्होंने कहा, \"बेटा, उस कमरे को कभी मत खोलना।\"",
+      "characters": ["अमन", "शंकर काका"],
+      "background": "village_house_interior",
+      "hindiText": "अगली सुबह उसने पड़ोस में रहने वाले बुजुर्ग शंकर काका से इस बारे में पूछा।",
+      "duration": 10,
+      "characters3d": [
+        {
+          "id": "char_2_0",
+          "bodyType": "adult",
+          "skinTone": 2,
+          "hairStyle": "short",
+          "hairColor": 0,
+          "eyeColor": 0,
+          "clothing": "casual",
+          "shirtColor": "#2c3e50",
+          "pantsColor": "#1a1a2e",
+          "shoesColor": "#0f0f1a",
+          "bodyScale": { "height": 1.0, "width": 0.9, "depth": 0.9 },
+          "headScale": 1.0,
+          "limbLength": 1.0,
+          "expression": "fear",
+          "expressionIntensity": 0.9
+        },
+        {
+          "id": "char_2_1",
+          "bodyType": "elderly",
+          "skinTone": 3,
+          "hairStyle": "bald",
+          "hairColor": 0,
+          "eyeColor": 1,
+          "clothing": "traditional",
+          "shirtColor": "#8b7355",
+          "pantsColor": "#5d4e37",
+          "shoesColor": "#3d2b1f",
+          "bodyScale": { "height": 0.95, "width": 0.85, "depth": 0.85 },
+          "headScale": 1.05,
+          "limbLength": 0.95,
+          "expression": "fear",
+          "expressionIntensity": 1.0
+        }
+      ],
+      "camera": {
+        "type": "perspective",
+        "fov": 40,
+        "distance": 8,
+        "height": 1.4,
+        "angle": 10,
+        "movement": "static",
+        "speed": 0.4,
+        "lookAt": { "x": 0, "y": 1.4, "z": 0 }
+      },
+      "lighting": {
+        "preset": "indoor",
+        "ambientIntensity": 0.3,
+        "ambientColor": 0x3d2e1a,
+        "keyIntensity": 1.0,
+        "keyColor": 0xffaa66,
+        "keyAngle": 45,
+        "fillIntensity": 0.15,
+        "fillColor": 0x1a1008,
+        "rimIntensity": 0.2,
+        "rimColor": 0x886644,
+        "shadowQuality": "high",
+        "exposure": 0.9
+      },
+      "environment": "indoor",
+      "weather": "clear",
+      "weatherIntensity": 0,
+      "timeOfDay": "morning",
+      "effects": {
+        "bloom": false,
+        "vignette": true,
+        "filmGrain": true,
+        "chromaticAberration": false,
+        "saturation": 0.7,
+        "contrast": 1.2,
+        "brightness": 0,
+        "temperature": -100
+      },
+      "transitionIn": "fade",
+      "transitionOut": "fade"
+    },
+    {
+      "id": "scene_4",
+      "title": "मोबाइल कैमरा और तस्वीर",
+      "description": "उसी रात उसने मोबाइल का कैमरा चालू किया और कमरे के दरवाजे के सामने रख दिया। रात के ठीक 12 बजे अंदर से तीन बार दस्तक हुई। फिर दरवाजे के नीचे से एक पुरानी तस्वीर बाहर सरक आई।",
+      "characters": ["अमन"],
+      "background": "hallway_locked_room",
+      "hindiText": "उसी रात उसने मोबाइल का कैमरा चालू किया और कमरे के दरवाजे के सामने रख दिया।",
+      "duration": 14,
+      "characters3d": [
+        {
+          "id": "char_3_0",
+          "bodyType": "adult",
+          "skinTone": 2,
+          "hairStyle": "short",
+          "hairColor": 0,
+          "eyeColor": 0,
+          "clothing": "casual",
+          "shirtColor": "#2c3e50",
+          "pantsColor": "#1a1a2e",
+          "shoesColor": "#0f0f1a",
+          "bodyScale": { "height": 1.0, "width": 0.9, "depth": 0.9 },
+          "headScale": 1.0,
+          "limbLength": 1.0,
+          "expression": "surprised",
+          "expressionIntensity": 1.0
+        }
+      ],
+      "camera": {
+        "type": "perspective",
+        "fov": 50,
+        "distance": 10,
+        "height": 0.5,
+        "angle": 0,
+        "movement": "static",
+        "speed": 0,
+        "lookAt": { "x": 0, "y": 0.8, "z": 0 }
+      },
+      "lighting": {
+        "preset": "night",
+        "ambientIntensity": 0.05,
+        "ambientColor": 0x050510,
+        "keyIntensity": 2.0,
+        "keyColor": 0xffffff,
+        "keyAngle": 270,
+        "fillIntensity": 0,
+        "fillColor": 0x000000,
+        "rimIntensity": 0.5,
+        "rimColor": 0x8888ff,
+        "shadowQuality": "ultra",
+        "exposure": 0.5
+      },
+      "environment": "night",
+      "weather": "clear",
+      "weatherIntensity": 0,
+      "timeOfDay": "night",
+      "effects": {
+        "bloom": true,
+        "vignette": true,
+        "filmGrain": true,
+        "chromaticAberration": true,
+        "saturation": 0.3,
+        "contrast": 1.8,
+        "brightness": -0.3,
+        "temperature": -400
+      },
+      "transitionIn": "fade",
+      "transitionOut": "fade"
+    },
+    {
+      "id": "scene_5",
+      "title": "तस्वीर का रहस्य",
+      "description": "अमन ने तस्वीर उठाई। उसमें उसके पिता खड़े थे और उनके बगल में बिल्कुल अमन जैसा दिखने वाला एक दूसरा युवक था। तस्वीर के पीछे तारीख लिखी थी—आज से ठीक 26 साल पहले।",
+      "characters": ["अमन"],
+      "background": "bedroom_night",
+      "hindiText": "अमन ने तस्वीर उठाई। उसमें उसके पिता खड़े थे और उनके बगल में बिल्कुल अमन जैसा दिखने वाला एक दूसरा युवक था।",
+      "duration": 12,
+      "characters3d": [
+        {
+          "id": "char_4_0",
+          "bodyType": "adult",
+          "skinTone": 2,
+          "hairStyle": "short",
+          "hairColor": 0,
+          "eyeColor": 0,
+          "clothing": "casual",
+          "shirtColor": "#2c3e50",
+          "pantsColor": "#1a1a2e",
+          "shoesColor": "#0f0f1a",
+          "bodyScale": { "height": 1.0, "width": 0.9, "depth": 0.9 },
+          "headScale": 1.0,
+          "limbLength": 1.0,
+          "expression": "surprised",
+          "expressionIntensity": 1.0
+        }
+      ],
+      "camera": {
+        "type": "perspective",
+        "fov": 28,
+        "distance": 4,
+        "height": 1.5,
+        "angle": 0,
+        "movement": "dolly",
+        "speed": 0.2,
+        "lookAt": { "x": 0, "y": 1.55, "z": 0 }
+      },
+      "lighting": {
+        "preset": "night",
+        "ambientIntensity": 0.08,
+        "ambientColor": 0x0a0a15,
+        "keyIntensity": 1.5,
+        "keyColor": 0xffdd88,
+        "keyAngle": 180,
+        "fillIntensity": 0.02,
+        "fillColor": 0x000000,
+        "rimIntensity": 0.3,
+        "rimColor": 0xffaa00,
+        "shadowQuality": "high",
+        "exposure": 0.65
+      },
+      "environment": "night",
+      "weather": "clear",
+      "weatherIntensity": 0,
+      "timeOfDay": "night",
+      "effects": {
+        "bloom": true,
+        "vignette": true,
+        "filmGrain": true,
+        "chromaticAberration": false,
+        "saturation": 0.5,
+        "contrast": 1.4,
+        "brightness": -0.15,
+        "temperature": -200
+      },
+      "transitionIn": "fade",
+      "transitionOut": "fade"
+    },
+    {
+      "id": "scene_6",
+      "title": "शंकर काका का सच",
+      "description": "अमन घबराकर शंकर काका के घर पहुँचा। बहुत पूछने पर उन्होंने सच बताया - अमन के जन्म के दिन दो जुड़वाँ बच्चे हुए थे। दूसरा बच्चा रहस्यमय तरीके से गायब हो गया था।",
+      "characters": ["अमन", "शंकर काका"],
+      "background": "village_house_interior",
+      "hindiText": "अमन घबराकर शंकर काका के घर पहुँचा। बहुत पूछने पर उन्होंने सच बताया।",
+      "duration": 14,
+      "characters3d": [
+        {
+          "id": "char_5_0",
+          "bodyType": "adult",
+          "skinTone": 2,
+          "hairStyle": "short",
+          "hairColor": 0,
+          "eyeColor": 0,
+          "clothing": "casual",
+          "shirtColor": "#2c3e50",
+          "pantsColor": "#1a1a2e",
+          "shoesColor": "#0f0f1a",
+          "bodyScale": { "height": 1.0, "width": 0.9, "depth": 0.9 },
+          "headScale": 1.0,
+          "limbLength": 1.0,
+          "expression": "surprised",
+          "expressionIntensity": 1.0
+        },
+        {
+          "id": "char_5_1",
+          "bodyType": "elderly",
+          "skinTone": 3,
+          "hairStyle": "bald",
+          "hairColor": 0,
+          "eyeColor": 1,
+          "clothing": "traditional",
+          "shirtColor": "#8b7355",
+          "pantsColor": "#5d4e37",
+          "shoesColor": "#3d2b1f",
+          "bodyScale": { "height": 0.95, "width": 0.85, "depth": 0.85 },
+          "headScale": 1.05,
+          "limbLength": 0.95,
+          "expression": "sad",
+          "expressionIntensity": 1.0
+        }
+      ],
+      "camera": {
+        "type": "perspective",
+        "fov": 38,
+        "distance": 7,
+        "height": 1.3,
+        "angle": -5,
+        "movement": "handheld",
+        "speed": 0.3,
+        "lookAt": { "x": 0, "y": 1.35, "z": 0 }
+      },
+      "lighting": {
+        "preset": "indoor",
+        "ambientIntensity": 0.25,
+        "ambientColor": 0x2a1a0a,
+        "keyIntensity": 1.3,
+        "keyColor": 0xff8844,
+        "keyAngle": 315,
+        "fillIntensity": 0.1,
+        "fillColor": 0x150800,
+        "rimIntensity": 0.25,
+        "rimColor": 0xaa6633,
+        "shadowQuality": "high",
+        "exposure": 0.8
+      },
+      "environment": "indoor",
+      "weather": "clear",
+      "weatherIntensity": 0,
+      "timeOfDay": "day",
+      "effects": {
+        "bloom": false,
+        "vignette": true,
+        "filmGrain": true,
+        "chromaticAberration": true,
+        "saturation": 0.6,
+        "contrast": 1.3,
+        "brightness": -0.05,
+        "temperature": -150
+      },
+      "transitionIn": "fade",
+      "transitionOut": "fade"
+    },
+    {
+      "id": "scene_7",
+      "title": "कमरे का ताला खोलना",
+      "description": "अमन तुरंत घर लौटा। बंद कमरे के अंदर से अब किसी के रोने की आवाज नहीं आ रही थी। उसने कांपते हाथों से ताला खोला। कमरे के अंदर एक पुराना बिस्तर, धूल से भरी तस्वीरें और दीवार पर लगी एक बड़ी अलमारी थी। तभी अलमारी के अंदर से किसी ने तीन बार दस्तक दी।",
+      "characters": ["अमन"],
+      "background": "locked_room_interior",
+      "hindiText": "अमन तुरंत घर लौटा। बंद कमरे के अंदर से अब किसी के रोने की आवाज नहीं आ रही थी।",
+      "duration": 15,
+      "characters3d": [
+        {
+          "id": "char_6_0",
+          "bodyType": "adult",
+          "skinTone": 2,
+          "hairStyle": "short",
+          "hairColor": 0,
+          "eyeColor": 0,
+          "clothing": "casual",
+          "shirtColor": "#2c3e50",
+          "pantsColor": "#1a1a2e",
+          "shoesColor": "#0f0f1a",
+          "bodyScale": { "height": 1.0, "width": 0.9, "depth": 0.9 },
+          "headScale": 1.0,
+          "limbLength": 1.0,
+          "expression": "fear",
+          "expressionIntensity": 1.0
+        }
+      ],
+      "camera": {
+        "type": "perspective",
+        "fov": 55,
+        "distance": 5,
+        "height": 1.4,
+        "angle": 0,
+        "movement": "handheld",
+        "speed": 0.4,
+        "lookAt": { "x": 2, "y": 1.2, "z": 0 }
+      },
+      "lighting": {
+        "preset": "night",
+        "ambientIntensity": 0.02,
+        "ambientColor": 0x020205,
+        "keyIntensity": 2.5,
+        "keyColor": 0xffffee,
+        "keyAngle": 90,
+        "fillIntensity": 0,
+        "fillColor": 0x000000,
+        "rimIntensity": 0.6,
+        "rimColor": 0xffffff,
+        "shadowQuality": "ultra",
+        "exposure": 0.4
+      },
+      "environment": "night",
+      "weather": "clear",
+      "weatherIntensity": 0,
+      "timeOfDay": "night",
+      "effects": {
+        "bloom": true,
+        "vignette": true,
+        "filmGrain": true,
+        "chromaticAberration": true,
+        "saturation": 0.2,
+        "contrast": 2.0,
+        "brightness": -0.4,
+        "temperature": -500
+      },
+      "transitionIn": "fade",
+      "transitionOut": "fade"
+    },
+    {
+      "id": "scene_8",
+      "title": "अलमारी का रहस्य और अंत",
+      "description": "अमन धीरे-धीरे उसके पास पहुँचा। अलमारी का दरवाजा अपने आप खुला। अंदर कोई नहीं था। लेकिन दीवार पर एक नया फोटो लगा था। उसमें अमन खड़ा था और उसके पीछे वही दूसरा युवक मुस्कुरा रहा था। अमन ने तुरंत पीछे मुड़कर देखा। कमरा खाली था। तभी उसके मोबाइल पर संदेश आया— \"अब तुम्हें पता चल गया कि तुम इस घर में अकेले नहीं हो।\"",
+      "characters": ["अमन", "जुड़वाँ"],
+      "background": "locked_room_interior",
+      "hindiText": "अमन धीरे-धीरे उसके पास पहुँचा। अलमारी का दरवाजा अपने आप खुला। अंदर कोई नहीं था।",
+      "duration": 15,
+      "characters3d": [
+        {
+          "id": "char_7_0",
+          "bodyType": "adult",
+          "skinTone": 2,
+          "hairStyle": "short",
+          "hairColor": 0,
+          "eyeColor": 0,
+          "clothing": "casual",
+          "shirtColor": "#2c3e50",
+          "pantsColor": "#1a1a2e",
+          "shoesColor": "#0f0f1a",
+          "bodyScale": { "height": 1.0, "width": 0.9, "depth": 0.9 },
+          "headScale": 1.0,
+          "limbLength": 1.0,
+          "expression": "fear",
+          "expressionIntensity": 1.0
+        },
+        {
+          "id": "char_7_1",
+          "bodyType": "adult",
+          "skinTone": 1,
+          "hairStyle": "short",
+          "hairColor": 0,
+          "eyeColor": 0,
+          "clothing": "casual",
+          "shirtColor": "#1a1a2e",
+          "pantsColor": "#0f0f1a",
+          "shoesColor": "#000000",
+          "bodyScale": { "height": 1.0, "width": 0.9, "depth": 0.9 },
+          "headScale": 1.0,
+          "limbLength": 1.0,
+          "expression": "happy",
+          "expressionIntensity": 1.0
+        }
+      ],
+      "camera": {
+        "type": "perspective",
+        "fov": 30,
+        "distance": 6,
+        "height": 1.5,
+        "angle": 0,
+        "movement": "static",
+        "speed": 0.2,
+        "lookAt": { "x": 0, "y": 1.6, "z": 0 }
+      },
+      "lighting": {
+        "preset": "night",
+        "ambientIntensity": 0.01,
+        "ambientColor": 0x010102,
+        "keyIntensity": 3.0,
+        "keyColor": 0xffffff,
+        "keyAngle": 180,
+        "fillIntensity": 0,
+        "fillColor": 0x000000,
+        "rimIntensity": 0.8,
+        "rimColor": 0xff0000,
+        "shadowQuality": "ultra",
+        "exposure": 0.3
+      },
+      "environment": "night",
+      "weather": "clear",
+      "weatherIntensity": 0,
+      "timeOfDay": "night",
+      "effects": {
+        "bloom": true,
+        "vignette": true,
+        "filmGrain": true,
+        "chromaticAberration": true,
+        "saturation": 0.1,
+        "contrast": 2.2,
+        "brightness": -0.5,
+        "temperature": -400
+      },
+      "transitionIn": "fade",
+      "transitionOut": "fade"
+    }
+  ],
+  "animationData": {
+    "scenes": [
+      { "index": 0, "startTime": 0, "duration": 10, "transitionDuration": 2.0 },
+      { "index": 1, "startTime": 10, "duration": 12, "transitionDuration": 2.0 },
+      { "index": 2, "startTime": 22, "duration": 10, "transitionDuration": 2.0 },
+      { "index": 3, "startTime": 32, "duration": 14, "transitionDuration": 2.0 },
+      { "index": 4, "startTime": 46, "duration": 12, "transitionDuration": 2.0 },
+      { "index": 5, "startTime": 58, "duration": 14, "transitionDuration": 2.0 },
+      { "index": 6, "startTime": 72, "duration": 15, "transitionDuration": 2.0 },
+      { "index": 7, "startTime": 87, "duration": 15, "transitionDuration": 3.0 }
+    ],
+    "totalDuration": 102
+  },
+  "audio": {
+    "music": {
+      "genre": "horror",
+      "tempo": 60,
+      "crossfade": true,
+      "scenes": [
+        { "sceneIndex": 0, "genre": "ambient", "tempo": 50 },
+        { "sceneIndex": 1, "genre": "horror", "tempo": 55 },
+        { "sceneIndex": 2, "genre": "horror", "tempo": 50 },
+        { "sceneIndex": 3, "genre": "horror", "tempo": 60 },
+        { "sceneIndex": 4, "genre": "horror", "tempo": 55 },
+        { "sceneIndex": 5, "genre": "horror", "tempo": 50 },
+        { "sceneIndex": 6, "genre": "horror", "tempo": 65 },
+        { "sceneIndex": 7, "genre": "horror", "tempo": 70 }
+      ]
+    },
+    "soundEffects": [
+      { "sceneIndex": 1, "time": 2, "sfx": "thunder", "volume": 0.4 },
+      { "sceneIndex": 1, "time": 4, "sfx": "creak", "volume": 0.6 },
+      { "sceneIndex": 1, "time": 8, "sfx": "whisper", "volume": 0.5 },
+      { "sceneIndex": 3, "time": 0.5, "sfx": "knock", "volume": 0.8 },
+      { "sceneIndex": 3, "time": 1.5, "sfx": "knock", "volume": 0.8 },
+      { "sceneIndex": 3, "time": 2.5, "sfx": "knock", "volume": 0.8 },
+      { "sceneIndex": 3, "time": 10, "sfx": "paper_slide", "volume": 0.7 },
+      { "sceneIndex": 6, "time": 3, "sfx": "lock_turn", "volume": 0.6 },
+      { "sceneIndex": 6, "time": 5, "sfx": "door_creak", "volume": 0.7 },
+      { "sceneIndex": 6, "time": 12, "sfx": "knock", "volume": 0.9 },
+      { "sceneIndex": 6, "time": 13, "sfx": "knock", "volume": 0.9 },
+      { "sceneIndex": 6, "time": 14, "sfx": "knock", "volume": 0.9 },
+      { "sceneIndex": 7, "time": 8, "sfx": "wardrobe_creak", "volume": 0.8 },
+      { "sceneIndex": 7, "time": 10, "sfx": "supernatural_whoosh", "volume": 0.7 },
+      { "sceneIndex": 7, "time": 14, "sfx": "phone_notification", "volume": 1.0 }
+    ],
+    "voiceover": {
+      "enabled": true,
+      "language": "hi",
+      "voice": "Google Hindi Female",
+      "rate": 0.9,
+      "pitch": 1.0,
+      "volume": 1.0
+    },
+    "subtitles": {
+      "enabled": true,
+      "language": "hi",
+      "fontSize": 18,
+      "position": "bottom",
+      "background": true
+    }
+  },
+  "timeline": {
+    "tracks": [
+      {
+        "id": "video_main",
+        "type": "video",
+        "name": "Main Video",
+        "clips": [
+          { "id": "clip_1", "type": "video", "name": "Scene 1: Ancestral House", "startTime": 0, "duration": 10, "color": "#1a1a2e", "metadata": { "sceneIndex": 0 } },
+          { "id": "clip_2", "type": "video", "name": "Scene 2: Midnight Sounds", "startTime": 10, "duration": 12, "color": "#0d0d1a", "metadata": { "sceneIndex": 1 } },
+          { "id": "clip_3", "type": "video", "name": "Scene 3: Shankar Kaka Warning", "startTime": 22, "duration": 10, "color": "#2a1a0a", "metadata": { "sceneIndex": 2 } },
+          { "id": "clip_4", "type": "video", "name": "Scene 4: Camera & Photo", "startTime": 32, "duration": 14, "color": "#050510", "metadata": { "sceneIndex": 3 } },
+          { "id": "clip_5", "type": "video", "name": "Scene 5: Photo Mystery", "startTime": 46, "duration": 12, "color": "#0a0a15", "metadata": { "sceneIndex": 4 } },
+          { "id": "clip_6", "type": "video", "name": "Scene 6: The Truth", "startTime": 58, "duration": 14, "color": "#2a1a0a", "metadata": { "sceneIndex": 5 } },
+          { "id": "clip_7", "type": "video", "name": "Scene 7: Unlocking Room", "startTime": 72, "duration": 15, "color": "#020205", "metadata": { "sceneIndex": 6 } },
+          { "id": "clip_8", "type": "video", "name": "Scene 8: Wardrobe & Ending", "startTime": 87, "duration": 15, "color": "#010102", "metadata": { "sceneIndex": 7 } }
+        ]
+      },
+      {
+        "id": "audio_music",
+        "type": "audio",
+        "name": "Horror Music",
+        "clips": [
+          { "id": "music_1", "type": "audio", "name": "Ambient Horror", "startTime": 0, "duration": 102, "color": "#8b0000", "metadata": { "genre": "horror", "loop": true } }
+        ]
+      },
+      {
+        "id": "audio_sfx",
+        "type": "audio",
+        "name": "Sound Effects",
+        "clips": [
+          { "id": "sfx_1", "type": "audio", "name": "Thunder", "startTime": 12, "duration": 3, "color": "#ff4444", "metadata": { "sfx": "thunder" } },
+          { "id": "sfx_2", "type": "audio", "name": "Creak", "startTime": 14, "duration": 2, "color": "#ff6666", "metadata": { "sfx": "creak" } },
+          { "id": "sfx_3", "type": "audio", "name": "Whisper", "startTime": 18, "duration": 2, "color": "#ff8888", "metadata": { "sfx": "whisper" } },
+          { "id": "sfx_4", "type": "audio", "name": "Knock 1", "startTime": 32.5, "duration": 1, "color": "#ffaa00", "metadata": { "sfx": "knock" } },
+          { "id": "sfx_5", "type": "audio", "name": "Knock 2", "startTime": 33.5, "duration": 1, "color": "#ffaa00", "metadata": { "sfx": "knock" } },
+          { "id": "sfx_6", "type": "audio", "name": "Knock 3", "startTime": 34.5, "duration": 1, "color": "#ffaa00", "metadata": { "sfx": "knock" } },
+          { "id": "sfx_7", "type": "audio", "name": "Paper Slide", "startTime": 42, "duration": 2, "color": "#ffcc00", "metadata": { "sfx": "paper_slide" } },
+          { "id": "sfx_8", "type": "audio", "name": "Lock Turn", "startTime": 75, "duration": 2, "color": "#8888ff", "metadata": { "sfx": "lock_turn" } },
+          { "id": "sfx_9", "type": "audio", "name": "Door Creak", "startTime": 77, "duration": 2, "color": "#8888ff", "metadata": { "sfx": "door_creak" } },
+          { "id": "sfx_10", "type": "audio", "name": "Wardrobe Knocks", "startTime": 84, "duration": 3, "color": "#ff0000", "metadata": { "sfx": "knock" } },
+          { "id": "sfx_11", "type": "audio", "name": "Wardrobe Open", "startTime": 95, "duration": 2, "color": "#ff2222", "metadata": { "sfx": "wardrobe_creak" } },
+          { "id": "sfx_12", "type": "audio", "name": "Supernatural Whoosh", "startTime": 97, "duration": 2, "color": "#ff0000", "metadata": { "sfx": "supernatural_whoosh" } },
+          { "id": "sfx_13", "type": "audio", "name": "Phone Notification", "startTime": 101, "duration": 1, "color": "#00ffff", "metadata": { "sfx": "phone_notification" } }
+        ]
+      },
+      {
+        "id": "text_subtitles",
+        "type": "text",
+        "name": "Hindi Subtitles",
+        "clips": [
+          { "id": "sub_1", "type": "text", "name": "Scene 1 Narration", "startTime": 0, "duration": 10, "color": "#f59e0b", "metadata": { "text": "एक छोटे से भारतीय गाँव में 26 साल का अमन अपने पुराने पुश्तैनी घर में अकेला रहता था।" } },
+          { "id": "sub_2", "type": "text", "name": "Scene 2 Narration", "startTime": 10, "duration": 12, "color": "#f59e0b", "metadata": { "text": "एक रात करीब 12 बजे अमन को उस बंद कमरे से किसी के रोने की आवाज सुनाई दी।" } },
+          { "id": "sub_3", "type": "text", "name": "Voice: Aman...", "startTime": 18, "duration": 4, "color": "#ff4444", "metadata": { "text": "\"अमन... दरवाजा खोलो।\"" } },
+          { "id": "sub_4", "type": "text", "name": "Scene 3 Narration", "startTime": 22, "duration": 10, "color": "#f59e0b", "metadata": { "text": "अगली सुबह उसने पड़ोस में रहने वाले बुजुर्ग शंकर काका से इस बारे में पूछा।" } },
+          { "id": "sub_5", "type": "text", "name": "Shankar Kaka", "startTime": 28, "duration": 4, "color": "#ff4444", "metadata": { "text": "\"बेटा, उस कमरे को कभी मत खोलना।\"" } },
+          { "id": "sub_6", "type": "text", "name": "Scene 4 Narration", "startTime": 32, "duration": 14, "color": "#f59e0b", "metadata": { "text": "उसी रात उसने मोबाइल का कैमरा चालू किया और कमरे के दरवाजे के सामने रख दिया।" } },
+          { "id": "sub_7", "type": "text", "name": "Knocks", "startTime": 32.5, "duration": 3, "color": "#ffaa00", "metadata": { "text": "*तीन बार दस्तक*" } },
+          { "id": "sub_8", "type": "text", "name": "Scene 5 Narration", "startTime": 46, "duration": 12, "color": "#f59e0b", "metadata": { "text": "अमन ने तस्वीर उठाई। उसमें उसके पिता खड़े थे और उनके बगल में बिल्कुल अमन जैसा दिखने वाला एक दूसरा युवक था।" } },
+          { "id": "sub_9", "type": "text", "name": "Scene 6 Narration", "startTime": 58, "duration": 14, "color": "#f59e0b", "metadata": { "text": "अमन घबराकर शंकर काका के घर पहुँचा। बहुत पूछने पर उन्होंने सच बताया।" } },
+          { "id": "sub_10", "type": "text", "name": "Shankar Kaka Truth", "startTime": 64, "duration": 8, "color": "#ff4444", "metadata": { "text": "\"तुम्हारे जन्म के दिन दो जुड़वाँ बच्चे हुए थे। दूसरा बच्चा गायब हो गया था।\"" } },
+          { "id": "sub_11", "type": "text", "name": "Scene 7 Narration", "startTime": 72, "duration": 15, "color": "#f59e0b", "metadata": { "text": "अमन तुरंत घर लौटा। बंद कमरे के अंदर से अब किसी के रोने की आवाज नहीं आ रही थी।" } },
+          { "id": "sub_12", "type": "text", "name": "Wardrobe Knocks", "startTime": 84, "duration": 3, "color": "#ffaa00", "metadata": { "text": "*अलमारी से तीन बार दस्तक*" } },
+          { "id": "sub_13", "type": "text", "name": "Scene 8 Narration", "startTime": 87, "duration": 15, "color": "#f59e0b", "metadata": { "text": "अलमारी का दरवाजा अपने आप खुला। दीवार पर एक नया फोटो था जिसमें अमन और वो दूसरा युवक था।" } },
+          { "id": "sub_14", "type": "text", "name": "Final SMS", "startTime": 101, "duration": 4, "color": "#00ffff", "metadata": { "text": "\"अब तुम्हें पता चल गया कि तुम इस घर में अकेले नहीं हो।\"" } }
+        ]
+      }
+    ]
+  }
+}

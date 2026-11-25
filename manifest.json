@@ -1,7 +1,7 @@
 {
-    "name": "3D पेपर एनिमेशन वीडियो क्रिएटर",
-    "short_name": "पेपर एनिमेशन",
-    "description": "रंगीन 3D पेपर कटआउट एनिमेशन वीडियो बनाएं - केवल आपके एंड्रॉइड फोन पर",
+    "name": "3D Paper Animation Video Creator",
+    "short_name": "Paper Animation",
+    "description": "Create colorful 3D paper cutout animation videos - on your Android phone only",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#f8f9fa",
@@ -19,10 +19,10 @@
     "screenshots": [],
     "shortcuts": [
         {
-            "name": "नई कहानी",
-            "short_name": "नई कहानी",
+            "name": "New Story",
+            "short_name": "New Story",
             "url": "/?new=1",
-            "description": "एक नई कहानी से शुरू करें"
+            "description": "Start with a new story"
         }
     ]
 }

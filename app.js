@@ -16,6 +16,17 @@
 // Import 3D Character System
 import { Character3D } from './character3d.js';
 import { CLOTHING_PRESETS, SKIN_TONES, HAIR_COLORS, EYE_COLORS } from './characters.js';
+import { assetLibrary, SceneAssetManager, ASSET_CATEGORIES, ALL_ASSETS } from './assets.js';
+import { DirectionParser, CharacterDirector, autoDirectScene, getDirectionSuggestions } from './direction.js';
+import { ScriptManager, SCRIPT_TEMPLATES, createScriptFromTemplate, syncScriptToAnimation, generateSubtitlesFromScript } from './script.js';
+import { ContinuityValidator, generateFixSuggestions, CONTINUITY_CHECKS } from './continuity.js';
+import { PropGenerator, PROP_CATEGORIES, PROP_VARIATIONS, MATERIAL_PRESETS, PROP_CUSTOMIZATION_OPTIONS } from './propGenerator.js';
+import { VisualDirector, autoDirectWithVisualDirector, getShotSuggestions, SHOT_TYPES, CAMERA_MOVEMENTS, SCENE_SHOT_RULES, COMPOSITION_RULES, TRANSITION_TYPES } from './visualDirector.js';
+import { EffectManager, PARTICLE_TYPES, POST_PROCESSING_EFFECTS, WEATHER_PRESETS, EFFECT_SHADERS } from './effects.js';
+import { AudioManager, MusicGenerator, INSTRUMENTS, GENRE_TEMPLATES, SOUND_EFFECTS, MUSICAL_SCALES, CHORD_PROGRESSIONS } from './audio.js';
+import { MultiTrackTimeline, TimelineUI, TimelineClip, TimelineTrack, TRACK_TYPES } from './timeline.js';
+import { ExportManager, createExportUI, EXPORT_FORMATS, EXPORT_PRESETS, RESOLUTIONS } from './export.js';
+import { ProjectManager, createProjectUI, PROJECT_SCHEMA } from './projectManager.js';
 
 // ========================================
 // Global State Management
@@ -56,6 +67,15 @@ const AppState = {
         characters: [],  // Legacy paper-cutout characters
         characters3d: [],  // New 3D human characters
         backgrounds: [],
+        assetManager: null,  // Asset library manager
+        propGenerator: null,  // Procedural prop generator
+        visualDirector: null,  // AI Visual Director
+        effectManager: null,  // Visual Effects Manager
+        audioManager: null,  // Enhanced Audio Manager
+        timeline: null,  // Multi-track timeline
+        timelineUI: null,  // Timeline UI controller
+        exportManager: null,  // Video Export Manager
+        projectManager: null,  // Project Manager
         currentScene: 0,
         transitionProgress: 0,
         isTransitioning: false,
@@ -378,6 +398,181 @@ const BackgroundTemplates = {
             { type: 'cactus', template: 'cactus', count: 3, depth: -1 },
             { type: 'sand', color: '#f4e4bc', depth: 0 }
         ]
+    },
+    // NEW: Expanded backgrounds
+    city: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'skyscrapers', template: 'building', count: 5, depth: -5, scale: 2 },
+            { type: 'buildings-mid', template: 'building', count: 8, depth: -2, scale: 1.5 },
+            { type: 'street', color: '#444444', depth: 0 },
+            { type: 'streetlights', template: 'streetlight', count: 6, depth: 0.5 },
+            { type: 'cars', template: 'car', count: 4, depth: 0.3 },
+            { type: 'sidewalk', color: '#cccccc', depth: 0.1 }
+        ]
+    },
+    mountain: {
+        layers: [
+            { type: 'sky', color: '#b0d4f3', depth: -15 },
+            { type: 'peaks-back', color: '#8aa3b8', depth: -8, count: 4 },
+            { type: 'peaks-mid', color: '#6b8a9e', depth: -4, count: 3 },
+            { type: 'peaks-front', color: '#4a6a7e', depth: -1, count: 2 },
+            { type: 'pine-trees', template: 'pineTree', count: 6, depth: 0 },
+            { type: 'rocks', color: '#808080', depth: 0.5, count: 8 },
+            { type: 'snow-caps', color: '#ffffff', depth: -3, count: 3 }
+        ]
+    },
+    beach: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'sun', template: 'sun', depth: -8, position: [5, 5] },
+            { type: 'ocean', color: '#0077be', depth: -2 },
+            { type: 'waves', color: '#ffffff', depth: -0.5, count: 5 },
+            { type: 'sand', color: '#f5deb3', depth: 0 },
+            { type: 'palm-trees', template: 'tree', count: 4, depth: 0.5, scale: 1.5 },
+            { type: 'shells', template: 'flower', count: 6, depth: 0.3, color: '#fff8dc' }
+        ]
+    },
+    park: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'trees-back', template: 'tree', count: 6, depth: -3, scale: 1.3 },
+            { type: 'grass', color: '#7cfc00', depth: 0 },
+            { type: 'path', color: '#d2b48c', depth: 0.1 },
+            { type: 'benches', template: 'bench', count: 3, depth: 0.5 },
+            { type: 'fountain', template: 'circle', count: 1, depth: 0.5, color: '#4a90d9', size: 2 },
+            { type: 'flowers', template: 'flower', count: 10, depth: 0.3 },
+            { type: 'lamps', template: 'streetlight', count: 4, depth: 1 }
+        ]
+    },
+    farm: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'barn', template: 'building', count: 1, depth: -3, scale: 2 },
+            { type: 'fields', color: '#daa520', depth: -1, count: 4 },
+            { type: 'crops', template: 'bush', count: 12, depth: 0, colors: ['#228b22', '#daa520', '#ff6347'] },
+            { type: 'tractor', template: 'car', count: 1, depth: 0.5, scale: 1.2 },
+            { type: 'fence', color: '#8b4513', depth: 0.2, count: 20 },
+            { type: 'animals', template: 'cow', count: 3, depth: 0.5 }
+        ]
+    },
+    hospital: {
+        layers: [
+            { type: 'sky', color: '#e8f5e9', depth: -10 },
+            { type: 'building-main', template: 'building', count: 1, depth: -3, scale: 1.5 },
+            { type: 'parking', color: '#cccccc', depth: 0 },
+            { type: 'ambulance', template: 'car', count: 1, depth: 0.5, color: '#ffffff' },
+            { type: 'cross', template: 'circle', count: 1, depth: -2, color: '#ff0000', size: 1 },
+            { type: 'trees', template: 'tree', count: 4, depth: 1 }
+        ]
+    },
+    school_building: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'building-main', template: 'building', count: 1, depth: -4, scale: 1.8 },
+            { type: 'playground', color: '#ffd700', depth: 0 },
+            { type: 'flag', template: 'flag', count: 1, depth: -2, color: '#ff6347' },
+            { type: 'buses', template: 'car', count: 2, depth: 0.3, color: '#ffcc00' },
+            { type: 'trees', template: 'tree', count: 5, depth: 1 }
+        ]
+    },
+    marketplace: {
+        layers: [
+            { type: 'sky', color: '#ffe4b5', depth: -10 },
+            { type: 'stalls', template: 'building', count: 6, depth: -2, scale: 1.2 },
+            { type: 'ground', color: '#d2b48c', depth: 0 },
+            { type: 'crowd', template: 'circle', count: 15, depth: 0.3, color: '#8b4513', size: 0.5 },
+            { type: 'goods', template: 'box', count: 20, depth: 0.5, colors: ['#ff6347', '#ffd700', '#32cd32', '#ff69b4'] },
+            { type: 'canopy', color: '#ffa500', depth: -1 }
+        ]
+    },
+    temple: {
+        layers: [
+            { type: 'sky', color: '#fff8dc', depth: -10 },
+            { type: 'structure-main', template: 'building', count: 1, depth: -4, scale: 1.5 },
+            { type: 'steps', color: '#d4c4a8', depth: 0, count: 10 },
+            { type: 'pillars', template: 'cylinder', count: 8, depth: -1, color: '#f5f5dc' },
+            { type: 'bells', template: 'circle', count: 4, depth: -3, color: '#ffd700', size: 0.5 },
+            { type: 'offerings', template: 'flower', count: 10, depth: 0.5, color: '#ff69b4' }
+        ]
+    },
+    railway: {
+        layers: [
+            { type: 'sky', color: '#b0c4de', depth: -10 },
+            { type: 'tracks', color: '#333333', depth: 0, count: 2 },
+            { type: 'platform', color: '#808080', depth: 0.1 },
+            { type: 'train', template: 'car', count: 5, depth: 0.3, scale: 3, color: '#4169e1' },
+            { type: 'station', template: 'building', count: 1, depth: -2, scale: 1.5 },
+            { type: 'signals', template: 'trafficLight', count: 2, depth: 1 }
+        ]
+    },
+    airport: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -15 },
+            { type: 'terminal', template: 'building', count: 1, depth: -5, scale: 2 },
+            { type: 'runway', color: '#444444', depth: 0, count: 2 },
+            { type: 'planes', template: 'car', count: 3, depth: -2, scale: 2, color: '#ffffff' },
+            { type: 'control-tower', template: 'streetlight', count: 1, depth: -3, scale: 3 },
+            { type: 'hangars', template: 'building', count: 2, depth: -1, scale: 1.5 }
+        ]
+    },
+    sunset: {
+        layers: [
+            { type: 'sky-gradient', colors: ['#ff6b35', '#f7931e', '#ffcc70', '#a8d0e6'], depth: -10 },
+            { type: 'sun', template: 'sun', depth: -8, position: [0, 1] },
+            { type: 'silhouettes', color: '#1a1a2e', depth: -3, count: 5 },
+            { type: 'birds', template: 'bird', count: 8, depth: -5 },
+            { type: 'ground', color: '#2d1b3d', depth: 0 }
+        ]
+    },
+    night: {
+        layers: [
+            { type: 'sky', color: '#0d0d2b', depth: -10 },
+            { type: 'moon', template: 'circle', depth: -8, color: '#f5f5dc', size: 2, position: [5, 4] },
+            { type: 'stars', color: '#ffffff', depth: -9, count: 200 },
+            { type: 'city-lights', color: '#ffd700', depth: -3, count: 30 },
+            { type: 'streetlights', template: 'streetlight', count: 8, depth: 0.5 },
+            { type: 'ground', color: '#1a1a2e', depth: 0 }
+        ]
+    },
+    rainy: {
+        layers: [
+            { type: 'sky', color: '#4a4a6a', depth: -10 },
+            { type: 'clouds-dark', color: '#2d2d44', depth: -6, count: 8 },
+            { type: 'rain', template: 'line', count: 100, depth: 0, color: 'rgba(173,216,230,0.6)' },
+            { type: 'puddles', template: 'circle', count: 20, depth: 0.1, color: 'rgba(173,216,230,0.3)' },
+            { type: 'ground-wet', color: '#2d2d44', depth: 0 },
+            { type: 'umbrellas', template: 'circle', count: 5, depth: 0.5, colors: ['#ff0000', '#0000ff', '#ffff00', '#ff69b4'] }
+        ]
+    },
+    snowy: {
+        layers: [
+            { type: 'sky', color: '#e8f0fe', depth: -10 },
+            { type: 'snowfall', template: 'circle', count: 150, depth: 0, color: '#ffffff', size: 0.1 },
+            { type: 'ground-snow', color: '#ffffff', depth: 0 },
+            { type: 'trees-snow', template: 'pineTree', count: 6, depth: 0.5, snow: true },
+            { type: 'snowman', template: 'circle', count: 2, depth: 0.5, color: '#ffffff', sizes: [0.8, 0.5, 0.3] },
+            { type: 'footprints', template: 'oval', count: 10, depth: 0.1, color: '#d0d0e0' }
+        ]
+    },
+    autumn: {
+        layers: [
+            { type: 'sky', color: '#ffe4b5', depth: -10 },
+            { type: 'trees-autumn', template: 'tree', count: 8, depth: -2, colors: ['#ff8c00', '#ff4500', '#ffd700', '#8b4513'] },
+            { type: 'leaves-falling', template: 'leaf', count: 50, depth: 0, colors: ['#ff8c00', '#ff4500', '#ffd700', '#a0522d'] },
+            { type: 'ground-leaves', color: '#a0522d', depth: 0 },
+            { type: 'pumpkins', template: 'circle', count: 4, depth: 0.3, color: '#ff7518', size: 0.5 }
+        ]
+    },
+    spring: {
+        layers: [
+            { type: 'sky', color: '#e0ffff', depth: -10 },
+            { type: 'cherry-blossoms', template: 'flower', count: 20, depth: -1, color: '#ffb7c5' },
+            { type: 'grass-green', color: '#7cfc00', depth: 0 },
+            { type: 'flowers', template: 'flower', count: 15, depth: 0.3, colors: ['#ff69b4', '#ffd700', '#9370db', '#ff6347'] },
+            { type: 'butterflies', template: 'butterfly', count: 8, depth: 0.5 },
+            { type: 'birds', template: 'bird', count: 6, depth: -3 }
+        ]
     }
 };
 
@@ -458,7 +653,7 @@ function showToast(message, type = 'info', duration = 3000) {
 // ========================================
 // Loading Modal
 // ========================================
-function showLoading(text = 'प्रोसेसिंग...') {
+function showLoading(text = 'Processing...') {
     $('#loadingText').textContent = text;
     $('#loadingModal').style.display = 'flex';
 }
@@ -468,83 +663,751 @@ function hideLoading() {
 }
 
 // ========================================
-// Scene Generation Logic
+// Scene Generation Logic (Enhanced)
 // ========================================
+
+// Enhanced character database with roles and attributes
+const CHARACTER_DATABASE = {
+    animals: {
+        'खरगोश': { role: 'protagonist', traits: ['fast', 'curious', 'small'] },
+        'बिल्ली': { role: 'supporting', traits: ['agile', 'independent', 'cunning'] },
+        'कुत्ता': { role: 'companion', traits: ['loyal', 'brave', 'friendly'] },
+        'पक्षी': { role: 'messenger', traits: ['free', 'observant', 'swift'] },
+        'तितली': { role: 'guide', traits: ['delicate', 'colorful', 'transformative'] },
+        'हाथी': { role: 'wise_elder', traits: ['strong', 'wise', 'gentle'] },
+        'शेर': { role: 'antagonist_or_king', traits: ['powerful', 'majestic', 'authoritative'] },
+        'बंदर': { role: 'trickster', traits: ['playful', 'clever', 'mischievous'] },
+        'चूहा': { role: 'sidekick', traits: ['small', 'resourceful', 'brave'] },
+        'कछुआ': { role: 'mentor', traits: ['slow', 'patient', 'wise'] },
+        'मोर': { role: 'beauty', traits: ['proud', 'graceful', 'colorful'] },
+        'तोता': { role: 'messenger', traits: ['talkative', 'colorful', 'loyal'] },
+        'गाय': { role: 'nurturer', traits: ['gentle', 'giving', 'calm'] },
+        'भैंस': { role: 'worker', traits: ['strong', 'hardworking', 'steady'] },
+        'बकरी': { role: 'climber', traits: ['agile', 'curious', 'stubborn'] },
+        'भेड़': { role: 'follower', traits: ['gentle', 'flock-oriented', 'soft'] }
+    },
+    humans: {
+        'लड़का': { role: 'protagonist', traits: ['curious', 'brave', 'growing'] },
+        'लड़की': { role: 'protagonist', traits: ['smart', 'kind', 'determined'] },
+        'बच्चा': { role: 'protagonist', traits: ['innocent', 'curious', 'learning'] },
+        'बूढ़ा': { role: 'mentor', traits: ['wise', 'experienced', 'patient'] },
+        'बूढ़ी': { role: 'mentor', traits: ['wise', 'caring', 'magical'] },
+        'राजा': { role: 'authority', traits: ['powerful', 'responsible', 'wise'] },
+        'रानी': { role: 'authority', traits: ['graceful', 'wise', 'protective'] },
+        'परी': { role: 'magical_helper', traits: ['magical', 'kind', 'ethereal'] },
+        'दानव': { role: 'antagonist', traits: ['powerful', 'scary', 'misunderstood'] },
+        'जादूगर': { role: 'mentor', traits: ['wise', 'mysterious', 'powerful'] },
+        'सैनिक': { role: 'protector', traits: ['brave', 'disciplined', 'loyal'] },
+        'किसान': { role: 'worker', traits: ['hardworking', 'patient', 'grounded'] },
+        'डॉक्टर': { role: 'healer', traits: ['caring', 'knowledgeable', 'calm'] },
+        'शिक्षक': { role: 'mentor', traits: ['patient', 'wise', 'encouraging'] }
+    }
+};
+
+// Background database with mood and time variations
+const BACKGROUND_DATABASE = {
+    'जंगल': { 
+        keywords: ['जंगल', 'वन', 'पेड़', 'झाड़ी', 'जंगली', 'वन्य'],
+        moods: { day: 'bright_forest', night: 'dark_forest', morning: 'misty_forest', evening: 'golden_forest' },
+        props: ['tree', 'bush', 'rock', 'flower']
+    },
+    'नदी': { 
+        keywords: ['नदी', 'नहर', 'पानी', 'तालाब', 'झील', 'समुद्र', 'नदी किनारे', 'घाट'],
+        moods: { day: 'clear_river', night: 'moonlit_river', morning: 'misty_river', evening: 'sunset_river' },
+        props: ['rock', 'flower', 'tree', 'bench']
+    },
+    'पहाड़': { 
+        keywords: ['पहाड़', 'पर्वत', 'चोटी', 'पहाड़ी', 'ऊंचाई'],
+        moods: { day: 'clear_mountain', night: 'starry_mountain', morning: 'misty_mountain', evening: 'sunset_mountain' },
+        props: ['rock', 'tree', 'bush']
+    },
+    'गांव': { 
+        keywords: ['गांव', 'ग्राम', 'घर', 'झोपड़ी', 'कुटीर', 'आंगन', 'खेत'],
+        moods: { day: 'vibrant_village', night: 'peaceful_village', morning: 'busy_village', evening: 'calm_village' },
+        props: ['house', 'tree', 'bench', 'well', 'cart']
+    },
+    'शहर': { 
+        keywords: ['शहर', 'नगर', 'इमारत', 'सड़क', 'बाजार', 'दुकान', 'मॉल', 'ट्रैफिक'],
+        moods: { day: 'busy_city', night: 'neon_city', morning: 'rush_city', evening: 'lights_city' },
+        props: ['building', 'streetlight', 'car', 'bench', 'traffic_light']
+    },
+    'गार्डन': { 
+        keywords: ['बगीचा', 'गार्डन', 'फूल', 'घास', 'पौधे', 'पेड़', 'झूला', 'लॉन'],
+        moods: { day: 'colorful_garden', night: 'moonlit_garden', morning: 'dewy_garden', evening: 'golden_garden' },
+        props: ['flower', 'tree', 'bench', 'bush', 'rock']
+    },
+    'कक्षा': { 
+        keywords: ['कक्षा', 'स्कूल', 'क्लासरूम', 'बोर्ड', 'डेस्क', 'शिक्षक', 'ब्लैकबोर्ड', 'चॉक'],
+        moods: { day: 'bright_classroom', morning: 'fresh_classroom', evening: 'empty_classroom' },
+        props: ['desk', 'chair', 'chalkboard', 'book', 'globe']
+    },
+    'अंतरिक्ष': { 
+        keywords: ['अंतरिक्ष', 'तारा', 'ग्रह', 'चंद्रमा', 'रॉकेट', 'उपग्रह', 'आकाशगंगा', 'एस्ट्रोनॉट'],
+        moods: { day: 'starfield', night: 'deep_space' },
+        props: ['rocket', 'planet', 'star']
+    },
+    'पानी के नीचे': { 
+        keywords: ['पानी के नीचे', 'समुद्र', 'मछली', 'मूंगा', 'जलीय', 'डॉल्फिन', 'शार्क', 'ऑक्टोपस'],
+        moods: { day: 'shallow_reef', night: 'deep_ocean' },
+        props: ['coral', 'fish', 'rock', 'seaweed']
+    },
+    'रेगिस्तान': { 
+        keywords: ['रेगिस्तान', 'रेत', 'कैक्टस', 'धूप', 'टिब्बा', 'ओएसिस', 'ऊंट'],
+        moods: { day: 'hot_desert', night: 'cold_desert', evening: 'sunset_desert' },
+        props: ['cactus', 'rock', 'bush']
+    }
+};
+
+// Scene type templates for better structure
+const SCENE_TYPE_TEMPLATES = {
+    introduction: {
+        weight: 1.0,
+        titlePrefix: 'परिचय: ',
+        description: 'पात्रों और सेटिंग का परिचय',
+        typicalDuration: 8
+    },
+    inciting_incident: {
+        weight: 1.2,
+        titlePrefix: 'घटना: ',
+        description: 'कहानी को गति देने वाली घटना',
+        typicalDuration: 10
+    },
+    rising_action: {
+        weight: 1.1,
+        titlePrefix: 'विकास: ',
+        description: 'चुनौतियों और प्रयासों का क्रम',
+        typicalDuration: 10
+    },
+    climax: {
+        weight: 1.3,
+        titlePrefix: 'चरमोत्कर्ष: ',
+        description: 'सबसे रोमांचक और निर्णायक क्षण',
+        typicalDuration: 12
+    },
+    falling_action: {
+        weight: 1.0,
+        titlePrefix: 'समाधान: ',
+        description: 'परिणाम और समाधान की ओर',
+        typicalDuration: 8
+    },
+    resolution: {
+        weight: 1.0,
+        titlePrefix: 'अंत: ',
+        description: 'कहानी का समापन और नैतिक',
+        typicalDuration: 8
+    }
+};
+
 function generateScenesFromStory(story, settings) {
+    // Split into sentences with better handling
     const sentences = story
         .split(/[।.!?]+/)
         .map(s => s.trim())
-        .filter(s => s.length > 10);
+        .filter(s => s.length > 5);
     
     if (sentences.length === 0) {
-        return [{ 
-            id: generateId(),
-            title: 'सीन 1',
-            description: story,
-            characters: ['मुख्य पात्र'],
-            background: 'गार्डन',
-            hindiText: story,
-            duration: settings.sceneDuration
-        }];
+        return createDefaultScene(story, settings);
     }
-
-    const scenes = [];
-    const sentencesPerScene = Math.max(2, Math.ceil(sentences.length / 5));
     
-    for (let i = 0; i < sentences.length; i += sentencesPerScene) {
-        const sceneSentences = sentences.slice(i, i + sentencesPerScene);
-        const sceneText = sceneSentences.join('। ') + '।';
-        
-        const characters = extractCharacters(sceneText);
-        const background = extractBackground(sceneText);
-        
-        scenes.push({
-            id: generateId(),
-            title: `सीन ${scenes.length + 1}`,
-            description: sceneText,
-            characters: characters.length > 0 ? characters : ['पात्र'],
-            background: background || 'गार्डन',
-            hindiText: sceneText,
-            duration: settings.sceneDuration
-        });
-    }
-
-    return scenes.slice(0, 10);
+    // Analyze story structure
+    const storyAnalysis = analyzeStoryStructure(sentences);
+    
+    // Determine number of scenes (3-8 based on story length)
+    const targetSceneCount = Math.min(8, Math.max(3, Math.ceil(sentences.length / 3)));
+    
+    // Distribute sentences across scenes based on story structure
+    const scenes = distributeSentencesToScenes(sentences, storyAnalysis, targetSceneCount, settings);
+    
+    // Enhance each scene with detailed analysis
+    return scenes.map((scene, index) => enhanceScene(scene, index, storyAnalysis, settings));
 }
 
-function extractCharacters(text) {
-    const characterKeywords = [
-        'खरगोश', 'बिल्ली', 'कुत्ता', 'पक्षी', 'तितली', 'हाथी', 'शेर', 'बंदर',
-        'चूहा', 'कछुआ', 'मोर', 'तोता', 'गाय', 'भैंस', 'बकरी', 'भेड़',
-        'लड़का', 'लड़की', 'बच्चा', 'बूढ़ा', 'बूढ़ी', 'राजा', 'रानी',
-        'परी', 'दानव', 'जादूगर', 'सैनिक', 'किसान', 'डॉक्टर', 'शिक्षक'
-    ];
-    
-    const found = characterKeywords.filter(kw => text.includes(kw));
-    return found.length > 0 ? found.slice(0, 3) : ['पात्र'];
+function createDefaultScene(story, settings) {
+    return [{
+        id: generateId(),
+        title: 'सीन 1',
+        description: story,
+        characters: ['मुख्य पात्र'],
+        background: 'गार्डन',
+        hindiText: story,
+        duration: settings.sceneDuration,
+        sceneType: 'introduction',
+        mood: 'neutral',
+        timeOfDay: 'day',
+        cameraSuggestion: 'medium',
+        lightingSuggestion: 'natural'
+    }];
 }
 
-function extractBackground(text) {
-    const backgroundKeywords = {
-        'जंगल': ['जंगल', 'वन', 'पेड़', 'झाड़ी'],
-        'नदी': ['नदी', 'नहर', 'पानी', 'तालाब', 'झील', 'समुद्र'],
-        'पहाड़': ['पहाड़', 'पर्वत', 'चोटी'],
-        'गांव': ['गांव', 'ग्राम', 'घर', 'झोपड़ी'],
-        'शहर': ['शहर', 'नगर', 'इमारत', 'सड़क', 'बाजार'],
-        'गार्डन': ['बगीचा', 'गार्डन', 'फूल', 'घास', 'पौधे'],
-        'कक्षा': ['कक्षा', 'स्कूल', 'क्लासरूम', 'बोर्ड', 'डेस्क'],
-        'अंतरिक्ष': ['अंतरिक्ष', 'तारा', 'ग्रह', 'चंद्रमा', 'रॉकेट'],
-        'पानी के नीचे': ['पानी के नीचे', 'समुद्र', 'मछली', 'मूंगा'],
-        'रेगिस्तान': ['रेगिस्तान', 'रेत', 'कैक्टस', 'धूप']
+function analyzeStoryStructure(sentences) {
+    const analysis = {
+        totalSentences: sentences.length,
+        characters: new Map(),
+        locations: new Map(),
+        emotions: new Map(),
+        actions: [],
+        timeMarkers: [],
+        sceneBoundaries: []
     };
+    
+    sentences.forEach((sentence, index) => {
+        // Extract characters with context
+        const chars = extractCharactersWithContext(sentence);
+        chars.forEach(char => {
+            if (!analysis.characters.has(char.name)) {
+                analysis.characters.set(char.name, { 
+                    mentions: 0, 
+                    roles: new Set(),
+                    contexts: [],
+                    firstMention: index,
+                    lastMention: index
+                });
+            }
+            const charData = analysis.characters.get(char.name);
+            charData.mentions++;
+            charData.roles.add(char.role);
+            charData.contexts.push({ sentence: index, context: char.context });
+            charData.lastMention = index;
+        });
+        
+        // Extract locations
+        const location = extractLocationWithContext(sentence);
+        if (location) {
+            if (!analysis.locations.has(location.name)) {
+                analysis.locations.set(location.name, { mentions: 0, contexts: [] });
+            }
+            const locData = analysis.locations.get(location.name);
+            locData.mentions++;
+            locData.contexts.push({ sentence: index, context: location.context });
+        }
+        
+        // Extract emotions
+        const emotion = extractEmotion(sentence);
+        if (emotion) {
+            analysis.emotions.set(index, emotion);
+        }
+        
+        // Extract actions
+        const action = extractAction(sentence);
+        if (action) {
+            analysis.actions.push({ sentence: index, action, text: sentence });
+        }
+        
+        // Time markers
+        const timeMarker = extractTimeMarker(sentence);
+        if (timeMarker) {
+            analysis.timeMarkers.push({ sentence: index, time: timeMarker });
+        }
+    });
+    
+    // Identify potential scene boundaries (major shifts)
+    analysis.sceneBoundaries = identifySceneBoundaries(sentences, analysis);
+    
+    return analysis;
+}
 
-    for (const [bg, keywords] of Object.entries(backgroundKeywords)) {
-        if (keywords.some(kw => text.includes(kw))) {
-            return bg;
+function extractCharactersWithContext(text) {
+    const found = [];
+    const lowerText = text.toLowerCase();
+    
+    // Check animals
+    Object.entries(CHARACTER_DATABASE.animals).forEach(([name, data]) => {
+        if (lowerText.includes(name.toLowerCase())) {
+            found.push({
+                name,
+                role: data.role,
+                traits: data.traits,
+                type: 'animal',
+                context: text.substring(Math.max(0, lowerText.indexOf(name.toLowerCase()) - 20), lowerText.indexOf(name.toLowerCase()) + name.length + 20)
+            });
+        }
+    });
+    
+    // Check humans
+    Object.entries(CHARACTER_DATABASE.humans).forEach(([name, data]) => {
+        if (lowerText.includes(name.toLowerCase())) {
+            found.push({
+                name,
+                role: data.role,
+                traits: data.traits,
+                type: 'human',
+                context: text.substring(Math.max(0, lowerText.indexOf(name.toLowerCase()) - 20), lowerText.indexOf(name.toLowerCase()) + name.length + 20)
+            });
+        }
+    });
+    
+    // Pronouns that might refer to characters
+    const pronouns = ['वह', 'वे', 'उसने', 'उन्होंने', 'यह', 'ये'];
+    pronouns.forEach(p => {
+        if (lowerText.includes(p.toLowerCase())) {
+            found.push({
+                name: p,
+                role: 'pronoun',
+                type: 'pronoun',
+                context: text
+            });
+        }
+    });
+    
+    return found;
+}
+
+function extractLocationWithContext(text) {
+    const lowerText = text.toLowerCase();
+    
+    for (const [name, data] of Object.entries(BACKGROUND_DATABASE)) {
+        for (const keyword of data.keywords) {
+            if (lowerText.includes(keyword.toLowerCase())) {
+                return {
+                    name,
+                    moods: data.moods,
+                    props: data.props,
+                    context: text.substring(Math.max(0, lowerText.indexOf(keyword.toLowerCase()) - 30), lowerText.indexOf(keyword.toLowerCase()) + keyword.length + 30)
+                };
+            }
         }
     }
-    return 'गार्डन';
+    return null;
 }
+
+function extractEmotion(text) {
+    const emotionKeywords = {
+        happy: ['खुश', 'मुस्कुर', 'हंस', 'प्रसन्न', 'आनंद', 'उल्लास', 'हर्ष'],
+        sad: ['उदास', 'रो', 'दुख', 'शोक', 'विषाद', 'आंसू', 'रोना'],
+        angry: ['गुस्सा', 'क्रोध', 'नाराज', 'चिढ़', 'आक्रोश', 'गरम'],
+        scared: ['डर', 'भय', 'भीत', 'त्रस्त', 'कांप', 'घबराहट'],
+        surprised: ['आश्चर्य', 'हैरान', 'चौंक', 'विस्मय', 'अचंभा', 'वाह'],
+        confused: ['उलझन', 'समझ नहीं', 'भ्रम', 'असमंजस', 'दुविधा'],
+        determined: ['निश्चय', 'ठान', 'प्रण', 'संकल्प', 'दृढ़', 'लगे रहो'],
+        peaceful: ['शांत', 'सुकून', 'आराम', 'चैन', 'शांति']
+    };
+    
+    const lowerText = text.toLowerCase();
+    for (const [emotion, keywords] of Object.entries(emotionKeywords)) {
+        if (keywords.some(kw => lowerText.includes(kw))) {
+            return emotion;
+        }
+    }
+    return null;
+}
+
+function extractAction(text) {
+    const actionKeywords = {
+        walk: ['चल', 'घूम', 'टहल', 'जा', 'आ', 'पहुंच'],
+        run: ['दौड़', 'भाग', 'तेज भाग'],
+        sit: ['बैठ', 'sit'],
+        stand: ['खड़', 'उठ', 'stand'],
+        talk: ['बोल', 'बात', 'कह', 'सुन', 'बातचीत'],
+        give: ['दे', 'हाथ में दे', 'उपहार'],
+        take: ['ले', 'पकड़', 'ग्रहण'],
+        look: ['देख', 'नजर', 'निरीक्ष'],
+        point: ['इशार', 'उंगली दिख'],
+        wave: ['हाथ हिल', 'अभिवादन'],
+        jump: ['कूद', 'उछल'],
+        dance: ['नाच', 'डांस'],
+        sleep: ['सो', 'नींद', 'सोना'],
+        eat: ['खा', 'भोजन', 'खाना'],
+        drink: ['पी', 'पानी पी', 'प्यास'],
+        fight: ['लड़', 'युद्ध', 'झगड़'],
+        help: ['मदद', 'सहायता', 'बचाओ'],
+        find: ['ढूंढ', 'मिल', 'खोज', 'पता लग'],
+        lose: ['खो', 'गुम', 'भटक'],
+        build: ['बना', 'निर्माण', 'बनाओ'],
+        break: ['टूट', 'तोड़', 'फूट'],
+        magic: ['जादू', 'मंत्र', 'शक्ति', 'चमत्कार']
+    };
+    
+    const lowerText = text.toLowerCase();
+    for (const [action, keywords] of Object.entries(actionKeywords)) {
+        if (keywords.some(kw => lowerText.includes(kw))) {
+            return action;
+        }
+    }
+    return null;
+}
+
+function extractTimeMarker(text) {
+    const timeKeywords = {
+        morning: ['सुबह', 'प्रभात', 'भोर', 'उषा', 'मॉर्निंग'],
+        afternoon: ['दोपहर', 'दोपहर को', 'मध्याह्न'],
+        evening: ['शाम', 'संध्या', 'सायं', 'गोधूलि', 'इवनिंग'],
+        night: ['रात', 'रात्रि', 'नाइट', 'अंधेरा'],
+        day: ['दिन', 'दिन में', 'दिवस'],
+        later: ['बाद में', 'फिर', 'तब', 'तत्पश्चात'],
+        suddenly: ['अचानक', 'एकाएक', 'आकस्मिक'],
+        morning_to_evening: ['सुबह से शाम', 'पूरे दिन']
+    };
+    
+    const lowerText = text.toLowerCase();
+    for (const [time, keywords] of Object.entries(timeKeywords)) {
+        if (keywords.some(kw => lowerText.includes(kw))) {
+            return time;
+        }
+    }
+    return null;
+}
+
+function identifySceneBoundaries(sentences, analysis) {
+    const boundaries = [0]; // First scene always starts at 0
+    
+    for (let i = 1; i < sentences.length; i++) {
+        let boundaryScore = 0;
+        
+        // Major location change
+        const prevLoc = getLocationAtSentence(i - 1, analysis);
+        const currLoc = getLocationAtSentence(i, analysis);
+        if (prevLoc && currLoc && prevLoc !== currLoc) {
+            boundaryScore += 3;
+        }
+        
+        // Major character focus change
+        const prevChars = getCharactersAtSentence(i - 1, analysis);
+        const currChars = getCharactersAtSentence(i, analysis);
+        const charOverlap = prevChars.filter(c => currChars.includes(c)).length;
+        if (charOverlap === 0 && prevChars.length > 0 && currChars.length > 0) {
+            boundaryScore += 2;
+        }
+        
+        // Time jump
+        const timeMarker = analysis.timeMarkers.find(tm => tm.sentence === i);
+        if (timeMarker && ['morning', 'afternoon', 'evening', 'night', 'later'].includes(timeMarker.time)) {
+            boundaryScore += 2;
+        }
+        
+        // Emotional shift
+        const prevEmotion = analysis.emotions.get(i - 1);
+        const currEmotion = analysis.emotions.get(i);
+        if (prevEmotion && currEmotion && prevEmotion !== currEmotion) {
+            boundaryScore += 1;
+        }
+        
+        // Action type change (e.g., from dialogue to action)
+        const prevAction = analysis.actions.find(a => a.sentence === i - 1);
+        const currAction = analysis.actions.find(a => a.sentence === i);
+        if (prevAction && currAction && prevAction.action !== currAction.action) {
+            boundaryScore += 1;
+        }
+        
+        // Sentence length change (short sentences often indicate scene breaks)
+        if (sentences[i].length < 20 && sentences[i - 1].length > 50) {
+            boundaryScore += 1;
+        }
+        
+        if (boundaryScore >= 3) {
+            boundaries.push(i);
+        }
+    }
+    
+    return boundaries;
+}
+
+function getLocationAtSentence(sentenceIndex, analysis) {
+    for (const [name, data] of analysis.locations) {
+        if (data.contexts.some(c => c.sentence === sentenceIndex)) {
+            return name;
+        }
+    }
+    return null;
+}
+
+function getCharactersAtSentence(sentenceIndex, analysis) {
+    const chars = [];
+    for (const [name, data] of analysis.characters) {
+        if (data.contexts.some(c => c.sentence === sentenceIndex)) {
+            chars.push(name);
+        }
+    }
+    return chars;
+}
+
+function distributeSentencesToScenes(sentences, analysis, targetCount, settings) {
+    const boundaries = analysis.sceneBoundaries;
+    const scenes = [];
+    
+    // If we have good boundaries, use them
+    if (boundaries.length >= targetCount) {
+        for (let i = 0; i < Math.min(targetCount, boundaries.length); i++) {
+            const start = boundaries[i];
+            const end = (i + 1 < boundaries.length) ? boundaries[i + 1] : sentences.length;
+            const sceneSentences = sentences.slice(start, end);
+            
+            if (sceneSentences.length > 0) {
+                scenes.push({
+                    sentences: sceneSentences,
+                    startSentence: start,
+                    endSentence: end - 1
+                });
+            }
+        }
+    } else {
+        // Fallback: even distribution
+        const perScene = Math.ceil(sentences.length / targetCount);
+        for (let i = 0; i < sentences.length; i += perScene) {
+            const sceneSentences = sentences.slice(i, i + perScene);
+            scenes.push({
+                sentences: sceneSentences,
+                startSentence: i,
+                endSentence: Math.min(i + perScene - 1, sentences.length - 1)
+            });
+        }
+    }
+    
+    return scenes.slice(0, targetCount);
+}
+
+function enhanceScene(sceneData, index, analysis, settings) {
+    const sceneSentences = sceneData.sentences;
+    const sceneText = sceneSentences.join('। ') + '।';
+    
+    // Determine scene type based on position and content
+    const sceneType = determineSceneType(index, scenes.length, analysis, sceneData);
+    const template = SCENE_TYPE_TEMPLATES[sceneType] || SCENE_TYPE_TEMPLATES.introduction;
+    
+    // Extract characters for this scene
+    const characters = extractSceneCharacters(sceneData, analysis);
+    
+    // Determine primary location
+    const background = determineSceneBackground(sceneData, analysis);
+    
+    // Determine mood
+    const mood = determineSceneMood(sceneData, analysis);
+    
+    // Determine time of day
+    const timeOfDay = determineTimeOfDay(sceneData, analysis);
+    
+    // Generate title
+    const title = generateSceneTitle(sceneType, index, sceneData, characters, background);
+    
+    // Camera and lighting suggestions
+    const cameraSuggestion = suggestCameraShot(sceneType, characters.length);
+    const lightingSuggestion = suggestLighting(mood, timeOfDay);
+    
+    // Estimate duration based on content
+    const duration = estimateSceneDuration(sceneSentences, sceneType, settings.sceneDuration);
+    
+    return {
+        id: generateId(),
+        title,
+        description: sceneText,
+        characters: characters.length > 0 ? characters : ['पात्र'],
+        background: background || 'गार्डन',
+        hindiText: sceneText,
+        duration,
+        sceneType,
+        mood,
+        timeOfDay,
+        cameraSuggestion,
+        lightingSuggestion,
+        locationDetails: getLocationDetails(background),
+        characterDetails: getCharacterDetails(characters)
+    };
+}
+
+function determineSceneType(index, totalScenes, analysis, sceneData) {
+    const position = index / Math.max(1, totalScenes - 1);
+    
+    // Check for specific content markers
+    const text = sceneData.sentences.join(' ').toLowerCase();
+    
+    if (index === 0) return 'introduction';
+    if (index === totalScenes - 1) return 'resolution';
+    
+    // Check for climax markers
+    if (text.includes('चरम') || text.includes('निर्णय') || text.includes('लड़ाई') || text.includes('अंतिम') || 
+        text.includes('सबसे बड़ी') || text.includes('मुश्किल') || text.includes('चुनौती')) {
+        return 'climax';
+    }
+    
+    // Check for inciting incident (early, problem introduction)
+    if (index === 1 && (text.includes('समस्या') || text.includes('मुश्किल') || text.includes('खो') || 
+        text.includes('गुम') || text.includes('जरूरत') || text.includes('चाहिए'))) {
+        return 'inciting_incident';
+    }
+    
+    // Check for resolution markers (late, solving)
+    if (index >= totalScenes - 2 && (text.includes('हल') || text.includes('समाधान') || text.includes('मिला') || 
+        text.includes('पाया') || text.includes('जीत') || text.includes('सफल') || text.includes('खुश'))) {
+        return 'falling_action';
+    }
+    
+    // Default to rising action for middle scenes
+    return 'rising_action';
+}
+
+function extractSceneCharacters(sceneData, analysis) {
+    const chars = new Set();
+    sceneData.sentences.forEach((sentence, localIndex) => {
+        const globalIndex = sceneData.startSentence + localIndex;
+        const found = extractCharactersWithContext(sentence);
+        found.forEach(c => {
+            if (c.type !== 'pronoun') chars.add(c.name);
+        });
+    });
+    return Array.from(chars).slice(0, 4); // Limit to 4 characters
+}
+
+function determineSceneBackground(sceneData, analysis) {
+    const locationCounts = new Map();
+    
+    sceneData.sentences.forEach((sentence, localIndex) => {
+        const globalIndex = sceneData.startSentence + localIndex;
+        const location = getLocationAtSentence(globalIndex, analysis);
+        if (location) {
+            locationCounts.set(location, (locationCounts.get(location) || 0) + 1);
+        }
+    });
+    
+    // Also check sentence content directly
+    sceneData.sentences.forEach(sentence => {
+        const loc = extractLocationWithContext(sentence);
+        if (loc) {
+            locationCounts.set(loc.name, (locationCounts.get(loc.name) || 0) + 1);
+        }
+    });
+    
+    // Return most mentioned location
+    let maxCount = 0;
+    let bestLocation = null;
+    for (const [loc, count] of locationCounts) {
+        if (count > maxCount) {
+            maxCount = count;
+            bestLocation = loc;
+        }
+    }
+    
+    return bestLocation || 'गार्डन';
+}
+
+function determineSceneMood(sceneData, analysis) {
+    const emotions = [];
+    sceneData.sentences.forEach((sentence, localIndex) => {
+        const globalIndex = sceneData.startSentence + localIndex;
+        const emotion = analysis.emotions.get(globalIndex);
+        if (emotion) emotions.push(emotion);
+    });
+    
+    // Also check sentence content
+    sceneData.sentences.forEach(sentence => {
+        const emotion = extractEmotion(sentence);
+        if (emotion) emotions.push(emotion);
+    });
+    
+    if (emotions.length === 0) return 'neutral';
+    
+    // Count emotions
+    const counts = {};
+    emotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
+    
+    // Return dominant emotion
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function determineTimeOfDay(sceneData, analysis) {
+    const timeMarkers = [];
+    sceneData.sentences.forEach((sentence, localIndex) => {
+        const globalIndex = sceneData.startSentence + localIndex;
+        const marker = analysis.timeMarkers.find(tm => tm.sentence === globalIndex);
+        if (marker) timeMarkers.push(marker.time);
+    });
+    
+    // Also check sentence content
+    sceneData.sentences.forEach(sentence => {
+        const time = extractTimeMarker(sentence);
+        if (time) timeMarkers.push(time);
+    });
+    
+    if (timeMarkers.length === 0) return 'day';
+    
+    // Return most common
+    const counts = {};
+    timeMarkers.forEach(t => counts[t] = (counts[t] || 0) + 1);
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function generateSceneTitle(sceneType, index, sceneData, characters, background) {
+    const template = SCENE_TYPE_TEMPLATES[sceneType] || SCENE_TYPE_TEMPLATES.introduction;
+    let title = template.titlePrefix;
+    
+    if (characters.length > 0) {
+        title += characters[0];
+        if (characters.length > 1) {
+            title += ` और ${characters.slice(1).join(', ')}`;
+        }
+    }
+    
+    if (background && background !== 'गार्डन') {
+        title += ` ${background} में`;
+    }
+    
+    // Fallback to numbered title if generated title is too generic
+    if (title.length < 5) {
+        title = `सीन ${index + 1}`;
+    }
+    
+    return title;
+}
+
+function suggestCameraShot(sceneType, characterCount) {
+    const suggestions = {
+        introduction: characterCount > 1 ? 'wide' : 'medium',
+        inciting_incident: 'closeup',
+        rising_action: characterCount > 1 ? 'medium' : 'closeup',
+        climax: 'closeup',
+        falling_action: 'medium',
+        resolution: 'wide'
+    };
+    return suggestions[sceneType] || 'medium';
+}
+
+function suggestLighting(mood, timeOfDay) {
+    if (timeOfDay === 'night') return 'moonlight';
+    if (timeOfDay === 'evening') return 'golden_hour';
+    if (timeOfDay === 'morning') return 'soft_morning';
+    
+    const moodLighting = {
+        happy: 'bright_cheerful',
+        sad: 'soft_melancholic',
+        angry: 'dramatic_contrast',
+        scared: 'dark_shadows',
+        surprised: 'bright_sudden',
+        peaceful: 'soft_natural',
+        determined: 'strong_directional',
+        neutral: 'natural'
+    };
+    return moodLighting[mood] || 'natural';
+}
+
+function getLocationDetails(location) {
+    if (!location || !BACKGROUND_DATABASE[location]) return null;
+    return BACKGROUND_DATABASE[location];
+}
+
+function getCharacterDetails(characters) {
+    return characters.map(name => {
+        if (CHARACTER_DATABASE.animals[name]) {
+            return { name, type: 'animal', ...CHARACTER_DATABASE.animals[name] };
+        }
+        if (CHARACTER_DATABASE.humans[name]) {
+            return { name, type: 'human', ...CHARACTER_DATABASE.humans[name] };
+        }
+        return { name, type: 'custom' };
+    });
+}
+
+function estimateSceneDuration(sentences, sceneType, baseDuration) {
+    const template = SCENE_TYPE_TEMPLATES[sceneType] || SCENE_TYPE_TEMPLATES.introduction;
+    let duration = template.typicalDuration;
+    
+    // Adjust based on sentence count and length
+    const totalWords = sentences.join(' ').split(/\s+/).length;
+    const wordFactor = Math.min(2, Math.max(0.5, totalWords / 50));
+    
+    duration = Math.round(duration * wordFactor);
+    return Math.max(5, Math.min(30, duration));
+}
+
+// Export for potential reuse
+export { CHARACTER_DATABASE, BACKGROUND_DATABASE, SCENE_TYPE_TEMPLATES, analyzeStoryStructure };
 
 // ========================================
 // Three.js 3D Professional Renderer
@@ -558,6 +1421,18 @@ async function initThreeJS() {
     const { FXAAShader } = await import('three/addons/shaders/FXAAShader.js');
 
     AppState.three.scene = new THREE.Scene();
+    
+    // Initialize asset manager
+    AppState.three.assetManager = new SceneAssetManager(AppState.three.scene);
+    
+    // Initialize prop generator
+    AppState.three.propGenerator = new PropGenerator(AppState.three);
+    
+    // Initialize visual director
+    AppState.three.visualDirector = new VisualDirector(AppState.scenes, AppState.three.characters3d, AppState.three);
+    
+    // Initialize effect manager
+    AppState.three.effectManager = new EffectManager(AppState.three);
     
     // Initialize background
     updateBackground();
@@ -1023,6 +1898,1919 @@ function createRock(x, z) {
     scene.add(rock);
 }
 
+// ========================================
+// Environment & Background Generator Functions
+// ========================================
+
+function applyEnvironmentPreset(preset) {
+    const template = BackgroundTemplates[preset];
+    if (!template) return;
+    
+    // Set background type to scene3d
+    AppState.three.background.type = 'scene3d';
+    $('#backgroundType').value = 'scene3d';
+    
+    // Apply template layers as 3D background
+    createEnvironmentFromTemplate(template, preset);
+    
+    // Update scene data
+    const sceneIndex = AppState.three.currentScene;
+    if (AppState.scenes[sceneIndex]) {
+        AppState.scenes[sceneIndex].background = preset;
+    }
+    
+    showToast(`Environment preset "${preset}" applied`, 'success');
+}
+
+function createEnvironmentFromTemplate(template, presetName) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    // Clear existing 3D background objects
+    if (AppState.three.envObjects) {
+        AppState.three.envObjects.forEach(obj => {
+            scene.remove(obj);
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => m.dispose());
+                } else {
+                    obj.material.dispose();
+                }
+            }
+        });
+    }
+    AppState.three.envObjects = [];
+    
+    // Create sky based on template
+    const skyLayer = template.layers.find(l => l.type === 'sky' || l.type === 'space-bg' || l.type === 'water-bg');
+    if (skyLayer) {
+        createSkyFromLayer(skyLayer);
+    }
+    
+    // Create ground
+    const groundLayer = template.layers.find(l => l.type === 'ground' || l.type === 'grass' || l.type === 'water' || l.type === 'sand' || l.type === 'wall');
+    if (groundLayer) {
+        createGroundFromLayer(groundLayer);
+    }
+    
+    // Create layer objects
+    template.layers.forEach(layer => {
+        if (layer.template) {
+            createLayerObjects(layer);
+        } else if (layer.type === 'mountain' || layer.type === 'mountains' || layer.type === 'dunes' || layer.type === 'peaks-back' || layer.type === 'peaks-mid' || layer.type === 'peaks-front') {
+            createMountains(layer);
+        } else if (layer.type === 'trees' || layer.type === 'forest' || layer.type === 'trees-back' || layer.type === 'trees-mid' || layer.type === 'pine-trees' || layer.type === 'palm-trees' || layer.type === 'cherry-blossoms') {
+            createTrees(layer);
+        } else if (layer.type === 'bushes' || layer.type === 'crops') {
+            createBushes(layer);
+        } else if (layer.type === 'rocks') {
+            createRocks(layer);
+        } else if (layer.type === 'flowers' || layer.type === 'shells' || layer.type === 'leaves-falling') {
+            createFlowers(layer);
+        } else if (layer.type === 'clouds' || layer.type === 'clouds-dark') {
+            createClouds(layer);
+        } else if (layer.type === 'stars' || layer.type === 'city-lights') {
+            createStars(layer);
+        } else if (layer.type === 'waves') {
+            createWaves(layer);
+        } else if (layer.type === 'rain' || layer.type === 'snowfall') {
+            createPrecipitation(layer);
+        } else if (layer.type === 'puddles') {
+            createPuddles(layer);
+        } else if (layer.type === 'sun' || layer.type === 'moon') {
+            createCelestialBody(layer);
+        } else if (layer.type === 'snow-caps') {
+            createSnowCaps(layer);
+        } else if (layer.type === 'buildings' || layer.type === 'houses' || layer.type === 'skyscrapers' || layer.type === 'buildings-mid' || layer.type === 'stalls' || layer.type === 'building-main' || layer.type === 'terminal' || layer.type === 'hangars' || layer.type === 'station' || layer.type === 'structure-main') {
+            createBuildings(layer);
+        } else if (layer.type === 'streetlights' || layer.type === 'lamps') {
+            createStreetlights(layer);
+        } else if (layer.type === 'cars' || layer.type === 'tractor' || layer.type === 'ambulance' || layer.type === 'buses' || layer.type === 'train' || layer.type === 'planes') {
+            createVehicles(layer);
+        } else if (layer.type === 'fence') {
+            createFence(layer);
+        } else if (layer.type === 'animals') {
+            createAnimals(layer);
+        } else if (layer.type === 'cross') {
+            createCross(layer);
+        } else if (layer.type === 'flag') {
+            createFlag(layer);
+        } else if (layer.type === 'canopy') {
+            createCanopy(layer);
+        } else if (layer.type === 'goods') {
+            createGoods(layer);
+        } else if (layer.type === 'bells') {
+            createBells(layer);
+        } else if (layer.type === 'offerings') {
+            createOfferings(layer);
+        } else if (layer.type === 'signals') {
+            createSignals(layer);
+        } else if (layer.type === 'control-tower') {
+            createControlTower(layer);
+        } else if (layer.type === 'silhouettes') {
+            createSilhouettes(layer);
+        } else if (layer.type === 'birds') {
+            createBirds(layer);
+        } else if (layer.type === 'umbrellas') {
+            createUmbrellas(layer);
+        } else if (layer.type === 'snowman') {
+            createSnowman(layer);
+        } else if (layer.type === 'footprints') {
+            createFootprints(layer);
+        } else if (layer.type === 'pumpkins') {
+            createPumpkins(layer);
+        } else if (layer.type === 'butterflies') {
+            createButterflies(layer);
+        } else if (layer.type === 'reeds') {
+            createReeds(layer);
+        } else if (layer.type === 'corals' || layer.type === 'fish' || layer.type === 'bubbles') {
+            createUnderwater(layer);
+        } else if (layer.type === 'cactus') {
+            createCactus(layer);
+        } else if (layer.type === 'desks' || layer.type === 'charts' || layer.type === 'board') {
+            createClassroom(layer);
+        } else if (layer.type === 'planet1' || layer.type === 'planet2' || layer.type === 'rocket') {
+            createSpace(layer);
+        } else if (layer.type === 'path' || layer.type === 'road' || layer.type === 'tracks' || layer.type === 'runway' || layer.type === 'steps') {
+            createPath(layer);
+        } else if (layer.type === 'playground') {
+            createPlayground(layer);
+        } else if (layer.type === 'parking') {
+            createParking(layer);
+        } else if (layer.type === 'crowd') {
+            createCrowd(layer);
+        } else if (layer.type === 'pillars') {
+            createPillars(layer);
+        }
+    });
+    
+    // Setup fog if needed
+    if (template.fogDensity) {
+        scene.fog = new THREE.FogExp2(template.fogColor || 0x888888, template.fogDensity);
+    }
+}
+
+function createSkyFromLayer(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    if (AppState.three.skySphere) {
+        scene.remove(AppState.three.skySphere);
+        AppState.three.skySphere.geometry.dispose();
+        AppState.three.skySphere.material.dispose();
+    }
+    
+    const skyGeo = new THREE.SphereGeometry(500, 32, 32);
+    skyGeo.scale(-1, 1, 1);
+    
+    const skyColor = parseInt(layer.color.replace('#', '0x'));
+    
+    const skyMat = new THREE.ShaderMaterial({
+        uniforms: {
+            topColor: { value: new THREE.Color(skyColor) },
+            bottomColor: { value: new THREE.Color(skyColor).offsetHSL(0, 0, 0.3) },
+            offset: { value: 0.5 },
+            exponent: { value: 0.6 }
+        },
+        vertexShader: `
+            varying vec3 vWorldPosition;
+            void main() {
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPosition.xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 topColor;
+            uniform vec3 bottomColor;
+            uniform float offset;
+            uniform float exponent;
+            varying vec3 vWorldPosition;
+            void main() {
+                float h = normalize(vWorldPosition + offset).y;
+                gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+            }
+        `,
+        side: THREE.BackSide,
+        depthWrite: false
+    });
+    
+    const skySphere = new THREE.Mesh(skyGeo, skyMat);
+    skySphere.renderOrder = -100;
+    scene.add(skySphere);
+    AppState.three.skySphere = skySphere;
+    AppState.three.envObjects.push(skySphere);
+}
+
+function createGroundFromLayer(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    // Remove old ground
+    if (AppState.three.groundPlane) {
+        scene.remove(AppState.three.groundPlane);
+        AppState.three.groundPlane.geometry.dispose();
+        AppState.three.groundPlane.material.dispose();
+    }
+    
+    const groundColor = parseInt(layer.color.replace('#', '0x'));
+    const geo = new THREE.PlaneGeometry(200, 200);
+    const mat = new THREE.MeshStandardMaterial({
+        color: groundColor,
+        side: THREE.DoubleSide,
+        roughness: 0.9,
+        metalness: 0,
+        polygonOffset: true,
+        polygonOffsetFactor: -100,
+        polygonOffsetUnits: -10
+    });
+    
+    const ground = new THREE.Mesh(geo, mat);
+    ground.position.set(0, -5, 0);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+    AppState.three.groundPlane = ground;
+    AppState.three.envObjects.push(ground);
+}
+
+function createLayerObjects(layer) {
+    // Generic layer object creation - handled by specific functions above
+    return;
+}
+
+function createMountains(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 4;
+    const color = parseInt(layer.color.replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const mountainShape = new THREE.Shape();
+        const width = 20 + Math.random() * 15;
+        const height = 15 + Math.random() * 10;
+        const x = -80 + i * (160 / count) + (Math.random() - 0.5) * 20;
+        
+        mountainShape.moveTo(-width/2, 0);
+        mountainShape.lineTo(0, height);
+        mountainShape.lineTo(width/2, 0);
+        mountainShape.lineTo(-width/2, 0);
+        
+        const mountainGeo = new THREE.ExtrudeGeometry(mountainShape, {
+            depth: 20 + Math.random() * 10,
+            bevelEnabled: true,
+            bevelSegments: 2,
+            bevelSize: 1,
+            bevelThickness: 1
+        });
+        
+        const mountainMat = new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: 0.9,
+            metalness: 0,
+            flatShading: true
+        });
+        
+        const mountain = new THREE.Mesh(mountainGeo, mountainMat);
+        mountain.position.set(x, -5, -30 + (layer.depth || 0) * 10);
+        mountain.rotation.x = -Math.PI / 2;
+        mountain.receiveShadow = true;
+        mountain.castShadow = true;
+        scene.add(mountain);
+        AppState.three.envObjects.push(mountain);
+    }
+}
+
+function createTrees(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 10;
+    const scale = layer.scale || 1;
+    const template = layer.template || 'tree';
+    
+    for (let i = 0; i < count; i++) {
+        const x = (Math.random() - 0.5) * 150;
+        const z = -10 + (layer.depth || 0) * 20 + (Math.random() - 0.5) * 40;
+        
+        const tree = createTreeInstance(template, scale);
+        if (tree) {
+            tree.position.set(x, -5, z);
+            tree.castShadow = true;
+            scene.add(tree);
+            AppState.three.envObjects.push(tree);
+        }
+    }
+}
+
+function createTreeInstance(template, scale) {
+    const THREE = AppState.three.THREE;
+    const treeGroup = new THREE.Group();
+    
+    const trunkHeight = 3 * scale;
+    const trunkGeo = new THREE.CylinderGeometry(0.2 * scale, 0.4 * scale, trunkHeight, 8);
+    const trunkMat = new THREE.MeshStandardMaterial({ 
+        color: 0x4a2c1a, 
+        roughness: 0.9,
+        flatShading: AppState.settings?.videoStyle === 'paper-cutout'
+    });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.y = trunkHeight / 2;
+    trunk.castShadow = true;
+    treeGroup.add(trunk);
+    
+    let leavesColor = 0x2e7d32;
+    if (template === 'pineTree') {
+        leavesColor = 0x006400;
+        for (let i = 0; i < 4; i++) {
+            const leaves = new THREE.Mesh(
+                new THREE.ConeGeometry(1.2 * scale - i * 0.2 * scale, 1.5 * scale, 8),
+                new THREE.MeshStandardMaterial({ color: leavesColor, roughness: 0.95, flatShading: true })
+            );
+            leaves.position.y = trunkHeight + 0.5 + i * 1.2 * scale;
+            leaves.castShadow = true;
+            treeGroup.add(leaves);
+        }
+    } else {
+        const layers = 3;
+        for (let i = 0; i < layers; i++) {
+            const leaves = new THREE.Mesh(
+                new THREE.ConeGeometry(1.5 * scale - i * 0.3 * scale, 2 * scale, 8),
+                new THREE.MeshStandardMaterial({ color: leavesColor, roughness: 0.95, flatShading: true })
+            );
+            leaves.position.y = trunkHeight + 0.5 + i * 1.5 * scale;
+            leaves.castShadow = true;
+            treeGroup.add(leaves);
+        }
+    }
+    
+    return treeGroup;
+}
+
+function createBushes(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 8;
+    const colors = layer.colors || ['#228b22'];
+    
+    for (let i = 0; i < count; i++) {
+        const bush = new THREE.Group();
+        const bushColor = parseInt(colors[Math.floor(Math.random() * colors.length)].replace('#', '0x'));
+        const mat = new THREE.MeshStandardMaterial({ color: bushColor, roughness: 0.9, flatShading: true });
+        
+        for (let j = 0; j < 5; j++) {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(0.8, 8, 8),
+                mat
+            );
+            sphere.position.set(
+                (Math.random() - 0.5) * 1.5,
+                0.5 + Math.random() * 0.5,
+                (Math.random() - 0.5) * 1.5
+            );
+            sphere.scale.set(1, 0.6, 1);
+            sphere.castShadow = true;
+            bush.add(sphere);
+        }
+        
+        bush.position.set(
+            (Math.random() - 0.5) * 100,
+            -4.5,
+            -10 + (layer.depth || 0) * 10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(bush);
+        AppState.three.envObjects.push(bush);
+    }
+}
+
+function createRocks(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 6;
+    
+    for (let i = 0; i < count; i++) {
+        const rockGeo = new THREE.DodecahedronGeometry(Math.random() * 1.5 + 0.5);
+        const rockMat = new THREE.MeshStandardMaterial({ 
+            color: 0x757575, 
+            roughness: 0.9,
+            flatShading: true
+        });
+        const rock = new THREE.Mesh(rockGeo, rockMat);
+        rock.position.set(
+            (Math.random() - 0.5) * 80,
+            rockGeo.parameters.radius - 5,
+            (Math.random() - 0.5) * 40
+        );
+        rock.rotation.set(Math.random(), Math.random(), Math.random());
+        rock.castShadow = true;
+        rock.receiveShadow = true;
+        scene.add(rock);
+        AppState.three.envObjects.push(rock);
+    }
+}
+
+function createFlowers(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 10;
+    const colors = layer.color || layer.colors || ['#ff69b4'];
+    
+    for (let i = 0; i < count; i++) {
+        const flowerColor = parseInt(colors[Math.floor(Math.random() * colors.length)].replace('#', '0x'));
+        const flower = new THREE.Group();
+        
+        // Stem
+        const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8),
+            new THREE.MeshStandardMaterial({ color: 0x228b22, roughness: 0.9 })
+        );
+        stem.position.y = 0.2;
+        flower.add(stem);
+        
+        // Petals
+        const petalMat = new THREE.MeshStandardMaterial({ color: flowerColor, roughness: 0.8 });
+        for (let j = 0; j < 6; j++) {
+            const petal = new THREE.Mesh(
+                new THREE.ConeGeometry(0.08, 0.15, 4),
+                petalMat
+            );
+            petal.position.set(0, 0.45, 0);
+            petal.rotation.y = j * Math.PI / 3;
+            petal.rotation.x = -Math.PI / 4;
+            flower.add(petal);
+        }
+        
+        // Center
+        const center = new THREE.Mesh(
+            new THREE.SphereGeometry(0.05, 8, 8),
+            new THREE.MeshStandardMaterial({ color: 0xffd700 })
+        );
+        center.position.y = 0.45;
+        flower.add(center);
+        
+        flower.position.set(
+            (Math.random() - 0.5) * 100,
+            -4.5,
+            -10 + (layer.depth || 0) * 10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(flower);
+        AppState.three.envObjects.push(flower);
+    }
+}
+
+function createClouds(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const color = parseInt((layer.color || '#ffffff').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const cloud = new THREE.Group();
+        const cloudMat = new THREE.MeshStandardMaterial({ 
+            color: color, 
+            roughness: 1,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const parts = 5 + Math.floor(Math.random() * 3);
+        for (let j = 0; j < parts; j++) {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(2 + Math.random() * 3, 8, 8),
+                cloudMat
+            );
+            sphere.position.set(
+                (Math.random() - 0.5) * 8,
+                (Math.random() - 0.5) * 2,
+                (Math.random() - 0.5) * 8
+            );
+            sphere.scale.set(1, 0.5, 1);
+            cloud.add(sphere);
+        }
+        
+        cloud.position.set(
+            (Math.random() - 0.5) * 200,
+            30 + Math.random() * 20,
+            (Math.random() - 0.5) * 200
+        );
+        scene.add(cloud);
+        AppState.three.envObjects.push(cloud);
+    }
+}
+
+function createStars(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 100;
+    const color = parseInt((layer.color || '#ffffff').replace('#', '0x'));
+    
+    if (layer.type === 'stars') {
+        const starsGeo = new THREE.BufferGeometry();
+        const positions = [];
+        const colors = [];
+        const sizes = [];
+        
+        for (let i = 0; i < count; i++) {
+            const radius = 400 + Math.random() * 100;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            
+            positions.push(
+                radius * Math.sin(phi) * Math.cos(theta),
+                radius * Math.sin(phi) * Math.sin(theta),
+                radius * Math.cos(phi)
+            );
+            
+            const starColor = Math.random() > 0.5 ? color : 0xfff0e0;
+            colors.push(
+                (starColor >> 16 & 255) / 255,
+                (starColor >> 8 & 255) / 255,
+                (starColor & 255) / 255
+            );
+            
+            sizes.push(Math.random() * 2 + 0.5);
+        }
+        
+        starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        starsGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        starsGeo.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+        
+        const starsMat = new THREE.PointsMaterial({
+            size: 2,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            sizeAttenuation: true
+        });
+        
+        const stars = new THREE.Points(starsGeo, starsMat);
+        stars.renderOrder = -100;
+        scene.add(stars);
+        AppState.three.envObjects.push(stars);
+    } else if (layer.type === 'city-lights') {
+        for (let i = 0; i < count; i++) {
+            const light = new THREE.Mesh(
+                new THREE.SphereGeometry(0.2, 8, 8),
+                new THREE.MeshBasicMaterial({ color: color })
+            );
+            light.position.set(
+                (Math.random() - 0.5) * 100,
+                -3 + Math.random() * 20,
+                (Math.random() - 0.5) * 100
+            );
+            scene.add(light);
+            AppState.three.envObjects.push(light);
+        }
+    }
+}
+
+function createWaves(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const color = parseInt((layer.color || '#ffffff').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const wave = new THREE.Mesh(
+            new THREE.BoxGeometry(200, 0.2, 10),
+            new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.5 })
+        );
+        wave.position.set(0, -4.5 + i * 0.3, -20 + i * 5);
+        wave.rotation.x = -0.1;
+        scene.add(wave);
+        AppState.three.envObjects.push(wave);
+    }
+}
+
+function createPrecipitation(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 100;
+    const color = parseInt((layer.color || '#add8e6').replace('#', '0x'));
+    const isSnow = layer.type === 'snowfall';
+    
+    const geo = new THREE.BufferGeometry();
+    const positions = [];
+    const velocities = [];
+    
+    for (let i = 0; i < count; i++) {
+        positions.push(
+            (Math.random() - 0.5) * 200,
+            Math.random() * 50,
+            (Math.random() - 0.5) * 200
+        );
+        velocities.push(
+            (Math.random() - 0.5) * 0.5,
+            - (isSnow ? 0.5 + Math.random() * 1 : 2 + Math.random() * 3),
+            (Math.random() - 0.5) * 0.5
+        );
+    }
+    
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    
+    const mat = new THREE.PointsMaterial({
+        size: isSnow ? 0.3 : 0.1,
+        color: color,
+        transparent: true,
+        opacity: 0.7,
+        sizeAttenuation: true
+    });
+    
+    const precipitation = new THREE.Points(geo, mat);
+    precipitation.userData = { velocities, isSnow };
+    scene.add(precipitation);
+    AppState.three.envObjects.push(precipitation);
+    AppState.three.precipitation = precipitation;
+}
+
+function createPuddles(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 20;
+    const color = parseInt((layer.color || '#add8e6').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const puddle = new THREE.Mesh(
+            new THREE.CircleGeometry(0.5 + Math.random() * 1.5, 16),
+            new THREE.MeshStandardMaterial({ 
+                color: color,
+                roughness: 0.1,
+                metalness: 0.9,
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        puddle.rotation.x = -Math.PI / 2;
+        puddle.position.set(
+            (Math.random() - 0.5) * 80,
+            -4.49,
+            (Math.random() - 0.5) * 80
+        );
+        scene.add(puddle);
+        AppState.three.envObjects.push(puddle);
+    }
+}
+
+function createCelestialBody(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ffffff').replace('#', '0x'));
+    const size = layer.size || 2;
+    const position = layer.position || [0, 5];
+    
+    const body = new THREE.Mesh(
+        new THREE.SphereGeometry(size, 32, 32),
+        new THREE.MeshBasicMaterial({ color: color })
+    );
+    body.position.set(position[0] * 10, position[1] * 10, -100);
+    body.renderOrder = -99;
+    scene.add(body);
+    AppState.three.envObjects.push(body);
+    
+    if (layer.type === 'sun') {
+        // Add lens flare effect
+        const flare = new THREE.Mesh(
+            new THREE.SphereGeometry(size * 1.5, 16, 16),
+            new THREE.MeshBasicMaterial({ 
+                color: 0xffff00, 
+                transparent: true, 
+                opacity: 0.3 
+            })
+        );
+        flare.position.copy(body.position);
+        scene.add(flare);
+        AppState.three.envObjects.push(flare);
+    }
+}
+
+function createSnowCaps(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    
+    for (let i = 0; i < count; i++) {
+        const cap = new THREE.Mesh(
+            new THREE.ConeGeometry(5, 8, 8),
+            new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
+        );
+        cap.position.set(
+            (Math.random() - 0.5) * 50,
+            5,
+            -30 + (Math.random() - 0.5) * 20
+        );
+        cap.rotation.x = -Math.PI / 2;
+        scene.add(cap);
+        AppState.three.envObjects.push(cap);
+    }
+}
+
+function createBuildings(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    const scale = layer.scale || 1;
+    const color = layer.color ? parseInt(layer.color.replace('#', '0x')) : 0x888888;
+    
+    for (let i = 0; i < count; i++) {
+        const width = (4 + Math.random() * 4) * scale;
+        const height = (8 + Math.random() * 12) * scale;
+        const depth = (4 + Math.random() * 4) * scale;
+        const x = (Math.random() - 0.5) * 100;
+        const z = -20 + (layer.depth || 0) * 20 + (Math.random() - 0.5) * 40;
+        
+        const building = new THREE.Mesh(
+            new THREE.BoxGeometry(width, height, depth),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.8, flatShading: true })
+        );
+        building.position.set(x, height / 2 - 5, z);
+        building.castShadow = true;
+        building.receiveShadow = true;
+        scene.add(building);
+        AppState.three.envObjects.push(building);
+        
+        // Add windows
+        const windowMat = new THREE.MeshBasicMaterial({ color: 0xffffcc, transparent: true, opacity: 0.8 });
+        for (let wy = 0; wy < height / 3; wy++) {
+            for (let wx = 0; wx < width / 2; wx++) {
+                const window = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.8, 1.2, 0.1),
+                    windowMat
+                );
+                window.position.set(
+                    x - width/2 + 1 + wx * 2,
+                    -5 + 2 + wy * 3,
+                    z + depth/2 + 0.1
+                );
+                scene.add(window);
+                AppState.three.envObjects.push(window);
+            }
+        }
+    }
+}
+
+function createStreetlights(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 6;
+    
+    for (let i = 0; i < count; i++) {
+        const light = createStreetlight();
+        light.position.set(
+            (Math.random() - 0.5) * 100,
+            -5,
+            -10 + (layer.depth || 0) * 10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(light);
+        AppState.three.envObjects.push(light);
+    }
+}
+
+function createVehicles(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    const color = layer.color ? parseInt(layer.color.replace('#', '0x')) : 0x4169e1;
+    const template = layer.template || 'car';
+    const scale = layer.scale || 1;
+    
+    for (let i = 0; i < count; i++) {
+        let vehicle;
+        if (template === 'car') {
+            vehicle = createCar(color);
+        } else if (template === 'train') {
+            vehicle = createTrain(color);
+        } else if (template === 'plane') {
+            vehicle = createPlane(color);
+        }
+        
+        if (vehicle) {
+            vehicle.scale.setScalar(scale);
+            vehicle.position.set(
+                (Math.random() - 0.5) * 100,
+                -4.5,
+                -10 + (layer.depth || 0) * 10 + (Math.random() - 0.5) * 30
+            );
+            scene.add(vehicle);
+            AppState.three.envObjects.push(vehicle);
+        }
+    }
+}
+
+function createCar(color) {
+    const THREE = AppState.three.THREE;
+    const car = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, flatShading: true });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+    
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), bodyMat);
+    body.position.y = 0.5;
+    body.castShadow = true;
+    car.add(body);
+    
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.7, 0.9), bodyMat);
+    roof.position.set(0, 1.2, 0);
+    roof.castShadow = true;
+    car.add(roof);
+    
+    for (const [x, z] of [[-0.7, -0.5], [0.7, -0.5], [-0.7, 0.5], [0.7, 0.5]]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.1, 12), wheelMat);
+        wheel.position.set(x, 0.3, z);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.castShadow = true;
+        car.add(wheel);
+    }
+    
+    return car;
+}
+
+function createTrain(color) {
+    const THREE = AppState.three.THREE;
+    const train = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, flatShading: true });
+    
+    for (let i = 0; i < 5; i++) {
+        const car = new THREE.Mesh(new THREE.BoxGeometry(4, 2, 1.5), mat);
+        car.position.set(i * 4.5, 1, 0);
+        car.castShadow = true;
+        train.add(car);
+        
+        for (const [x, z] of [[-1.5, -0.7], [1.5, -0.7], [-1.5, 0.7], [1.5, 0.7]]) {
+            const wheel = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.4, 0.4, 0.15, 12),
+                new THREE.MeshStandardMaterial({ color: 0x111111 })
+            );
+            wheel.position.set(i * 4.5 + x, 0.15, z);
+            wheel.rotation.z = Math.PI / 2;
+            train.add(wheel);
+        }
+    }
+    
+    return train;
+}
+
+function createPlane(color) {
+    const THREE = AppState.three.THREE;
+    const plane = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.4 });
+    
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 8, 16), mat);
+    plane.add(body);
+    
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(10, 0.2, 1.5), mat);
+    wing.position.y = 0.5;
+    plane.add(wing);
+    
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(2, 1.5, 0.2), mat);
+    tail.position.set(0, 1, -4);
+    plane.add(tail);
+    
+    return plane;
+}
+
+function createFence(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 20;
+    const color = parseInt((layer.color || '#8b4513').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const post = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 1.5, 0.1),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        post.position.set(
+            -40 + i * 4,
+            -4.25,
+            10
+        );
+        post.castShadow = true;
+        scene.add(post);
+        AppState.three.envObjects.push(post);
+    }
+}
+
+function createAnimals(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    const template = layer.template || 'cow';
+    
+    for (let i = 0; i < count; i++) {
+        const animal = createAnimalInstance(template);
+        if (animal) {
+            animal.position.set(
+                (Math.random() - 0.5) * 50,
+                -5,
+                -10 + (Math.random() - 0.5) * 30
+            );
+            animal.castShadow = true;
+            scene.add(animal);
+            AppState.three.envObjects.push(animal);
+        }
+    }
+}
+
+function createAnimalInstance(template) {
+    const THREE = AppState.three.THREE;
+    if (template === 'cow') {
+        const cow = new THREE.Group();
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+        const spotMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.9 });
+        
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.7), bodyMat);
+        body.position.y = 0.5;
+        body.castShadow = true;
+        cow.add(body);
+        
+        for (let i = 0; i < 5; i++) {
+            const spot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.1), spotMat);
+            spot.position.set(
+                (Math.random() - 0.5) * 1,
+                0.5 + (Math.random() - 0.5) * 0.4,
+                0.35 + (Math.random() - 0.5) * 0.4
+            );
+            cow.add(spot);
+        }
+        
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.35, 0.4), bodyMat);
+        head.position.set(0.8, 0.55, 0);
+        head.castShadow = true;
+        cow.add(head);
+        
+        for (const [x, z] of [[-0.4, -0.25], [0.2, -0.25], [-0.4, 0.25], [0.2, 0.25]]) {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8), bodyMat);
+            leg.position.set(x, 0.25, z);
+            leg.castShadow = true;
+            cow.add(leg);
+        }
+        
+        return cow;
+    }
+    return null;
+}
+
+function createCross(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ff0000').replace('#', '0x'));
+    const size = layer.size || 1;
+    
+    const cross = new THREE.Group();
+    const mat = new THREE.MeshBasicMaterial({ color: color });
+    
+    const vertical = new THREE.Mesh(new THREE.BoxGeometry(0.2, size * 2, 0.2), mat);
+    cross.add(vertical);
+    
+    const horizontal = new THREE.Mesh(new THREE.BoxGeometry(size, 0.2, 0.2), mat);
+    horizontal.position.y = size * 0.3;
+    cross.add(horizontal);
+    
+    cross.position.set(0, -5 + size, -15);
+    scene.add(cross);
+    AppState.three.envObjects.push(cross);
+}
+
+function createFlag(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ff6347').replace('#', '0x'));
+    
+    const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 6, 8),
+        new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+    );
+    pole.position.y = -2;
+    pole.castShadow = true;
+    scene.add(pole);
+    
+    const flag = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 1.2, 0.05),
+        new THREE.MeshStandardMaterial({ color: color, side: THREE.DoubleSide })
+    );
+    flag.position.set(1, 1, 0);
+    scene.add(flag);
+    
+    AppState.three.envObjects.push(pole, flag);
+}
+
+function createCanopy(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ffa500').replace('#', '0x'));
+    
+    const canopy = new THREE.Mesh(
+        new THREE.BoxGeometry(50, 0.3, 30),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+    );
+    canopy.position.set(0, 3, -5);
+    canopy.castShadow = true;
+    scene.add(canopy);
+    AppState.three.envObjects.push(canopy);
+}
+
+function createGoods(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 20;
+    const colors = layer.colors || ['#ff6347', '#ffd700', '#32cd32', '#ff69b4'];
+    
+    for (let i = 0; i < count; i++) {
+        const color = parseInt(colors[Math.floor(Math.random() * colors.length)].replace('#', '0x'));
+        const box = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5 + Math.random() * 0.5, 0.4 + Math.random() * 0.4, 0.5 + Math.random() * 0.5),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+        );
+        box.position.set(
+            (Math.random() - 0.5) * 30,
+            -4.5 + 0.3,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        box.castShadow = true;
+        scene.add(box);
+        AppState.three.envObjects.push(box);
+    }
+}
+
+function createBells(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 4;
+    const color = parseInt((layer.color || '#ffd700').replace('#', '0x'));
+    const size = layer.size || 0.5;
+    
+    for (let i = 0; i < count; i++) {
+        const bell = new THREE.Mesh(
+            new THREE.ConeGeometry(size, size * 1.5, 8),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.3 })
+        );
+        bell.position.set(
+            (Math.random() - 0.5) * 20,
+            -2 + Math.random() * 4,
+            -15
+        );
+        bell.rotation.x = Math.PI;
+        scene.add(bell);
+        AppState.three.envObjects.push(bell);
+    }
+}
+
+function createOfferings(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 10;
+    const color = parseInt((layer.color || '#ff69b4').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const offering = new THREE.Group();
+        
+        const base = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 0.1, 12),
+            new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+        );
+        offering.add(base);
+        
+        const flowers = new THREE.Mesh(
+            new THREE.SphereGeometry(0.25, 8, 8),
+            new THREE.MeshStandardMaterial({ color: color })
+        );
+        flowers.position.y = 0.15;
+        offering.add(flowers);
+        
+        offering.position.set(
+            (Math.random() - 0.5) * 10,
+            -4.5,
+            -12 + (Math.random() - 0.5) * 5
+        );
+        scene.add(offering);
+        AppState.three.envObjects.push(offering);
+    }
+}
+
+function createSignals(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 2;
+    
+    for (let i = 0; i < count; i++) {
+        const signal = createTrafficLight();
+        signal.position.set(
+            (Math.random() - 0.5) * 20,
+            -5,
+            -15 + i * 30
+        );
+        scene.add(signal);
+        AppState.three.envObjects.push(signal);
+    }
+}
+
+function createTrafficLight() {
+    const THREE = AppState.three.THREE;
+    const signal = new THREE.Group();
+    
+    const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.1, 4, 8),
+        new THREE.MeshStandardMaterial({ color: 0x808080 })
+    );
+    pole.position.y = 2;
+    pole.castShadow = true;
+    signal.add(pole);
+    
+    const box = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 1, 0.2),
+        new THREE.MeshStandardMaterial({ color: 0x111111 })
+    );
+    box.position.set(0, 3, 0.2);
+    box.castShadow = true;
+    signal.add(box);
+    
+    const colors = [0xff0000, 0xffff00, 0x00ff00];
+    colors.forEach((color, i) => {
+        const light = new THREE.Mesh(
+            new THREE.SphereGeometry(0.15, 8, 8),
+            new THREE.MeshBasicMaterial({ color: color })
+        );
+        light.position.set(0, 3 - i * 0.4, 0.35);
+        signal.add(light);
+    });
+    
+    return signal;
+}
+
+function createControlTower(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const scale = layer.scale || 1;
+    
+    const tower = new THREE.Group();
+    
+    const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(3 * scale, 4 * scale, 10 * scale, 12),
+        new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.7 })
+    );
+    base.position.y = 5 * scale - 5;
+    base.castShadow = true;
+    tower.add(base);
+    
+    const cabin = new THREE.Mesh(
+        new THREE.CylinderGeometry(4 * scale, 3 * scale, 4 * scale, 16),
+        new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5 })
+    );
+    cabin.position.y = 13 * scale - 5;
+    tower.add(cabin);
+    
+    const windows = new THREE.Mesh(
+        new THREE.BoxGeometry(7 * scale, 3 * scale, 0.2),
+        new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.8 })
+    );
+    windows.position.set(0, 13 * scale - 5, 4.5 * scale);
+    tower.add(windows);
+    
+    tower.position.set(0, 0, -30);
+    scene.add(tower);
+    AppState.three.envObjects.push(tower);
+}
+
+function createSilhouettes(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const color = parseInt((layer.color || '#1a1a2e').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const silhouette = new THREE.Mesh(
+            new THREE.ConeGeometry(2, 8, 8),
+            new THREE.MeshBasicMaterial({ color: color })
+        );
+        silhouette.position.set(
+            (Math.random() - 0.5) * 80,
+            -1,
+            -20 + (Math.random() - 0.5) * 40
+        );
+        silhouette.rotation.x = -Math.PI / 2;
+        scene.add(silhouette);
+        AppState.three.envObjects.push(silhouette);
+    }
+}
+
+function createBirds(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 8;
+    
+    for (let i = 0; i < count; i++) {
+        const bird = new THREE.Group();
+        const body = new THREE.Mesh(
+            new THREE.SphereGeometry(0.15, 8, 8),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        body.scale.set(1.5, 1, 1);
+        bird.add(body);
+        
+        const wing1 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.02, 0.15),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        wing1.position.set(0.1, 0, -0.1);
+        wing1.rotation.x = Math.PI / 6;
+        bird.add(wing1);
+        
+        const wing2 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.02, 0.15),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        wing2.position.set(0.1, 0, 0.1);
+        wing2.rotation.x = -Math.PI / 6;
+        bird.add(wing2);
+        
+        bird.position.set(
+            (Math.random() - 0.5) * 100,
+            20 + Math.random() * 20,
+            (Math.random() - 0.5) * 100
+        );
+        bird.userData = { 
+            velocity: new THREE.Vector3(
+                (Math.random() - 0.5) * 0.1,
+                (Math.random() - 0.5) * 0.05,
+                (Math.random() - 0.5) * 0.1
+            )
+        };
+        scene.add(bird);
+        AppState.three.envObjects.push(bird);
+    }
+}
+
+function createUmbrellas(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const colors = layer.colors || ['#ff0000', '#0000ff', '#ffff00', '#ff69b4'];
+    
+    for (let i = 0; i < count; i++) {
+        const color = parseInt(colors[Math.floor(Math.random() * colors.length)].replace('#', '0x'));
+        const umbrella = new THREE.Group();
+        
+        const pole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 1, 8),
+            new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        pole.position.y = 0.5;
+        umbrella.add(pole);
+        
+        const canopy = new THREE.Mesh(
+            new THREE.ConeGeometry(0.8, 0.2, 8),
+            new THREE.MeshStandardMaterial({ color: color, side: THREE.DoubleSide })
+        );
+        canopy.position.y = 1.1;
+        umbrella.add(canopy);
+        
+        umbrella.position.set(
+            (Math.random() - 0.5) * 50,
+            -5,
+            -10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(umbrella);
+        AppState.three.envObjects.push(umbrella);
+    }
+}
+
+function createSnowman(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 2;
+    const sizes = layer.sizes || [0.8, 0.5, 0.3];
+    
+    for (let i = 0; i < count; i++) {
+        const snowman = new THREE.Group();
+        let yPos = 0;
+        
+        sizes.forEach((size, idx) => {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(size, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
+            );
+            sphere.position.y = yPos + size;
+            sphere.castShadow = true;
+            snowman.add(sphere);
+            yPos += size * 1.8;
+        });
+        
+        // Hat
+        const hat = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.4, 0.4, 12),
+            new THREE.MeshStandardMaterial({ color: 0x000000 })
+        );
+        hat.position.y = yPos + 0.2;
+        snowman.add(hat);
+        
+        snowman.position.set(
+            (Math.random() - 0.5) * 40,
+            -4.5,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        scene.add(snowman);
+        AppState.three.envObjects.push(snowman);
+    }
+}
+
+function createFootprints(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 10;
+    const color = parseInt((layer.color || '#d0d0e0').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const footprint = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.02, 0.5),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        footprint.rotation.x = -Math.PI / 2;
+        footprint.position.set(
+            (Math.random() - 0.5) * 50,
+            -4.49,
+            (Math.random() - 0.5) * 50
+        );
+        footprint.rotation.y = Math.random() * Math.PI;
+        scene.add(footprint);
+        AppState.three.envObjects.push(footprint);
+    }
+}
+
+function createPumpkins(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 4;
+    const color = parseInt((layer.color || '#ff7518').replace('#', '0x'));
+    const size = layer.size || 0.5;
+    
+    for (let i = 0; i < count; i++) {
+        const pumpkin = new THREE.Mesh(
+            new THREE.SphereGeometry(size, 16, 16),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+        );
+        pumpkin.scale.set(1, 0.8, 1);
+        pumpkin.position.set(
+            (Math.random() - 0.5) * 30,
+            -4.5 + size,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        pumpkin.castShadow = true;
+        scene.add(pumpkin);
+        AppState.three.envObjects.push(pumpkin);
+        
+        // Stem
+        const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.05, 0.05, 0.15, 8),
+            new THREE.MeshStandardMaterial({ color: 0x228b22 })
+        );
+        stem.position.copy(pumpkin.position);
+        stem.position.y += size + 0.075;
+        scene.add(stem);
+        AppState.three.envObjects.push(stem);
+    }
+}
+
+function createButterflies(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 8;
+    
+    for (let i = 0; i < count; i++) {
+        const butterfly = new THREE.Group();
+        
+        const body = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 0.2, 8),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        butterfly.add(body);
+        
+        const wing1 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.01, 0.2),
+            new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide })
+        );
+        wing1.position.set(0.1, 0, -0.1);
+        butterfly.add(wing1);
+        
+        const wing2 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.01, 0.2),
+            new THREE.MeshBasicMaterial({ color: 0xffd700, side: THREE.DoubleSide })
+        );
+        wing2.position.set(0.1, 0, 0.1);
+        butterfly.add(wing2);
+        
+        butterfly.position.set(
+            (Math.random() - 0.5) * 50,
+            1 + Math.random() * 2,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        butterfly.userData = { 
+            velocity: new THREE.Vector3(
+                (Math.random() - 0.5) * 0.05,
+                (Math.random() - 0.5) * 0.02,
+                (Math.random() - 0.5) * 0.05
+            )
+        };
+        scene.add(butterfly);
+        AppState.three.envObjects.push(butterfly);
+    }
+}
+
+function createReeds(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const color = parseInt((layer.color || '#228b22').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const reed = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.03, 0.01, 1.5, 8),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        reed.position.set(
+            (Math.random() - 0.5) * 20,
+            -4.25,
+            -3 + (Math.random() - 0.5) * 2
+        );
+        reed.castShadow = true;
+        scene.add(reed);
+        AppState.three.envObjects.push(reed);
+    }
+}
+
+function createUnderwater(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    if (layer.type === 'corals') {
+        const colors = layer.color || ['#ff6b6b', '#ffd700', '#ff69b4'];
+        colors.forEach((c, idx) => {
+            const coral = new THREE.Group();
+            const coralColor = parseInt(c.replace('#', '0x'));
+            
+            for (let j = 0; j < 5; j++) {
+                const branch = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.2, 0.05, 1, 8),
+                    new THREE.MeshStandardMaterial({ color: coralColor, roughness: 0.9 })
+                );
+                branch.position.set(
+                    (Math.random() - 0.5) * 2,
+                    0.5 + j * 0.2,
+                    (Math.random() - 0.5) * 2
+                );
+                coral.add(branch);
+            }
+            
+            coral.position.set(
+                (Math.random() - 0.5) * 50,
+                -8,
+                (Math.random() - 0.5) * 50
+            );
+            scene.add(coral);
+            AppState.three.envObjects.push(coral);
+        });
+    } else if (layer.type === 'fish') {
+        for (let i = 0; i < 10; i++) {
+            const fish = new THREE.Group();
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(0.5, 0.2, 0.15),
+                new THREE.MeshStandardMaterial({ color: 0xff9900 })
+            );
+            body.scale.set(1, 0.8, 1);
+            fish.add(body);
+            
+            const tail = new THREE.Mesh(
+                new THREE.ConeGeometry(0.15, 0.2, 4),
+                new THREE.MeshStandardMaterial({ color: 0xff9900 })
+            );
+            tail.position.set(-0.35, 0, 0);
+            tail.rotation.z = -Math.PI / 2;
+            fish.add(tail);
+            
+            fish.position.set(
+                (Math.random() - 0.5) * 100,
+                -6 + Math.random() * 4,
+                (Math.random() - 0.5) * 100
+            );
+            fish.userData = { 
+                velocity: new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.1,
+                    0,
+                    (Math.random() - 0.5) * 0.1
+                )
+            };
+            scene.add(fish);
+            AppState.three.envObjects.push(fish);
+        }
+    } else if (layer.type === 'bubbles') {
+        const count = layer.count || 15;
+        const color = parseInt((layer.color || 'rgba(255,255,255,0.5)').replace('rgba(', '').replace(')', '').split(',')[0]);
+        
+        const geo = new THREE.BufferGeometry();
+        const positions = [];
+        
+        for (let i = 0; i < count; i++) {
+            positions.push(
+                (Math.random() - 0.5) * 100,
+                Math.random() * 20,
+                (Math.random() - 0.5) * 100
+            );
+        }
+        
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        
+        const mat = new THREE.PointsMaterial({
+            size: layer.size || 0.2,
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.5,
+            sizeAttenuation: true
+        });
+        
+        const bubbles = new THREE.Points(geo, mat);
+        bubbles.userData = { velocities: Array(count).fill().map(() => new THREE.Vector3(0, 0.5, 0)) };
+        scene.add(bubbles);
+        AppState.three.envObjects.push(bubbles);
+    }
+}
+
+function createCactus(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    
+    for (let i = 0; i < count; i++) {
+        const cactus = new THREE.Group();
+        
+        const trunk = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.25, 3, 8),
+            new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.9 })
+        );
+        trunk.position.y = 1.5;
+        trunk.castShadow = true;
+        cactus.add(trunk);
+        
+        // Arms
+        for (let j = 0; j < 2; j++) {
+            const arm = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.15, 0.1, 1.5, 8),
+                new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.9 })
+            );
+            arm.position.set(
+                j === 0 ? -0.4 : 0.4,
+                1.5 + Math.random() * 1,
+                0
+            );
+            arm.rotation.z = j === 0 ? -Math.PI / 4 : Math.PI / 4;
+            arm.castShadow = true;
+            cactus.add(arm);
+        }
+        
+        cactus.position.set(
+            (Math.random() - 0.5) * 60,
+            -4.5,
+            -10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(cactus);
+        AppState.three.envObjects.push(cactus);
+    }
+}
+
+function createClassroom(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    if (layer.type === 'desks') {
+        const count = layer.count || 6;
+        const color = parseInt((layer.color || '#8b4513').replace('#', '0x'));
+        
+        for (let i = 0; i < count; i++) {
+            const desk = new THREE.Mesh(
+                new THREE.BoxGeometry(1, 0.8, 0.6),
+                new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+            );
+            desk.position.set(
+                -4 + (i % 3) * 4,
+                -4.6,
+                -8 + Math.floor(i / 3) * 3
+            );
+            desk.castShadow = true;
+            scene.add(desk);
+            AppState.three.envObjects.push(desk);
+            
+            // Chair
+            const chair = new THREE.Mesh(
+                new THREE.BoxGeometry(0.5, 0.9, 0.5),
+                new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+            );
+            chair.position.set(
+                -4 + (i % 3) * 4,
+                -4.55,
+                -9 + Math.floor(i / 3) * 3
+            );
+            chair.castShadow = true;
+            scene.add(chair);
+            AppState.three.envObjects.push(chair);
+        }
+    } else if (layer.type === 'board') {
+        const board = new THREE.Mesh(
+            new THREE.BoxGeometry(4, 2, 0.1),
+            new THREE.MeshStandardMaterial({ color: 0x1b4d3e, roughness: 0.9 })
+        );
+        board.position.set(0, 0.5, -10.1);
+        scene.add(board);
+        AppState.three.envObjects.push(board);
+    }
+}
+
+function createSpace(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ff6b6b').replace('#', '0x'));
+    const size = layer.size || 3;
+    const position = layer.position || [0, 0];
+    
+    if (layer.type === 'planet1' || layer.type === 'planet2') {
+        const planet = new THREE.Mesh(
+            new THREE.SphereGeometry(size, 32, 32),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.7 })
+        );
+        planet.position.set(position[0], position[1], -50);
+        scene.add(planet);
+        AppState.three.envObjects.push(planet);
+    } else if (layer.type === 'rocket') {
+        const rocket = createRocket();
+        rocket.position.set(position[0], position[1], -30);
+        scene.add(rocket);
+        AppState.three.envObjects.push(rocket);
+    }
+}
+
+function createRocket() {
+    const THREE = AppState.three.THREE;
+    const rocket = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+    
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 5, 12), mat);
+    rocket.add(body);
+    
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.5, 12), mat);
+    nose.position.y = 3.25;
+    rocket.add(nose);
+    
+    for (let i = 0; i < 3; i++) {
+        const fin = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 0.1, 1.5),
+            mat
+        );
+        fin.position.set(
+            Math.cos(i * 2 * Math.PI / 3) * 0.6,
+            -2,
+            Math.sin(i * 2 * Math.PI / 3) * 0.6
+        );
+        fin.rotation.y = i * 2 * Math.PI / 3;
+        rocket.add(fin);
+    }
+    
+    return rocket;
+}
+
+function createPath(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#d2b48c').replace('#', '0x'));
+    const count = layer.count || 1;
+    
+    for (let i = 0; i < count; i++) {
+        const path = new THREE.Mesh(
+            new THREE.BoxGeometry(200, 0.1, 4),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        path.position.set(0, -4.9, -5 + i * 10);
+        path.receiveShadow = true;
+        scene.add(path);
+        AppState.three.envObjects.push(path);
+    }
+}
+
+function createPlayground(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ffd700').replace('#', '0x'));
+    
+    const ground = new THREE.Mesh(
+        new THREE.BoxGeometry(30, 0.1, 20),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+    );
+    ground.position.set(0, -4.9, -5);
+    ground.receiveShadow = true;
+    scene.add(ground);
+    AppState.three.envObjects.push(ground);
+}
+
+function createParking(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#cccccc').replace('#', '0x'));
+    
+    const lot = new THREE.Mesh(
+        new THREE.BoxGeometry(40, 0.1, 30),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+    );
+    lot.position.set(0, -4.9, -10);
+    lot.receiveShadow = true;
+    scene.add(lot);
+    AppState.three.envObjects.push(lot);
+    
+    // Parking lines
+    for (let i = 0; i < 10; i++) {
+        const line = new THREE.Mesh(
+            new THREE.BoxGeometry(20, 0.02, 0.1),
+            new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        line.position.set(0, -4.88, -25 + i * 5);
+        scene.add(line);
+        AppState.three.envObjects.push(line);
+    }
+}
+
+function createCrowd(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 15;
+    const color = parseInt((layer.color || '#8b4513').replace('#', '0x'));
+    const size = layer.size || 0.5;
+    
+    for (let i = 0; i < count; i++) {
+        const person = new THREE.Mesh(
+            new THREE.CylinderGeometry(size, size * 0.5, 1.5, 8),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        person.position.set(
+            (Math.random() - 0.5) * 30,
+            -4.25,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        person.castShadow = true;
+        scene.add(person);
+        AppState.three.envObjects.push(person);
+    }
+}
+
+function createPillars(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 8;
+    const color = parseInt((layer.color || '#f5f5dc').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const pillar = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.5, 0.5, 8, 12),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.7 })
+        );
+        pillar.position.set(
+            -15 + i * 4,
+            -1,
+            -15
+        );
+        pillar.castShadow = true;
+        scene.add(pillar);
+        AppState.three.envObjects.push(pillar);
+    }
+}
+
+function applyWeatherPreset(weather) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const intensity = AppState.three.background.weatherIntensity || 0.5;
+    
+    // Clear existing weather
+    if (AppState.three.precipitation) {
+        scene.remove(AppState.three.precipitation);
+        AppState.three.precipitation.geometry.dispose();
+        AppState.three.precipitation.material.dispose();
+        AppState.three.precipitation = null;
+    }
+    
+    // Clear puddles
+    AppState.three.envObjects = AppState.three.envObjects.filter(obj => {
+        if (obj.userData?.isPuddle) {
+            scene.remove(obj);
+            return false;
+        }
+        return true;
+    });
+    
+    switch (weather) {
+        case 'rain':
+            createPrecipitation({ type: 'rain', count: Math.floor(200 * intensity) });
+            // Add puddles
+            createPuddles({ count: Math.floor(30 * intensity) });
+            break;
+        case 'storm':
+            createPrecipitation({ type: 'rain', count: Math.floor(400 * intensity) });
+            createPuddles({ count: Math.floor(50 * intensity) });
+            // Darker sky
+            if (AppState.three.skySphere) {
+                AppState.three.skySphere.material.uniforms.topColor.value.setHex(0x37474f);
+                AppState.three.skySphere.material.uniforms.bottomColor.value.setHex(0x455a64);
+            }
+            break;
+        case 'snow':
+            createPrecipitation({ type: 'snowfall', count: Math.floor(150 * intensity) });
+            break;
+        case 'fog':
+        case 'mist':
+            scene.fog = new THREE.FogExp2(0x8888aa, weather === 'fog' ? 0.02 * intensity : 0.01 * intensity);
+            break;
+        case 'clear':
+        default:
+            scene.fog = null;
+            break;
+    }
+    
+    showToast(`Weather "${weather}" applied`, 'success');
+}
+
+function applyTimeOfDayPreset(timeOfDay) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    const timeSettings = {
+        dawn: { skyTop: 0xff6b35, skyBottom: 0xffcc70, sunY: 5, exposure: 0.8, fog: 0.01 },
+        morning: { skyTop: 0x87ceeb, skyBottom: 0xe0f7fa, sunY: 20, exposure: 1.0, fog: 0 },
+        noon: { skyTop: 0x4da6ff, skyBottom: 0x87ceeb, sunY: 40, exposure: 1.2, fog: 0 },
+        afternoon: { skyTop: 0x64b5f6, skyBottom: 0xb3e5fc, sunY: 30, exposure: 1.1, fog: 0 },
+        goldenHour: { skyTop: 0xff7043, skyBottom: 0xffcc80, sunY: 10, exposure: 1.3, fog: 0.005 },
+        sunset: { skyTop: 0xff6b35, skyBottom: 0xffcc70, sunY: 5, exposure: 1.0, fog: 0.01 },
+        dusk: { skyTop: 0x4a148c, skyBottom: 0x7b1fa2, sunY: 0, exposure: 0.7, fog: 0.01 },
+        night: { skyTop: 0x0d0d2b, skyBottom: 0x1a1a3e, sunY: -10, exposure: 0.5, fog: 0.02 }
+    };
+    
+    const settings = timeSettings[timeOfDay] || timeSettings.noon;
+    
+    // Update sky
+    if (AppState.three.skySphere) {
+        AppState.three.skySphere.material.uniforms.topColor.value.setHex(settings.skyTop);
+        AppState.three.skySphere.material.uniforms.bottomColor.value.setHex(settings.skyBottom);
+    }
+    
+    // Update sun position
+    if (AppState.three.sunLight) {
+        const angle = THREE.MathUtils.degToRad(90 - settings.sunY);
+        AppState.three.sunLight.position.set(
+            Math.sin(angle) * 100,
+            Math.cos(angle) * 100,
+            50
+        );
+        AppState.three.sunLight.intensity = settings.exposure;
+    }
+    
+    // Update exposure
+    if (AppState.three.renderer) {
+        AppState.three.renderer.toneMappingExposure = settings.exposure;
+    }
+    
+    // Update fog
+    if (settings.fog > 0) {
+        scene.fog = new THREE.FogExp2(0xaaaacc, settings.fog);
+    } else {
+        scene.fog = null;
+    }
+    
+    // Add stars for night
+    if (timeOfDay === 'night' && !AppState.three.stars) {
+        addStars();
+    } else if (timeOfDay !== 'night' && AppState.three.stars) {
+        scene.remove(AppState.three.stars);
+        AppState.three.stars.geometry.dispose();
+        AppState.three.stars.material.dispose();
+        AppState.three.stars = null;
+    }
+    
+    showToast(`Time of day "${timeOfDay}" applied`, 'success');
+}
+
+// Post-processing update
+function updatePostProcessing() {
+    const effects = AppState.three.effects || {};
+    
+    // Apply color grading through renderer tone mapping
+    if (AppState.three.renderer) {
+        const exposure = 1.0 + (effects.brightness || 0);
+        AppState.three.renderer.toneMappingExposure = exposure;
+    }
+    
+    // Note: Full post-processing effects (bloom, vignette, film grain, chromatic aberration)
+    // would require additional passes in the EffectComposer.
+    // For now, we apply basic color grading through renderer settings.
+    
+    // Update sky sphere uniforms if available
+    if (AppState.three.skySphere && AppState.three.skySphere.material.uniforms) {
+        // Temperature affects sky color
+        const temp = effects.temperature || 0;
+        // This would need custom shader uniforms for full effect
+    }
+}
+
 function onThreeResize() {
     const { camera, renderer, composer, cameraControls } = AppState.three;
     const canvas = $('#previewCanvas');
@@ -1053,7 +3841,7 @@ function onThreeResize() {
 }
 
 function animateThree() {
-    const { scene, camera, renderer, composer, animationId, characters3d } = AppState.three;
+    const { scene, camera, renderer, composer, animationId, characters3d, effectManager } = AppState.three;
     
     AppState.three.animationId = requestAnimationFrame(animateThree);
     
@@ -1078,6 +3866,14 @@ function animateThree() {
     
     updateCameraMovement(time);
     updateSubtitlesForCurrentTime();
+    
+    // Update visual effects (particles, etc.)
+    if (effectManager) {
+        effectManager.update(deltaTime);
+    }
+    
+    // Update timeline
+    updateTimeline(deltaTime);
     
     if (composer) {
         composer.render();
@@ -1560,7 +4356,7 @@ async function createPaperCutout(templateName, colors, depth = 0, scale = 1) {
 }
 
 // ========================================
-// Scene Building
+// Scene Building (Enhanced)
 // ========================================
 async function buildScene(sceneIndex) {
     const sceneData = AppState.scenes[sceneIndex];
@@ -1571,18 +4367,599 @@ async function buildScene(sceneIndex) {
     
     clearSceneObjects(sceneIndex);
     
-    const background = await buildBackground(sceneData.background, colors, sceneIndex);
+    // Apply automatic camera settings from scene data
+    if (sceneData.cameraSuggestion) {
+        applyCameraSuggestion(sceneData.cameraSuggestion, sceneData.characters?.length || 1);
+    }
+    
+    // Apply automatic lighting settings from scene data
+    if (sceneData.lightingSuggestion) {
+        applyLightingSuggestion(sceneData.lightingSuggestion, sceneData.timeOfDay, sceneData.mood);
+    }
+    
+    // Build background with enhanced settings
+    const background = await buildBackgroundEnhanced(sceneData, colors, sceneIndex);
     if (background) {
         AppState.three.backgrounds[sceneIndex] = background;
         AppState.three.scene.add(background.group);
     }
     
+    // Build characters with enhanced positioning and animation
     for (let i = 0; i < sceneData.characters.length; i++) {
-        await buildCharacter(sceneData.characters[i], colors, sceneIndex, i);
+        await buildCharacterEnhanced(sceneData, colors, sceneIndex, i);
     }
     
-    console.log(`Scene ${sceneIndex + 1} built`);
+    // Load assets for this scene
+    if (sceneData.assets && AppState.three.assetManager) {
+        AppState.three.assetManager.clear();
+        AppState.three.assetManager.fromJSON(sceneData.assets);
+    }
+    
+    // Auto-place environment props based on location
+    if (sceneData.locationDetails) {
+        autoPlaceEnvironmentProps(sceneData.locationDetails, sceneIndex);
+    }
+    
+    // Apply time of day effects
+    if (sceneData.timeOfDay) {
+        applyTimeOfDayEffects(sceneData.timeOfDay, sceneData.mood);
+    }
+    
+    console.log(`Scene ${sceneIndex + 1} built with enhanced generation`);
 }
+
+function applyCameraSuggestion(suggestion, characterCount) {
+    const cameraControls = AppState.three.cameraControls;
+    if (!cameraControls) return;
+    
+    const suggestions = {
+        closeup: { distance: 5, height: 1.6, fov: 30, angle: 0 },
+        medium: { distance: 10, height: 1.2, fov: 45, angle: 0 },
+        wide: { distance: 20, height: 3, fov: 60, angle: 0 },
+        over_shoulder: { distance: 8, height: 1.5, fov: 40, angle: 30 },
+        two_shot: { distance: 12, height: 1.2, fov: 50, angle: 0 }
+    };
+    
+    if (suggestions[suggestion]) {
+        Object.assign(cameraControls, suggestions[suggestion]);
+    }
+    
+    // For two-shot, adjust look-at to center between characters
+    if (suggestion === 'two_shot' && characterCount >= 2) {
+        cameraControls.lookAt.set(0, 1.6, 0);
+    }
+}
+
+function applyLightingSuggestion(suggestion, timeOfDay, mood) {
+    const lighting = AppState.three.lighting;
+    if (!lighting) return;
+    
+    const suggestions = {
+        bright_cheerful: { ambientIntensity: 0.8, keyIntensity: 1.2, fillIntensity: 0.6, exposure: 1.3, keyColor: 0xffffee },
+        soft_melancholic: { ambientIntensity: 0.4, keyIntensity: 0.6, fillIntensity: 0.3, exposure: 0.9, keyColor: 0xddddff },
+        dramatic_contrast: { ambientIntensity: 0.2, keyIntensity: 2.0, fillIntensity: 0.1, rimIntensity: 0.5, exposure: 1.2, keyColor: 0xffccaa },
+        dark_shadows: { ambientIntensity: 0.1, keyIntensity: 0.8, fillIntensity: 0.05, exposure: 0.7, keyColor: 0x8888cc },
+        bright_sudden: { ambientIntensity: 0.5, keyIntensity: 1.5, fillIntensity: 0.3, exposure: 1.4, keyColor: 0xffffaa },
+        soft_natural: { ambientIntensity: 0.6, keyIntensity: 1.0, fillIntensity: 0.5, exposure: 1.1, keyColor: 0xffeedd },
+        strong_directional: { ambientIntensity: 0.3, keyIntensity: 1.5, fillIntensity: 0.2, rimIntensity: 0.4, exposure: 1.2, keyColor: 0xffddaa },
+        moonlight: { ambientIntensity: 0.15, keyIntensity: 0.5, fillIntensity: 0.1, exposure: 0.8, keyColor: 0xaaaaff, ambientColor: 0x444466 },
+        golden_hour: { ambientIntensity: 0.4, keyIntensity: 1.0, fillIntensity: 0.3, exposure: 1.1, keyColor: 0xffcc66, ambientColor: 0xffaa44 },
+        soft_morning: { ambientIntensity: 0.5, keyIntensity: 0.8, fillIntensity: 0.4, exposure: 1.0, keyColor: 0xfff0dd, ambientColor: 0xffddaa },
+        natural: { ambientIntensity: 0.6, keyIntensity: 1.0, fillIntensity: 0.5, exposure: 1.2, keyColor: 0xffffff }
+    };
+    
+    // Time of day overrides
+    if (timeOfDay === 'night') {
+        Object.assign(lighting, suggestions.moonlight);
+    } else if (timeOfDay === 'evening') {
+        Object.assign(lighting, suggestions.golden_hour);
+    } else if (timeOfDay === 'morning') {
+        Object.assign(lighting, suggestions.soft_morning);
+    } else if (suggestions[suggestion]) {
+        Object.assign(lighting, suggestions[suggestion]);
+    }
+}
+
+async function buildBackgroundEnhanced(sceneData, colors, sceneIndex) {
+    const THREE = await import('three');
+    
+    // Use location details for enhanced background
+    const locationDetails = sceneData.locationDetails;
+    const bgName = sceneData.background;
+    const template = BackgroundTemplates[bgName] || BackgroundTemplates.garden;
+    
+    const bgGroup = new THREE.Group();
+    bgGroup.userData = { type: 'background', name: bgName, sceneIndex, layers: [] };
+    
+    // Base ground plane with location-appropriate color
+    let groundColor = parseInt(colors.background[0].replace('#', '0x'));
+    if (locationDetails) {
+        // Use location-specific ground color
+        const locationGroundColors = {
+            'जंगल': 0x2d5a2d,
+            'नदी': 0x3d85c6,
+            'पहाड़': 0x6b5b4a,
+            'गांव': 0x8b7355,
+            'शहर': 0x555555,
+            'गार्डन': 0x4caf50,
+            'कक्षा': 0xd0d0d0,
+            'अंतरिक्ष': 0x0a0a2a,
+            'पानी के नीचे': 0x1a3a5c,
+            'रेगिस्तान': 0xe8c48a
+        };
+        groundColor = locationGroundColors[sceneData.background] || groundColor;
+    }
+    
+    const baseGeometry = new THREE.PlaneGeometry(40, 30);
+    const baseMaterial = new THREE.MeshStandardMaterial({
+        color: groundColor,
+        side: THREE.DoubleSide,
+        roughness: 0.9,
+        metalness: 0,
+        polygonOffset: true,
+        polygonOffsetFactor: -100,
+        polygonOffsetUnits: -10
+    });
+    const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
+    baseMesh.position.z = -5;
+    baseMesh.receiveShadow = true;
+    bgGroup.add(baseMesh);
+    
+    // Build template layers with enhancements
+    for (let layerIndex = 0; layerIndex < template.layers.length; layerIndex++) {
+        const layer = template.layers[layerIndex];
+        
+        // Enhance layer colors based on time of day and mood
+        let layerColor = parseInt(layer.color.replace('#', '0x'));
+        if (sceneData.timeOfDay) {
+            layerColor = adjustColorForTimeOfDay(layerColor, sceneData.timeOfDay, sceneData.mood);
+        }
+        
+        if (layer.type === 'sky') {
+            baseMesh.material.color.set(layerColor);
+        } else if (layer.type === 'ground' || layer.type === 'grass' || layer.type === 'water' || layer.type === 'sand' || layer.type === 'wall') {
+            const geo = new THREE.PlaneGeometry(40, layer.type === 'water' ? 12 : 8);
+            const mat = new THREE.MeshStandardMaterial({
+                color: layerColor,
+                side: THREE.DoubleSide,
+                roughness: 0.9,
+                metalness: layer.type === 'water' ? 0.3 : 0,
+                transparent: layer.type === 'water',
+                opacity: layer.type === 'water' ? 0.7 : 1,
+                polygonOffset: true,
+                polygonOffsetFactor: -50 + layerIndex,
+                polygonOffsetUnits: -5
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(0, layer.type === 'water' ? -3 : -5, layer.depth || layerIndex * 0.5);
+            mesh.rotation.x = layer.type === 'ground' || layer.type === 'grass' || layer.type === 'sand' ? -Math.PI / 2 : 0;
+            mesh.receiveShadow = true;
+            bgGroup.add(mesh);
+        } else if (layer.type === 'mountain' || layer.type === 'mountains' || layer.type === 'dunes') {
+            const count = layer.count || 3;
+            for (let i = 0; i < count; i++) {
+                const mountainShape = new THREE.Shape();
+                const width = 10 + Math.random() * 8;
+                const height = 5 + Math.random() * 4;
+                const x = -20 + i * (40 / count) + (Math.random() - 0.5) * 4;
+                
+                mountainShape.moveTo(-width/2, 0);
+                mountainShape.lineTo(0, height);
+                mountainShape.lineTo(width/2, 0);
+                mountainShape.lineTo(-width/2, 0);
+                
+                const mountainGeo = new THREE.ExtrudeGeometry(mountainShape, {
+                    depth: 8 + Math.random() * 4,
+                    bevelEnabled: true,
+                    bevelSegments: 2,
+                    bevelSize: 0.5,
+                    bevelThickness: 0.5
+                });
+                
+                const mountainMat = new THREE.MeshStandardMaterial({
+                    color: layerColor,
+                    roughness: 0.9,
+                    metalness: 0
+                });
+                
+                const mountain = new THREE.Mesh(mountainGeo, mountainMat);
+                mountain.position.set(x, -5, layer.depth || layerIndex * 1.5);
+                mountain.rotation.x = -Math.PI / 2;
+                mountain.receiveShadow = true;
+                mountain.castShadow = true;
+                bgGroup.add(mountain);
+            }
+        } else if (layer.type === 'trees' || layer.type === 'forest') {
+            const count = layer.count || 8;
+            for (let i = 0; i < count; i++) {
+                const tree = createEnhancedTree(layerColor, layerIndex, sceneData);
+                tree.position.set(
+                    (Math.random() - 0.5) * 35,
+                    -5,
+                    (layer.depth || layerIndex * 1) + (Math.random() - 0.5) * 3
+                );
+                tree.castShadow = true;
+                bgGroup.add(tree);
+            }
+        }
+    }
+    
+    // Add location-specific props
+    if (locationDetails && locationDetails.props) {
+        locationDetails.props.forEach(propType => {
+            const count = 3 + Math.floor(Math.random() * 3);
+            for (let i = 0; i < count; i++) {
+                const prop = createEnvironmentProp(propType, sceneData);
+                if (prop) {
+                    prop.position.set(
+                        (Math.random() - 0.5) * 30,
+                        -4.5,
+                        (Math.random() - 0.5) * 20 - 5
+                    );
+                    prop.castShadow = true;
+                    bgGroup.add(prop);
+                }
+            }
+        });
+    }
+    
+    return { group: bgGroup, name: bgName, sceneIndex };
+}
+
+function adjustColorForTimeOfDay(baseColor, timeOfDay, mood) {
+    const color = new THREE.Color(baseColor);
+    const hsl = {};
+    color.getHSL(hsl);
+    
+    switch (timeOfDay) {
+        case 'morning':
+            hsl.l = Math.min(1, hsl.l * 1.2);
+            hsl.s = Math.min(1, hsl.s * 1.1);
+            hsl.h = (hsl.h + 0.05) % 1; // Slightly warmer
+            break;
+        case 'evening':
+            hsl.l = Math.max(0.1, hsl.l * 0.8);
+            hsl.s = Math.min(1, hsl.s * 1.3);
+            hsl.h = (hsl.h + 0.08) % 1; // Warmer/golden
+            break;
+        case 'night':
+            hsl.l = Math.max(0.05, hsl.l * 0.3);
+            hsl.s = Math.min(1, hsl.s * 0.7);
+            hsl.h = (hsl.h + 0.55) % 1; // Blue shift
+            break;
+    }
+    
+    // Mood adjustments
+    if (mood === 'sad') {
+        hsl.s *= 0.7;
+        hsl.l *= 0.9;
+    } else if (mood === 'happy') {
+        hsl.s *= 1.2;
+        hsl.l *= 1.1;
+    } else if (mood === 'scared') {
+        hsl.l *= 0.7;
+        hsl.h = (hsl.h + 0.55) % 1;
+    }
+    
+    return new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l).getHex();
+}
+
+function createEnhancedTree(baseColor, layerIndex, sceneData) {
+    const THREE = AppState.three.THREE;
+    const treeGroup = new THREE.Group();
+    
+    // Tree trunk
+    const trunkHeight = 3 + Math.random() * 2;
+    const trunkGeo = new THREE.CylinderGeometry(0.2, 0.35, trunkHeight, 8);
+    const trunkMat = new THREE.MeshStandardMaterial({
+        color: 0x4a2c1a,
+        roughness: 0.9,
+        metalness: 0,
+        flatShading: AppState.settings.videoStyle === 'paper-cutout'
+    });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.y = trunkHeight / 2;
+    trunk.castShadow = true;
+    treeGroup.add(trunk);
+    
+    // Tree foliage - multiple layers for paper-cutout style
+    const foliageColor = adjustColorForTimeOfDay(baseColor, sceneData.timeOfDay, sceneData.mood);
+    const foliageMat = new THREE.MeshStandardMaterial({
+        color: foliageColor,
+        roughness: 0.95,
+        metalness: 0,
+        flatShading: AppState.settings.videoStyle === 'paper-cutout'
+    });
+    
+    const layers = 3 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < layers; i++) {
+        const scale = 1 - i * 0.2;
+        const foliageGeo = new THREE.ConeGeometry(1.2 * scale, 1.8 * scale, 8);
+        const foliage = new THREE.Mesh(foliageGeo, foliageMat);
+        foliage.position.y = trunkHeight + 0.5 + i * 1.2;
+        foliage.castShadow = true;
+        treeGroup.add(foliage);
+    }
+    
+    return treeGroup;
+}
+
+function createEnvironmentProp(propType, sceneData) {
+    // Use asset library if available
+    if (AppState.three.assetManager && assetLibrary.getAsset(propType)) {
+        const instanceId = AppState.three.assetManager.addAsset(propType, {
+            position: new THREE.Vector3(0, 0, 0)
+        });
+        return AppState.three.assetManager.getAsset(instanceId)?.asset?.clone();
+    }
+    
+    // Fallback: create simple prop
+    const THREE = AppState.three.THREE;
+    const mat = new THREE.MeshStandardMaterial({
+        color: 0x8b7355,
+        roughness: 0.9,
+        metalness: 0,
+        flatShading: AppState.settings.videoStyle === 'paper-cutout'
+    });
+    
+    const propMap = {
+        tree: () => new THREE.Mesh(new THREE.ConeGeometry(1, 2, 8), mat),
+        bush: () => new THREE.Mesh(new THREE.SphereGeometry(0.8, 8, 8), mat),
+        rock: () => new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1), mat),
+        flower: () => new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), new THREE.MeshStandardMaterial({color: 0xff69b4})),
+        bench: () => new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.5), mat),
+        well: () => new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1, 12), mat),
+        cart: () => new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 1), mat),
+        building: () => new THREE.Mesh(new THREE.BoxGeometry(4, 5, 4), mat),
+        streetlight: () => new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 4, 8), mat),
+        car: () => new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), mat),
+        traffic_light: () => new THREE.Mesh(new THREE.BoxGeometry(0.3, 1, 0.2), mat),
+        desk: () => new THREE.Mesh(new THREE.BoxGeometry(1, 0.8, 0.6), mat),
+        chair: () => new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.5), mat),
+        chalkboard: () => new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 0.1), new THREE.MeshStandardMaterial({color: 0x1b4d3e})),
+        book: () => new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.03), mat),
+        globe: () => new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshStandardMaterial({color: 0x4a90d9})),
+        rocket: () => new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 3, 12), mat),
+        planet: () => new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), new THREE.MeshStandardMaterial({color: 0xffaa00})),
+        star: () => new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshStandardMaterial({color: 0xffff00, emissive: 0xffff00})),
+        coral: () => new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1), new THREE.MeshStandardMaterial({color: 0xff6f61})),
+        fish: () => new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.15), new THREE.MeshStandardMaterial({color: 0xff9900})),
+        seaweed: () => new THREE.Mesh(new THREE.BoxGeometry(0.1, 1, 0.1), new THREE.MeshStandardMaterial({color: 0x2e8b57})),
+        cactus: () => new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 2, 8), new THREE.MeshStandardMaterial({color: 0x2e8b57}))
+    };
+    
+    const creator = propMap[propType];
+    if (creator) {
+        return creator();
+    }
+    return null;
+}
+
+function autoPlaceEnvironmentProps(locationDetails, sceneIndex) {
+    if (!locationDetails || !locationDetails.props) return;
+    
+    const propCounts = {
+        tree: { min: 3, max: 8 },
+        bush: { min: 2, max: 6 },
+        rock: { min: 1, max: 4 },
+        flower: { min: 4, max: 10 },
+        bench: { min: 0, max: 2 },
+        well: { min: 0, max: 1 },
+        cart: { min: 0, max: 1 },
+        building: { min: 0, max: 2 },
+        streetlight: { min: 0, max: 3 },
+        car: { min: 0, max: 2 },
+        traffic_light: { min: 0, max: 2 },
+        desk: { min: 2, max: 6 },
+        chair: { min: 4, max: 10 },
+        chalkboard: { min: 0, max: 1 },
+        book: { min: 3, max: 8 },
+        globe: { min: 0, max: 1 },
+        rocket: { min: 0, max: 1 },
+        planet: { min: 0, max: 3 },
+        star: { min: 10, max: 30 },
+        coral: { min: 5, max: 15 },
+        fish: { min: 5, max: 15 },
+        seaweed: { min: 8, max: 20 },
+        cactus: { min: 3, max: 8 }
+    };
+    
+    locationDetails.props.forEach(propType => {
+        const counts = propCounts[propType] || { min: 1, max: 3 };
+        const count = counts.min + Math.floor(Math.random() * (counts.max - counts.min + 1));
+        
+        for (let i = 0; i < count; i++) {
+            const prop = createEnvironmentProp(propType, AppState.scenes[sceneIndex]);
+            if (prop && AppState.three.assetManager) {
+                const instanceId = AppState.three.assetManager.addAsset(propType, {
+                    position: new THREE.Vector3(
+                        (Math.random() - 0.5) * 30,
+                        -4.5,
+                        (Math.random() - 0.5) * 20 - 5
+                    )
+                });
+            }
+        }
+        });
+    }
+
+async function buildCharacterEnhanced(sceneData, colors, sceneIndex, charIndex) {
+    // Build base character
+    await buildCharacter(sceneData.characters[charIndex], colors, sceneIndex, charIndex);
+    
+    // Get the character3d instance
+    const charData = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+    if (!charData || !charData.character3d) return;
+    
+    const character3d = charData.character3d;
+    
+    // Apply character details if available
+    if (sceneData.characterDetails && sceneData.characterDetails[charIndex]) {
+        const details = sceneData.characterDetails[charIndex];
+        
+        // Set appropriate animation based on scene type and character role
+        const animation = suggestAnimationForCharacter(details, sceneData.sceneType);
+        if (animation) {
+            character3d.playAnimation(animation);
+        }
+        
+        // Set expression based on scene mood
+        if (sceneData.mood && FACIAL_EXPRESSIONS[sceneData.mood]) {
+            character3d.setExpression(sceneData.mood, 1.0);
+        }
+    }
+    
+    // Position characters based on scene type and count
+    positionCharacterInScene(character3d, charIndex, sceneData.characters.length, sceneData.sceneType);
+}
+
+function suggestAnimationForCharacter(details, sceneType) {
+    if (!details) return 'idle';
+    
+    const roleAnimations = {
+        protagonist: {
+            introduction: 'idle',
+            inciting_incident: 'surprised',
+            rising_action: 'walk',
+            climax: 'point',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        mentor: {
+            introduction: 'idle',
+            inciting_incident: 'talk',
+            rising_action: 'point',
+            climax: 'nod',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        antagonist: {
+            introduction: 'idle',
+            inciting_incident: 'angry',
+            rising_action: 'walk',
+            climax: 'angry',
+            falling_action: 'sad',
+            resolution: 'idle'
+        },
+        companion: {
+            introduction: 'wave',
+            inciting_incident: 'surprised',
+            rising_action: 'walk',
+            climax: 'point',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        magical_helper: {
+            introduction: 'wave',
+            inciting_incident: 'surprised',
+            rising_action: 'point',
+            climax: 'jump',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        protector: {
+            introduction: 'idle',
+            inciting_incident: 'point',
+            rising_action: 'walk',
+            climax: 'run',
+            falling_action: 'happy',
+            resolution: 'idle'
+        },
+        worker: {
+            introduction: 'idle',
+            inciting_incident: 'surprised',
+            rising_action: 'walk',
+            climax: 'point',
+            falling_action: 'happy',
+            resolution: 'idle'
+        },
+        healer: {
+            introduction: 'idle',
+            inciting_incident: 'sad',
+            rising_action: 'talk',
+            climax: 'point',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        trickster: {
+            introduction: 'wave',
+            inciting_incident: 'surprised',
+            rising_action: 'run',
+            climax: 'jump',
+            falling_action: 'happy',
+            resolution: 'wave'
+        }
+    };
+    
+    const animations = roleAnimations[details.role] || roleAnimations.protagonist;
+    return animations[sceneType] || 'idle';
+}
+
+function positionCharacterInScene(character3d, charIndex, totalChars, sceneType) {
+    const spacing = 3;
+    const startX = -(totalChars - 1) * spacing / 2;
+    
+    let x, z;
+    
+    switch (sceneType) {
+        case 'introduction':
+        case 'resolution':
+            // Line formation
+            x = startX + charIndex * spacing;
+            z = 0;
+            break;
+        case 'inciting_incident':
+            // Slight arc
+            x = startX + charIndex * spacing;
+            z = Math.sin(charIndex * 0.5) * 1.5;
+            break;
+        case 'rising_action':
+            // Scattered
+            x = startX + charIndex * spacing + (Math.random() - 0.5) * 2;
+            z = (Math.random() - 0.5) * 3;
+            break;
+        case 'climax':
+            // Converged toward center
+            x = startX + charIndex * spacing * 0.5;
+            z = 1;
+            break;
+        case 'falling_action':
+            // Line but closer
+            x = startX + charIndex * spacing * 0.7;
+            z = 0;
+            break;
+        default:
+            x = startX + charIndex * spacing;
+            z = 0;
+    }
+    
+    character3d.group.position.set(x, 0, z);
+    
+    // Face center for most scenes
+    if (sceneType !== 'rising_action') {
+        character3d.lookAt(new THREE.Vector3(0, 1.6, 0));
+    }
+}
+
+function applyTimeOfDayEffects(timeOfDay, mood) {
+    const background = AppState.three.background;
+    if (!background) return;
+    
+    // Fog for morning/evening
+    if (timeOfDay === 'morning' || timeOfDay === 'evening') {
+        background.fogDensity = 0.02;
+        background.fogColor = timeOfDay === 'morning' ? 0xe0f0ff : 0xffd0a0;
+    } else if (timeOfDay === 'night') {
+        background.fogDensity = 0.05;
+        background.fogColor = 0x1a1a3a;
+    } else {
+        background.fogDensity = 0;
+    }
+    
+    // Sky color adjustments handled in buildBackgroundEnhanced
+}
+
+function updateKeyLightPosition() {
 
 async function buildBackground(bgName, colors, sceneIndex) {
     const template = BackgroundTemplates[bgName] || BackgroundTemplates.garden;
@@ -1750,7 +5127,9 @@ async function buildCharacter3D(charName, char3dData, sceneIndex, charIndex) {
         clothing: char3dData.clothing || 'casual',
         bodyScale: char3dData.bodyScale || { height: 1.0, width: 1.0, depth: 1.0 },
         headScale: char3dData.headScale || 1.0,
-        limbLength: char3dData.limbLength || 1.0
+        limbLength: char3dData.limbLength || 1.0,
+        visualStyle: AppState.settings.videoStyle || 'paper-cutout',
+        paperThickness: (AppState.settings.paperThickness || 3) * 0.02
     });
     
     // Position character
@@ -1788,7 +5167,9 @@ async function buildCharacter3D(charName, char3dData, sceneIndex, charIndex) {
             headScale: char3dData.headScale || 1.0,
             limbLength: char3dData.limbLength || 1.0,
             expression: char3dData.expression || 'neutral',
-            expressionIntensity: char3dData.expressionIntensity || 1.0
+            expressionIntensity: char3dData.expressionIntensity || 1.0,
+            visualStyle: AppState.settings.videoStyle || 'paper-cutout',
+            paperThickness: (AppState.settings.paperThickness || 3) * 0.02
         }
     };
     
@@ -1885,6 +5266,11 @@ function clearSceneObjects(sceneIndex) {
     });
     
     char3dIndices.reverse().forEach(i => AppState.three.characters3d.splice(i, 1));
+    
+    // Clear assets for this scene
+    if (AppState.three.assetManager) {
+        AppState.three.assetManager.clear();
+    }
 }
 
 function disposeObject(obj) {
@@ -2122,7 +5508,7 @@ function setBackgroundMusicVolume(volume) {
 }
 
 // ========================================
-// Audio System (Web Speech API + Web Audio)
+// Audio System (Web Speech API + Web Audio + Procedural Music)
 // ========================================
 async function initAudio() {
     AppState.audio.synth = window.speechSynthesis;
@@ -2139,7 +5525,13 @@ async function initAudio() {
     AppState.audio.synth.onvoiceschanged = loadVoices;
     
     try {
-        AppState.audio.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // Initialize new AudioManager
+        AppState.audioManager = new AudioManager();
+        await AppState.audioManager.init();
+        
+        // Also keep legacy audio context for backward compatibility
+        AppState.audio.audioContext = AppState.audioManager.ctx;
+        
         await generateSoundEffects();
     } catch (e) {
         console.warn('Web Audio API not available:', e);
@@ -2148,6 +5540,9 @@ async function initAudio() {
     document.addEventListener('click', () => {
         if (AppState.audio.audioContext?.state === 'suspended') {
             AppState.audio.audioContext.resume();
+        }
+        if (AppState.audioManager?.ctx?.state === 'suspended') {
+            AppState.audioManager.ctx.resume();
         }
     }, { once: true });
 }
@@ -2395,6 +5790,17 @@ async function startExport() {
     const settings = AppState.exportSettings;
     const canvas = $('#previewCanvas');
     
+    // Check if canvas and captureStream are supported
+    if (!canvas || !canvas.captureStream) {
+        showToast('Video rendering not supported in this browser', 'error');
+        return;
+    }
+    
+    if (AppState.duration <= 0) {
+        showToast('Animation duration not set', 'error');
+        return;
+    }
+    
     let width, height;
     switch (settings.resolution) {
         case '1080p': [width, height] = [1920, 1080]; break;
@@ -2420,9 +5826,19 @@ async function startExport() {
     $('#framesRendered').textContent = '0';
     $('#totalFrames').textContent = AppState.export.totalFrames;
     $('#progressPercent').textContent = '0%';
-    $('#progressStatus').textContent = 'रेंडर हो रहा है...';
+    $('#progressStatus').textContent = 'Rendering...';
     
-    const stream = canvas.captureStream(settings.framerate);
+    let stream;
+    try {
+        stream = canvas.captureStream(settings.framerate);
+    } catch (e) {
+        console.error('captureStream failed:', e);
+        showToast('Failed to create video stream: ' + e.message, 'error');
+        AppState.export.isExporting = false;
+        $('#exportActions').style.display = 'block';
+        $('#exportProgress').style.display = 'none';
+        return;
+    }
     
     const mimeType = settings.format === 'mp4' ? 'video/mp4' : 'video/webm;codecs=vp9';
     let recorder;
@@ -2666,7 +6082,7 @@ function finalizeExport() {
     
     AppState.export.isExporting = false;
     
-    showToast('वीडियो सफलतापूर्वक बन गया!', 'success');
+    showToast('Video created successfully!', 'success');
 }
 
 function downloadVideo() {
@@ -2677,7 +6093,7 @@ function downloadVideo() {
     a.download = `paper-animation-${Date.now()}.${AppState.exportSettings.format === 'mp4' ? 'mp4' : 'webm'}`;
     a.click();
     
-    showToast('डाउनलोड शुरू हो गया', 'success');
+    showToast('Download started', 'success');
 }
 
 async function shareVideo() {
@@ -2689,13 +6105,13 @@ async function shareVideo() {
         });
         
         if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'मेरा पेपर एनिमेशन वीडियो' });
+            await navigator.share({ files: [file], title: 'My Paper Animation Video' });
         } else {
-            showToast('शेयर करने के लिए वीडियो डाउनलोड करें', 'info');
+            showToast('Download video to share', 'info');
         }
     } catch (e) {
         console.error('Share failed:', e);
-        showToast('शेयर नहीं कर सके', 'error');
+        showToast('Could not share', 'error');
     }
 }
 
@@ -2715,6 +6131,2811 @@ function switchProTab(tabName) {
     if (tabName === 'scene') {
         populateSceneSelector();
     }
+    
+    // Load asset library when assets tab is selected
+    if (tabName === 'assets') {
+        loadAssetLibrary();
+    }
+}
+
+// Asset Library state
+let currentAssetSearch = '';
+let currentAssetCategory = 'all';
+let selectedAssetId = null;
+let selectedAssetInstanceId = null;
+
+function initializeAssetLibrary() {
+    // Populate category dropdown
+    const categorySelect = $('#assetCategory');
+    if (categorySelect) {
+        ASSET_CATEGORIES.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            categorySelect.appendChild(option);
+        });
+    }
+    
+    // Search input
+    const searchInput = $('#assetSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            currentAssetSearch = searchInput.value.toLowerCase();
+            loadAssetLibrary();
+        }, 300));
+    }
+    
+    // Category select
+    if (categorySelect) {
+        categorySelect.addEventListener('change', () => {
+            currentAssetCategory = categorySelect.value;
+            loadAssetLibrary();
+        });
+    }
+    
+    // Transform controls
+    ['X', 'Y', 'Z'].forEach(axis => {
+        const slider = $('#assetPos' + axis);
+        const valEl = $('#assetPos' + axis + 'Val');
+        if (slider && valEl) {
+            slider.addEventListener('input', () => {
+                valEl.textContent = parseFloat(slider.value).toFixed(1);
+                updateSelectedAssetTransform();
+            });
+        }
+    });
+    
+    const rotSlider = $('#assetRotY');
+    const rotVal = $('#assetRotYVal');
+    if (rotSlider && rotVal) {
+        rotSlider.addEventListener('input', () => {
+            rotVal.textContent = rotSlider.value;
+            updateSelectedAssetTransform();
+        });
+    }
+    
+    const scaleSlider = $('#assetScale');
+    const scaleVal = $('#assetScaleVal');
+    if (scaleSlider && scaleVal) {
+        scaleSlider.addEventListener('input', () => {
+            scaleVal.textContent = parseFloat(scaleSlider.value).toFixed(1);
+            updateSelectedAssetTransform();
+        });
+    }
+    
+    // Add/Remove buttons
+    const addBtn = $('#addAssetToScene');
+    const removeBtn = $('#removeAssetFromScene');
+    if (addBtn) addBtn.addEventListener('click', addSelectedAssetToScene);
+    if (removeBtn) removeBtn.addEventListener('click', removeSelectedAssetFromScene);
+}
+
+function loadAssetLibrary() {
+    const grid = $('#assetGrid');
+    if (!grid) return;
+    
+    // Filter assets
+    let assets = ALL_ASSETS;
+    
+    if (currentAssetCategory !== 'all') {
+        assets = assets.filter(a => a.category === currentAssetCategory);
+    }
+    
+    if (currentAssetSearch) {
+        assets = assets.filter(a => 
+            a.name.toLowerCase().includes(currentAssetSearch) ||
+            a.id.toLowerCase().includes(currentAssetSearch)
+        );
+    }
+    
+    // Render grid
+    grid.innerHTML = '';
+    assets.forEach(asset => {
+        const item = document.createElement('div');
+        item.className = 'asset-item' + (selectedAssetId === asset.id ? ' selected' : '');
+        item.dataset.assetId = asset.id;
+        item.innerHTML = `
+            <div class="asset-preview">${getAssetIcon(asset.category)}</div>
+            <div class="asset-name">${asset.name}</div>
+        `;
+        item.addEventListener('click', () => selectAsset(asset.id));
+        grid.appendChild(item);
+    });
+    
+    // If selected asset is no longer in filtered list, clear selection
+    if (selectedAssetId && !assets.find(a => a.id === selectedAssetId)) {
+        clearAssetSelection();
+    }
+}
+
+function getAssetIcon(category) {
+    const cat = ASSET_CATEGORIES.find(c => c.id === category);
+    return cat ? cat.icon : '📦';
+}
+
+function selectAsset(assetId) {
+    selectedAssetId = assetId;
+    const asset = assetLibrary.getAsset(assetId);
+    
+    if (!asset) return;
+    
+    // Update UI
+    $$('#assetGrid .asset-item').forEach(item => {
+        item.classList.toggle('selected', item.dataset.assetId === assetId);
+    });
+    
+    // Show asset info
+    const info = $('#selectedAssetInfo');
+    const nameEl = $('#selectedAssetName');
+    if (info && nameEl) {
+        info.style.display = 'block';
+        nameEl.textContent = asset.name;
+    }
+    
+    // Check if this asset is already in the scene
+    const assetManager = AppState.three.assetManager;
+    if (assetManager) {
+        const instances = assetManager.getAllAssets();
+        const existing = instances.find(inst => inst.assetId === assetId);
+        if (existing) {
+            selectedAssetInstanceId = existing.instanceId;
+            loadAssetTransform(existing);
+            const removeBtn = $('#removeAssetFromScene');
+            const addBtn = $('#addAssetToScene');
+            if (removeBtn) removeBtn.style.display = 'inline-block';
+            if (addBtn) addBtn.textContent = 'अपडेट करें';
+        } else {
+            selectedAssetInstanceId = null;
+            resetAssetTransform();
+            const removeBtn = $('#removeAssetFromScene');
+            const addBtn = $('#addAssetToScene');
+            if (removeBtn) removeBtn.style.display = 'none';
+            if (addBtn) addBtn.textContent = 'सीन में जोड़ें';
+        }
+    }
+}
+
+function clearAssetSelection() {
+    selectedAssetId = null;
+    selectedAssetInstanceId = null;
+    $$('#assetGrid .asset-item').forEach(item => item.classList.remove('selected'));
+    const info = $('#selectedAssetInfo');
+    if (info) info.style.display = 'none';
+}
+
+function loadAssetTransform(data) {
+    const asset = data.asset;
+    $('#assetPosX').value = asset.position.x.toFixed(1);
+    $('#assetPosXVal').textContent = asset.position.x.toFixed(1);
+    $('#assetPosY').value = asset.position.y.toFixed(1);
+    $('#assetPosYVal').textContent = asset.position.y.toFixed(1);
+    $('#assetPosZ').value = asset.position.z.toFixed(1);
+    $('#assetPosZVal').textContent = asset.position.z.toFixed(1);
+    $('#assetRotY').value = THREE.MathUtils.radToDeg(asset.rotation.y).toFixed(0);
+    $('#assetRotYVal').textContent = THREE.MathUtils.radToDeg(asset.rotation.y).toFixed(0);
+    $('#assetScale').value = asset.scale.x.toFixed(1);
+    $('#assetScaleVal').textContent = asset.scale.x.toFixed(1);
+}
+
+function resetAssetTransform() {
+    $('#assetPosX').value = 0;
+    $('#assetPosXVal').textContent = '0';
+    $('#assetPosY').value = 0;
+    $('#assetPosYVal').textContent = '0';
+    $('#assetPosZ').value = 0;
+    $('#assetPosZVal').textContent = '0';
+    $('#assetRotY').value = 0;
+    $('#assetRotYVal').textContent = '0';
+    $('#assetScale').value = 1.0;
+    $('#assetScaleVal').textContent = '1.0';
+}
+
+function updateSelectedAssetTransform() {
+    if (!selectedAssetInstanceId) return;
+    
+    const assetManager = AppState.three.assetManager;
+    if (!assetManager) return;
+    
+    const data = assetManager.getAsset(selectedAssetInstanceId);
+    if (!data) return;
+    
+    const position = new AppState.three.THREE.Vector3(
+        parseFloat($('#assetPosX').value),
+        parseFloat($('#assetPosY').value),
+        parseFloat($('#assetPosZ').value)
+    );
+    const rotation = new AppState.three.THREE.Euler(
+        0,
+        AppState.three.THREE.MathUtils.degToRad(parseFloat($('#assetRotY').value)),
+        0
+    );
+    const scale = new AppState.three.THREE.Vector3(
+        parseFloat($('#assetScale').value),
+        parseFloat($('#assetScale').value),
+        parseFloat($('#assetScale').value)
+    );
+    
+    assetManager.updateAsset(selectedAssetInstanceId, { position, rotation, scale });
+}
+
+function addSelectedAssetToScene() {
+    if (!selectedAssetId) return;
+    
+    const assetManager = AppState.three.assetManager;
+    if (!assetManager) return;
+    
+    const position = new AppState.three.THREE.Vector3(
+        parseFloat($('#assetPosX').value),
+        parseFloat($('#assetPosY').value),
+        parseFloat($('#assetPosZ').value)
+    );
+    const rotation = new AppState.three.THREE.Euler(
+        0,
+        AppState.three.THREE.MathUtils.degToRad(parseFloat($('#assetRotY').value)),
+        0
+    );
+    const scale = new AppState.three.THREE.Vector3(
+        parseFloat($('#assetScale').value),
+        parseFloat($('#assetScale').value),
+        parseFloat($('#assetScale').value)
+    );
+    
+    if (selectedAssetInstanceId) {
+        // Update existing
+        assetManager.updateAsset(selectedAssetInstanceId, { position, rotation, scale });
+        showToast('Asset updated', 'success');
+    } else {
+        // Add new
+        const instanceId = assetManager.addAsset(selectedAssetId, { position, rotation, scale });
+        if (instanceId) {
+            selectedAssetInstanceId = instanceId;
+            const removeBtn = $('#removeAssetFromScene');
+            const addBtn = $('#addAssetToScene');
+            if (removeBtn) removeBtn.style.display = 'inline-block';
+            if (addBtn) addBtn.textContent = 'Update';
+            showToast('Asset added to scene', 'success');
+        }
+    }
+}
+
+function removeSelectedAssetFromScene() {
+    if (!selectedAssetInstanceId) return;
+    
+    const assetManager = AppState.three.assetManager;
+    if (!assetManager) return;
+    
+    assetManager.removeAsset(selectedAssetInstanceId);
+    selectedAssetInstanceId = null;
+    resetAssetTransform();
+    
+    const removeBtn = $('#removeAssetFromScene');
+    const addBtn = $('#addAssetToScene');
+    if (removeBtn) removeBtn.style.display = 'none';
+    if (addBtn) addBtn.textContent = 'Add to Scene';
+    
+    showToast('Asset removed', 'success');
+}
+
+// ========================================
+// Keyframe Animation Editor
+// ========================================
+
+let keyframeState = {
+    selectedCharacter: null,
+    selectedAnimation: 'custom',
+    currentTime: 0,
+    duration: 2,
+    isPlaying: false,
+    keyframes: {}, // trackName -> array of keyframes
+    selectedKeyframe: null,
+    animationId: null
+};
+
+function initializeKeyframeEditor() {
+    // Character select
+    const charSelect = $('#keyframeCharacter');
+    if (charSelect) {
+        charSelect.addEventListener('change', () => {
+            keyframeState.selectedCharacter = charSelect.value;
+            updateKeyframeTracks();
+        });
+    }
+    
+    // Animation select
+    const animSelect = $('#keyframeAnimation');
+    if (animSelect) {
+        // Populate with preset animations
+        const presets = ['custom', 'idle', 'walk', 'run', 'talk', 'sit', 'wave', 'point', 'nod', 'shakeHead', 'jump'];
+        presets.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+            animSelect.appendChild(option);
+        });
+        
+        animSelect.addEventListener('change', () => {
+            keyframeState.selectedAnimation = animSelect.value;
+            if (animSelect.value !== 'custom') {
+                loadPresetAnimation(animSelect.value);
+            } else {
+                clearKeyframes();
+            }
+        });
+    }
+    
+    // Timeline click to add keyframe
+    const timeline = $('#keyframeTimeline');
+    if (timeline) {
+        timeline.addEventListener('click', (e) => {
+            if (e.target.classList.contains('keyframe-marker')) return;
+            const rect = timeline.getBoundingClientRect();
+            const x = e.clientX - rect.left - 80; // Account for track header
+            if (x < 0) return;
+            const time = (x / (rect.width - 80)) * keyframeState.duration;
+            addKeyframeAtTime(time);
+        });
+    }
+    
+    // Duration slider
+    const durationSlider = $('#kfTime');
+    const durationVal = $('#kfTimeVal');
+    if (durationSlider && durationVal) {
+        durationSlider.addEventListener('input', () => {
+            durationVal.textContent = parseFloat(durationSlider.value).toFixed(2);
+        });
+    }
+    
+    // Control buttons
+    const addBtn = $('#keyframeAdd');
+    const delBtn = $('#keyframeDelete');
+    const playBtn = $('#keyframePlay');
+    const stopBtn = $('#keyframeStop');
+    
+    if (addBtn) addBtn.addEventListener('click', () => addKeyframeAtTime(keyframeState.currentTime));
+    if (delBtn) delBtn.addEventListener('click', deleteSelectedKeyframe);
+    if (playBtn) playBtn.addEventListener('click', playKeyframeAnimation);
+    if (stopBtn) stopBtn.addEventListener('click', stopKeyframeAnimation);
+    
+    // Pose textarea
+    const poseInput = $('#kfPose');
+    if (poseInput) {
+        poseInput.addEventListener('change', updateSelectedKeyframePose);
+    }
+    
+    // Easing select
+    const easingSelect = $('#kfEasing');
+    if (easingSelect) {
+        easingSelect.addEventListener('change', updateSelectedKeyframeEasing);
+    }
+    
+    // Populate character list
+    updateKeyframeCharacterList();
+}
+
+function updateKeyframeCharacterList() {
+    const select = $('#keyframeCharacter');
+    if (!select) return;
+    
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">पात्र चुनें</option>';
+    
+    // Add 3D characters from current scene
+    const sceneIndex = AppState.three.currentScene;
+    const scene = AppState.scenes[sceneIndex];
+    if (scene && scene.characters3d) {
+        scene.characters3d.forEach((char, i) => {
+            const option = document.createElement('option');
+            option.value = `char3d_${sceneIndex}_${i}`;
+            option.textContent = `${scene.characters[i]} (3D)`;
+            select.appendChild(option);
+        });
+    }
+    
+    // Add legacy characters
+    const chars3d = AppState.three.characters3d.filter(c => c.sceneIndex === sceneIndex);
+    chars3d.forEach((char, i) => {
+        const option = document.createElement('option');
+        option.value = char.sceneIndex + '_' + char.charIndex;
+        option.textContent = `${scene?.characters[i] || 'Character'} (3D)`;
+        select.appendChild(option);
+    });
+    
+    if (currentValue) select.value = currentValue;
+}
+
+function updateKeyframeTracks() {
+    const tracksContainer = $('#keyframeTracks');
+    const ruler = $('#keyframeRuler');
+    if (!tracksContainer || !ruler) return;
+    
+    // Build ruler
+    const ticks = Math.ceil(keyframeState.duration);
+    ruler.innerHTML = '';
+    for (let i = 0; i <= ticks; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick' + (i % 1 === 0 ? ' major' : '');
+        tick.style.left = `${80 + (i / ticks) * (tracksContainer.parentElement.clientWidth - 80)}px`;
+        if (i % 1 === 0) {
+            const label = document.createElement('span');
+            label.className = 'tick-label';
+            label.style.left = tick.style.left;
+            label.textContent = `${i}s`;
+            ruler.appendChild(label);
+        }
+        ruler.appendChild(tick);
+    }
+    
+    // Build tracks for selected character
+    if (!keyframeState.selectedCharacter) {
+        tracksContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">पात्र चुनें</div>';
+        return;
+    }
+    
+    const trackNames = ['position', 'rotation', 'scale'];
+    tracksContainer.innerHTML = '';
+    
+    trackNames.forEach(trackName => {
+        const track = document.createElement('div');
+        track.className = 'keyframe-track';
+        track.dataset.track = trackName;
+        
+        const header = document.createElement('div');
+        header.className = 'keyframe-track-header';
+        header.textContent = trackName;
+        track.appendChild(header);
+        
+        const content = document.createElement('div');
+        content.className = 'keyframe-track-content';
+        track.appendChild(content);
+        
+        // Render keyframes for this track
+        const keyframes = keyframeState.keyframes[trackName] || [];
+        keyframes.forEach((kf, idx) => {
+            const marker = document.createElement('div');
+            marker.className = 'keyframe-marker' + (keyframeState.selectedKeyframe === `${trackName}_${idx}` ? ' selected' : '');
+            marker.dataset.track = trackName;
+            marker.dataset.index = idx;
+            const xPos = 80 + (kf.time / keyframeState.duration) * (tracksContainer.parentElement.clientWidth - 80);
+            marker.style.left = `${xPos}px`;
+            marker.innerHTML = `<span class="keyframe-value">${kf.time.toFixed(2)}s</span>`;
+            marker.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectKeyframe(trackName, idx);
+            });
+            marker.addEventListener('mousedown', (e) => startDragKeyframe(e, trackName, idx));
+            content.appendChild(marker);
+        });
+        
+        tracksContainer.appendChild(track);
+    });
+}
+
+function selectKeyframe(trackName, index) {
+    keyframeState.selectedKeyframe = `${trackName}_${index}`;
+    const kf = keyframeState.keyframes[trackName]?.[index];
+    
+    if (kf) {
+        const props = $('#keyframeProperties');
+        const timeInput = $('#kfTime');
+        const timeVal = $('#kfTimeVal');
+        const easingSelect = $('#kfEasing');
+        const poseInput = $('#kfPose');
+        
+        if (props) props.style.display = 'block';
+        if (timeInput) { timeInput.value = kf.time; timeInput.max = keyframeState.duration; }
+        if (timeVal) timeVal.textContent = kf.time.toFixed(2);
+        if (easingSelect) easingSelect.value = kf.easing || 'linear';
+        if (poseInput) poseInput.value = JSON.stringify(kf.pose || {}, null, 2);
+    }
+    
+    updateKeyframeTracks();
+}
+
+function clearSelection() {
+    keyframeState.selectedKeyframe = null;
+    const props = $('#keyframeProperties');
+    if (props) props.style.display = 'none';
+    updateKeyframeTracks();
+}
+
+function addKeyframeAtTime(time) {
+    if (!keyframeState.selectedCharacter) {
+        showToast('Select a character first', 'warning');
+        return;
+    }
+    
+    // Clamp time
+    time = Math.max(0, Math.min(keyframeState.duration, time));
+    
+    // Add keyframe to each track with default pose
+    const defaultPoses = {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+        scale: { x: 1, y: 1, z: 1 }
+    };
+    
+    Object.keys(defaultPoses).forEach(trackName => {
+        if (!keyframeState.keyframes[trackName]) {
+            keyframeState.keyframes[trackName] = [];
+        }
+        
+        const keyframes = keyframeState.keyframes[trackName];
+        const newKf = {
+            time,
+            pose: defaultPoses[trackName],
+            easing: 'easeInOut'
+        };
+        
+        // Insert in sorted order
+        const insertIdx = keyframes.findIndex(kf => kf.time > time);
+        if (insertIdx === -1) {
+            keyframes.push(newKf);
+        } else {
+            keyframes.splice(insertIdx, 0, newKf);
+        }
+    });
+    
+    updateKeyframeTracks();
+    showToast('Keyframe added', 'success');
+}
+
+function deleteSelectedKeyframe() {
+    if (!keyframeState.selectedKeyframe) return;
+    
+    const [trackName, idx] = keyframeState.selectedKeyframe.split('_');
+    const index = parseInt(idx);
+    
+    if (keyframeState.keyframes[trackName]) {
+        keyframeState.keyframes[trackName].splice(index, 1);
+    }
+    
+    clearSelection();
+    showToast('Keyframe deleted', 'success');
+}
+
+function updateSelectedKeyframePose() {
+    if (!keyframeState.selectedKeyframe) return;
+    
+    const [trackName, idx] = keyframeState.selectedKeyframe.split('_');
+    const index = parseInt(idx);
+    const poseInput = $('#kfPose');
+    
+    try {
+        const pose = JSON.parse(poseInput.value);
+        if (keyframeState.keyframes[trackName] && keyframeState.keyframes[trackName][index]) {
+            keyframeState.keyframes[trackName][index].pose = pose;
+            showToast('Pose updated', 'success');
+        }
+    } catch (e) {
+        showToast('Invalid JSON', 'error');
+    }
+}
+
+function updateSelectedKeyframeEasing() {
+    if (!keyframeState.selectedKeyframe) return;
+    
+    const [trackName, idx] = keyframeState.selectedKeyframe.split('_');
+    const index = parseInt(idx);
+    const easingSelect = $('#kfEasing');
+    
+    if (keyframeState.keyframes[trackName] && keyframeState.keyframes[trackName][index]) {
+        keyframeState.keyframes[trackName][index].easing = easingSelect.value;
+    }
+}
+
+function clearKeyframes() {
+    keyframeState.keyframes = {};
+    clearSelection();
+    updateKeyframeTracks();
+}
+
+function loadPresetAnimation(name) {
+    // Load preset animation keyframes
+    // This would load from ANIMATION_CLIPS
+    clearKeyframes();
+    showToast(`${name} animation loaded`, 'info');
+}
+
+function playKeyframeAnimation() {
+    if (keyframeState.isPlaying) return;
+    if (!keyframeState.selectedCharacter) {
+        showToast('Select a character', 'warning');
+        return;
+    }
+    
+    keyframeState.isPlaying = true;
+    keyframeState.currentTime = 0;
+    keyframeState.animationId = requestAnimationFrame(keyframeAnimationLoop);
+    
+    const playBtn = $('#keyframePlay');
+    const stopBtn = $('#keyframeStop');
+    if (playBtn) playBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'inline-block';
+}
+
+function stopKeyframeAnimation() {
+    keyframeState.isPlaying = false;
+    if (keyframeState.animationId) {
+        cancelAnimationFrame(keyframeState.animationId);
+        keyframeState.animationId = null;
+    }
+    
+    const playBtn = $('#keyframePlay');
+    const stopBtn = $('#keyframeStop');
+    if (playBtn) playBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+    
+    // Reset playhead
+    keyframeState.currentTime = 0;
+    updateKeyframePlayhead();
+}
+
+function keyframeAnimationLoop(timestamp) {
+    if (!keyframeState.isPlaying) return;
+    
+    const delta = 1/60;
+    keyframeState.currentTime += delta;
+    
+    if (keyframeState.currentTime >= keyframeState.duration) {
+        keyframeState.currentTime = 0; // Loop
+    }
+    
+    updateKeyframePlayhead();
+    applyKeyframeAnimation(keyframeState.currentTime);
+    
+    keyframeState.animationId = requestAnimationFrame(keyframeAnimationLoop);
+}
+
+function updateKeyframePlayhead() {
+    const playhead = $('#keyframePlayhead');
+    const timeEl = $('#keyframeCurrentTime');
+    const timeline = $('#keyframeTimeline');
+    
+    if (playhead && timeline) {
+        const rect = timeline.getBoundingClientRect();
+        const x = 80 + (keyframeState.currentTime / keyframeState.duration) * (rect.width - 80);
+        playhead.style.left = `${x}px`;
+    }
+    
+    if (timeEl) {
+        timeEl.textContent = keyframeState.currentTime.toFixed(2);
+    }
+}
+
+function applyKeyframeAnimation(time) {
+    // Apply interpolated keyframe values to character
+    // This is a simplified version - in production you'd interpolate between keyframes
+    const charKey = keyframeState.selectedCharacter;
+    let character3d = null;
+    
+    if (charKey.startsWith('char3d_')) {
+        const parts = charKey.split('_');
+        const sceneIndex = parseInt(parts[1]);
+        const charIndex = parseInt(parts[2]);
+        character3d = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex)?.character3d;
+    }
+    
+    if (!character3d) return;
+    
+    // For each track, find the current interpolated value
+    ['position', 'rotation', 'scale'].forEach(trackName => {
+        const keyframes = keyframeState.keyframes[trackName] || [];
+        if (keyframes.length === 0) return;
+        
+        // Find surrounding keyframes
+        let prev = null;
+        let next = null;
+        for (let i = 0; i < keyframes.length; i++) {
+            if (keyframes[i].time <= time) {
+                prev = keyframes[i];
+            } else {
+                next = keyframes[i];
+                break;
+            }
+        }
+        
+        if (!prev) prev = keyframes[0];
+        if (!next) next = keyframes[keyframes.length - 1];
+        
+        if (prev === next) {
+            // Apply directly
+            applyPoseToCharacter(character3d, trackName, prev.pose);
+        } else {
+            // Interpolate
+            const t = (time - prev.time) / (next.time - prev.time);
+            const easedT = ease(t, prev.easing);
+            const interpolated = interpolatePose(prev.pose, next.pose, easedT);
+            applyPoseToCharacter(character3d, trackName, interpolated);
+        }
+    });
+}
+
+function ease(t, type) {
+    switch (type) {
+        case 'easeIn': return t * t;
+        case 'easeOut': return 1 - (1 - t) * (1 - t);
+        case 'easeInOut': return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        default: return t; // linear
+    }
+}
+
+function interpolatePose(a, b, t) {
+    const result = {};
+    for (const key in a) {
+        if (typeof a[key] === 'number' && typeof b[key] === 'number') {
+            result[key] = a[key] + (b[key] - a[key]) * t;
+        } else if (Array.isArray(a[key]) && Array.isArray(b[key])) {
+            result[key] = a[key].map((v, i) => v + (b[key][i] - v) * t);
+        }
+    }
+    return result;
+}
+
+function applyPoseToCharacter(character3d, trackName, pose) {
+    if (trackName === 'position') {
+        character3d.group.position.set(pose.x || 0, pose.y || 0, pose.z || 0);
+    } else if (trackName === 'rotation') {
+        character3d.group.rotation.set(pose.x || 0, pose.y || 0, pose.z || 0);
+    } else if (trackName === 'scale') {
+        character3d.group.scale.set(pose.x || 1, pose.y || 1, pose.z || 1);
+    }
+}
+
+function startDragKeyframe(e, trackName, index) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const timeline = $('#keyframeTimeline');
+    const marker = e.target.closest('.keyframe-marker');
+    if (!marker) return;
+    
+    const startX = e.clientX;
+    const startTime = keyframeState.keyframes[trackName][index].time;
+    
+    function onMouseMove(e) {
+        const rect = timeline.getBoundingClientRect();
+        const deltaX = e.clientX - rect.left - 80 - startX;
+        const deltaTime = (deltaX / (rect.width - 80)) * keyframeState.duration;
+        let newTime = startTime + deltaTime;
+        newTime = Math.max(0, Math.min(keyframeState.duration, newTime));
+        
+        keyframeState.keyframes[trackName][index].time = newTime;
+        updateKeyframeTracks();
+    }
+    
+    function onMouseUp() {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+}
+
+// ========================================
+// Character Interactions
+// ========================================
+
+function initializeInteractions() {
+    // Populate character dropdowns
+    updateInteractionCharacterDropdowns();
+    
+    // Populate target object dropdown
+    updateInteractionTargetObjects();
+    
+    // Event listeners
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    const typeSelect = $('#interactionType');
+    const targetSelect = $('#interactionTargetObject');
+    const applyBtn = $('#applyInteraction');
+    const previewBtn = $('#previewInteraction');
+    const stopBtn = $('#stopInteraction');
+    
+    if (char1Select) char1Select.addEventListener('change', updateInteractionChar2Options);
+    if (char2Select) char2Select.addEventListener('change', updateInteractionTargetObjects);
+    if (typeSelect) typeSelect.addEventListener('change', updateInteractionTargetObjects);
+    
+    if (applyBtn) applyBtn.addEventListener('click', applyInteraction);
+    if (previewBtn) previewBtn.addEventListener('click', previewInteraction);
+    if (stopBtn) stopBtn.addEventListener('click', stopInteraction);
+    
+    // Scene selector change should update dropdowns
+    const sceneSelector = $('#sceneSelector');
+    if (sceneSelector) {
+        sceneSelector.addEventListener('change', () => {
+            updateInteractionCharacterDropdowns();
+            updateInteractionTargetObjects();
+        });
+    }
+}
+
+function updateInteractionCharacterDropdowns() {
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    
+    if (!char1Select || !char2Select) return;
+    
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    const scene = AppState.scenes[sceneIndex];
+    
+    const buildOptions = (select, excludeValue = null) => {
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">पात्र चुनें</option>';
+        
+        if (scene && scene.characters3d) {
+            scene.characters3d.forEach((char, i) => {
+                if (excludeValue && `${sceneIndex}_${i}` === excludeValue) return;
+                const option = document.createElement('option');
+                option.value = `${sceneIndex}_${i}`;
+                option.textContent = `${scene.characters[i] || `पात्र ${i+1}`} (3D)`;
+                select.appendChild(option);
+            });
+        }
+        
+        if (currentValue && !excludeValue) select.value = currentValue;
+    };
+    
+    buildOptions(char1Select);
+    buildOptions(char2Select, char1Select.value);
+}
+
+function updateInteractionChar2Options() {
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    if (char1Select && char2Select) {
+        updateInteractionCharacterDropdowns();
+    }
+}
+
+function updateInteractionTargetObjects() {
+    const targetSelect = $('#interactionTargetObject');
+    const typeSelect = $('#interactionType');
+    
+    if (!targetSelect || !typeSelect) return;
+    
+    const type = typeSelect.value;
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    const scene = AppState.scenes[sceneIndex];
+    
+    targetSelect.innerHTML = '<option value="">कोई नहीं</option>';
+    
+    // Add assets in scene
+    if (AppState.three.assetManager) {
+        const assets = AppState.three.assetManager.getAllAssets();
+        assets.forEach(asset => {
+            const option = document.createElement('option');
+            option.value = asset.instanceId;
+            option.textContent = `${asset.assetName} (${asset.assetId})`;
+            targetSelect.appendChild(option);
+        });
+    }
+    
+    // Add sit-able objects
+    if (type === 'sit') {
+        const sitAssets = ['chair', 'bench', 'sofa', 'bed'];
+        sitAssets.forEach(assetId => {
+            const assetDef = assetLibrary.getAsset(assetId);
+            if (assetDef) {
+                const option = document.createElement('option');
+                option.value = `preset_${assetId}`;
+                option.textContent = assetDef.name;
+                targetSelect.appendChild(option);
+            }
+        });
+    }
+    
+    // Show/hide target object based on interaction type
+    const targetContainer = targetSelect.closest('.setting-item');
+    if (targetContainer) {
+        targetContainer.style.display = ['give', 'sit'].includes(type) ? 'block' : 'none';
+    }
+}
+
+function applyInteraction() {
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    const typeSelect = $('#interactionType');
+    const targetSelect = $('#interactionTargetObject');
+    
+    if (!char1Select || !char2Select || !typeSelect) return;
+    
+    const char1Key = char1Select.value;
+    const char2Key = char2Select.value;
+    const type = typeSelect.value;
+    const targetId = targetSelect.value;
+    
+    if (!char1Key || !char2Key) {
+        showToast('Select both characters', 'warning');
+        return;
+    }
+    
+    const char1 = getCharacter3DByKey(char1Key);
+    const char2 = getCharacter3DByKey(char2Key);
+    
+    if (!char1 || !char2) {
+        showToast('Character not found', 'error');
+        return;
+    }
+    
+    // Apply interaction
+    switch (type) {
+        case 'look':
+            char1.lookAt(char2.group.position);
+            char2.lookAt(char1.group.position);
+            showToast('Characters looking at each other', 'success');
+            break;
+            
+        case 'wave':
+            char1.playAnimation('wave');
+            char2.playAnimation('wave');
+            char1.lookAt(char2.group.position);
+            char2.lookAt(char1.group.position);
+            showToast('Waving', 'success');
+            break;
+            
+        case 'talk':
+            char1.playAnimation('talk');
+            char2.playAnimation('idle');
+            char1.lookAt(char2.group.position);
+            char2.lookAt(char1.group.position);
+            showToast('Conversation started', 'success');
+            break;
+            
+        case 'hug':
+            char1.playAnimation('wave');
+            char2.playAnimation('wave');
+            // Move closer
+            const midPoint = new THREE.Vector3().addVectors(char1.group.position, char2.group.position).multiplyScalar(0.5);
+            char1.walkTo(midPoint.clone().add(new THREE.Vector3(-0.5, 0, 0)));
+            char2.walkTo(midPoint.clone().add(new THREE.Vector3(0.5, 0, 0)));
+            showToast('Hugging', 'success');
+            break;
+            
+        case 'highfive':
+            char1.playAnimation('point');
+            char2.playAnimation('point');
+            char1.lookAt(char2.group.position);
+            char2.lookAt(char1.group.position);
+            showToast('High five!', 'success');
+            break;
+            
+        case 'walk_to':
+            char1.walkTo(char2.group.position.clone(), {
+                onComplete: () => {
+                    char1.lookAt(char2.group.position);
+                    char1.playAnimation('wave');
+                }
+            });
+            showToast('Character 1 walking', 'success');
+            break;
+            
+        case 'give':
+            if (!targetId) {
+                showToast('Select object to give', 'warning');
+                return;
+            }
+            const object = getObjectByInstanceId(targetId);
+            if (object) {
+                char1.holdObject(object, 'right');
+                setTimeout(() => {
+                    char1.giveObject(char2, object);
+                }, 1000);
+                showToast('Giving object', 'success');
+            }
+            break;
+            
+        case 'sit':
+            if (!targetId) {
+                showToast('Select object to sit on', 'warning');
+                return;
+            }
+            const sitObject = getObjectByInstanceId(targetId) || createSitObject(targetId);
+            if (sitObject) {
+                // Add sit position data
+                sitObject.userData.sitPosition = sitObject.position.clone().add(new THREE.Vector3(0, 0.5, 0.5));
+                sitObject.userData.sitRotation = new THREE.Euler(0, Math.PI, 0);
+                char1.sitOn(sitObject);
+                showToast('Character sitting', 'success');
+            }
+            break;
+    }
+}
+
+function previewInteraction() {
+    // Same as apply but with preview mode
+    applyInteraction();
+}
+
+function stopInteraction() {
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    
+    if (!char1Select || !char2Select) return;
+    
+    const char1Key = char1Select.value;
+    const char2Key = char2Select.value;
+    
+    const char1 = getCharacter3DByKey(char1Key);
+    const char2 = getCharacter3DByKey(char2Key);
+    
+    if (char1) {
+        char1.stopWalking();
+        char1.playAnimation('idle');
+        char1.releaseObject();
+    }
+    if (char2) {
+        char2.stopWalking();
+        char2.playAnimation('idle');
+        char2.releaseObject();
+    }
+    
+    showToast('Interaction stopped', 'info');
+}
+
+function getCharacter3DByKey(key) {
+    const parts = key.split('_');
+    if (parts.length >= 2) {
+        const sceneIndex = parseInt(parts[0]);
+        const charIndex = parseInt(parts[1]);
+        const charData = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+        return charData?.character3d;
+    }
+    return null;
+}
+
+function getObjectByInstanceId(instanceId) {
+    if (!AppState.three.assetManager) return null;
+    const asset = AppState.three.assetManager.getAsset(instanceId);
+    return asset?.asset;
+}
+
+function createSitObject(presetId) {
+    // Create a temporary sit object from preset
+    if (presetId.startsWith('preset_')) {
+        const assetId = presetId.replace('preset_', '');
+        const assetGroup = assetLibrary.buildAsset(assetId, {
+            position: new THREE.Vector3(0, 0, 2)
+        });
+        if (assetGroup && AppState.three.scene) {
+            AppState.three.scene.add(assetGroup);
+            // Add to asset manager
+            if (AppState.three.assetManager) {
+                const instanceId = AppState.three.assetManager.addAsset(assetId, {
+                    position: new THREE.Vector3(0, 0, 2)
+                });
+                return AppState.three.assetManager.getAsset(instanceId)?.asset;
+            }
+        }
+        return assetGroup;
+    }
+    return null;
+}
+
+// ========================================
+// Auto-Direction System
+// ========================================
+
+function initializeAutoDirect() {
+    const autoBtn = $('#autoDirectScene');
+    const suggestBtn = $('#showDirectionSuggestions');
+    
+    if (autoBtn) autoBtn.addEventListener('click', handleAutoDirectScene);
+    if (suggestBtn) suggestBtn.addEventListener('click', handleShowDirectionSuggestions);
+}
+
+// ========================================
+// Continuity Validation
+// ========================================
+
+function initializeContinuityValidation() {
+    const checkBtn = $('#runContinuityCheck');
+    const fixBtn = $('#autoFixContinuity');
+    
+    if (checkBtn) checkBtn.addEventListener('click', handleRunContinuityCheck);
+    if (fixBtn) fixBtn.addEventListener('click', handleAutoFixContinuity);
+}
+
+// ========================================
+// Prop Generator
+// ========================================
+
+function initializePropGenerator() {
+    // Populate category dropdown
+    const categorySelect = $('#propCategory');
+    if (categorySelect) {
+        categorySelect.innerHTML = '<option value="">प्रॉप कैटेगरी चुनें</option>';
+        Object.entries(PROP_CATEGORIES).forEach(([key, cat]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = `${cat.icon} ${cat.name}`;
+            categorySelect.appendChild(option);
+        });
+    }
+
+    // Populate material dropdown
+    const materialSelect = $('#propMaterial');
+    if (materialSelect) {
+        materialSelect.innerHTML = '';
+        Object.entries(MATERIAL_PRESETS).forEach(([key, mat]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = mat.name;
+            materialSelect.appendChild(option);
+        });
+    }
+
+    // Category change - populate prop types
+    const propCategorySelect = $('#propCategory');
+    const propTypeSelect = $('#propType');
+    const propVariationSelect = $('#propVariation');
+
+    if (propCategorySelect) {
+        propCategorySelect.addEventListener('change', (e) => {
+            const category = e.target.value;
+            if (category && PROP_CATEGORIES[category]) {
+                propTypeSelect.disabled = false;
+                propTypeSelect.innerHTML = '<option value="">प्रॉप प्रकार चुनें</option>';
+                PROP_CATEGORIES[category].baseProps.forEach(prop => {
+                    const option = document.createElement('option');
+                    option.value = prop;
+                    option.textContent = prop.charAt(0).toUpperCase() + prop.slice(1);
+                    propTypeSelect.appendChild(option);
+                });
+                propVariationSelect.disabled = true;
+                propVariationSelect.innerHTML = '<option value="">पहले प्रॉप चुनें</option>';
+            } else {
+                propTypeSelect.disabled = true;
+                propTypeSelect.innerHTML = '<option value="">पहले कैटेगरी चुनें</option>';
+                propVariationSelect.disabled = true;
+                propVariationSelect.innerHTML = '<option value="">पहले प्रॉप चुनें</option>';
+            }
+        });
+    }
+
+    // Prop type change - populate variations
+    if (propTypeSelect) {
+        propTypeSelect.addEventListener('change', (e) => {
+            const propType = e.target.value;
+            if (propType && PROP_VARIATIONS[propType]) {
+                propVariationSelect.disabled = false;
+                propVariationSelect.innerHTML = '<option value="">डिफ़ॉल्ट</option>';
+                PROP_VARIATIONS[propType].variations.forEach(variation => {
+                    const option = document.createElement('option');
+                    option.value = variation;
+                    option.textContent = variation.charAt(0).toUpperCase() + variation.slice(1);
+                    propVariationSelect.appendChild(option);
+                });
+            } else {
+                propVariationSelect.disabled = true;
+                propVariationSelect.innerHTML = '<option value="">पहले प्रॉप चुनें</option>';
+            }
+        });
+    }
+
+    // Size slider value display
+    $('#propSize').addEventListener('input', (e) => {
+        $('#propSizeValue').textContent = parseFloat(e.target.value).toFixed(1);
+    });
+
+    // Position sliders value display
+    $('#propPosX').addEventListener('input', (e) => {
+        $('#propPosXValue').textContent = e.target.value;
+    });
+    $('#propPosY').addEventListener('input', (e) => {
+        $('#propPosYValue').textContent = e.target.value;
+    });
+    $('#propPosZ').addEventListener('input', (e) => {
+        $('#propPosZValue').textContent = e.target.value;
+    });
+
+    // Generate prop button
+    $('#generateProp').addEventListener('click', handleGenerateProp);
+
+    // Add prop to scene button
+    $('#addPropToScene').addEventListener('click', handleAddPropToScene);
+
+    // Clear generated props button
+    $('#clearGeneratedProps').addEventListener('click', handleClearGeneratedProps);
+}
+
+// ========================================
+// Visual Director
+// ========================================
+
+function initializeVisualDirector() {
+    // Generate shot plan button
+    $('#generateShotPlan').addEventListener('click', handleGenerateShotPlan);
+    
+    // Apply shot plan button
+    $('#applyShotPlan').addEventListener('click', handleApplyShotPlan);
+    
+    // Show shot suggestions button
+    $('#showShotSuggestions').addEventListener('click', handleShowShotSuggestions);
+}
+
+function handleGenerateShotPlan() {
+    if (!AppState.scenes || AppState.scenes.length === 0) {
+        showToast('No scenes for shot plan', 'warning');
+        return;
+    }
+
+    if (!AppState.three.visualDirector) {
+        showToast('Visual Director not initialized', 'error');
+        return;
+    }
+
+    showLoading('Generating AI shot plan...');
+
+    setTimeout(() => {
+        try {
+            // Update visual director with current scenes
+            AppState.three.visualDirector.scenes = AppState.scenes;
+            AppState.three.visualDirector.characters = AppState.three.characters3d;
+            
+            const result = autoDirectWithVisualDirector(AppState.scenes, AppState.three.characters3d, AppState.three);
+            AppState.lastShotPlan = result.shotPlan;
+            
+            displayShotPlan(result.shotPlan);
+            hideLoading();
+            showToast(`${result.totalShots} shots plan generated (${result.totalDuration.toFixed(1)}s)`, 'success');
+        } catch (e) {
+            hideLoading();
+            console.error('Shot plan generation failed:', e);
+            showToast('Generation failed: ' + e.message, 'error');
+        }
+    }, 100);
+}
+
+function handleApplyShotPlan() {
+    if (!AppState.lastShotPlan || AppState.lastShotPlan.length === 0) {
+        showToast('No shot plan to apply', 'warning');
+        return;
+    }
+
+    // Apply shot plan to current scene
+    const sceneIndex = AppState.three.currentScene;
+    const sceneShots = AppState.lastShotPlan.filter(s => s.sceneIndex === sceneIndex);
+    
+    if (sceneShots.length === 0) {
+        showToast('No shots for this scene', 'warning');
+        return;
+    }
+
+    // Store shot plan in scene
+    AppState.scenes[sceneIndex].shotPlan = sceneShots;
+    AppState.scenes[sceneIndex].visualDirectorApplied = true;
+
+    // Apply first shot camera settings
+    const firstShot = sceneShots[0];
+    applyShotToCamera(firstShot);
+
+    showToast(`${sceneShots.length} shots applied to scene ${sceneIndex + 1}`, 'success');
+}
+
+function applyShotToCamera(shot) {
+    const { cameraControls } = AppState.three;
+    
+    cameraControls.distance = shot.cameraDistance;
+    cameraControls.height = shot.cameraHeight;
+    cameraControls.fov = shot.cameraFOV;
+    
+    // Update UI
+    $('#camDistance').value = shot.cameraDistance;
+    $('#camDistValue').textContent = shot.cameraDistance;
+    $('#camHeight').value = shot.cameraHeight;
+    $('#camHeightValue').textContent = shot.cameraHeight;
+    $('#camFov').value = shot.cameraFOV;
+    $('#camFovValue').textContent = shot.cameraFOV;
+    
+    // Apply camera movement type
+    cameraControls.movement = shot.cameraMovement;
+    $('#camMovement').value = shot.cameraMovement;
+    
+    // Update lookAt target if character specified
+    if (shot.lookAtTarget) {
+        const charData = AppState.three.characters3d.find(c => 
+            c.sceneIndex === shot.sceneIndex && c.character3d && 
+            (AppState.scenes[shot.sceneIndex]?.characters?.[c.charIndex] === shot.lookAtTarget)
+        );
+        if (charData && charData.character3d) {
+            cameraControls.lookAt.copy(charData.character3d.group.position);
+        }
+    }
+    
+    // Rebuild scene to apply camera changes
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    if (sceneIndex !== undefined && sceneIndex !== null) {
+        rebuildSceneForPreview(parseInt(sceneIndex));
+    }
+}
+
+function displayShotPlan(shotPlan) {
+    const container = $('#shotPlanList');
+    if (!container) return;
+    
+    container.style.display = 'block';
+    
+    if (!shotPlan || shotPlan.length === 0) {
+        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">No shot plan</p>';
+        return;
+    }
+    
+    // Group by scene
+    const byScene = {};
+    shotPlan.forEach(shot => {
+        if (!byScene[shot.sceneIndex]) byScene[shot.sceneIndex] = [];
+        byScene[shot.sceneIndex].push(shot);
+    });
+    
+    let html = '';
+    Object.keys(byScene).sort((a, b) => a - b).forEach(sceneIdx => {
+        const shots = byScene[sceneIdx];
+        html += `<h4 style="margin: 16px 0 8px; font-size: 0.8125rem; color: var(--text-secondary);">सीन ${parseInt(sceneIdx) + 1}</h4>`;
+        
+        shots.forEach(shot => {
+            const transitionInfo = shot.transition ? ` → ${shot.transition.info.name} (${shot.transition.duration}s)` : '';
+            
+            html += `
+                <div class="vd-shot-item">
+                    <span class="vd-shot-number">${shot.shotIndex + 1}</span>
+                    <span class="vd-shot-type">${shot.typeInfo.shortName}</span>
+                    <span class="vd-shot-duration">${shot.duration.toFixed(1)}s</span>
+                    <span class="vd-shot-purpose">${shot.purpose}</span>
+                    <span class="vd-shot-movement">${shot.movementInfo.name}${transitionInfo}</span>
+                    <span class="vd-shot-characters">${shot.characters.join(', ') || '—'}</span>
+                    <span class="vd-shot-composition">${shot.composition?.rule || '—'}</span>
+                </div>
+            `;
+        });
+    });
+    
+    container.innerHTML = html;
+}
+
+function handleShowShotSuggestions() {
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    if (sceneIndex === undefined || sceneIndex === null || sceneIndex === '') {
+        showToast('Select a scene first', 'warning');
+        return;
+    }
+    
+    const scene = AppState.scenes[parseInt(sceneIndex)];
+    if (!scene) {
+        showToast('Scene not found', 'error');
+        return;
+    }
+    
+    const suggestions = getShotSuggestions(scene);
+    displayShotSuggestions(suggestions, parseInt(sceneIndex));
+}
+
+function displayShotSuggestions(suggestions, sceneIndex) {
+    const container = $('#shotSuggestions');
+    if (!container) return;
+    
+    container.style.display = 'block';
+    
+    if (!suggestions || suggestions.length === 0) {
+        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">No suggestions - shot plan complete!</p>';
+        return;
+    }
+    
+    let html = '<h4 style="margin: 0 0 12px; font-size: 0.8125rem; color: var(--text-secondary);">Shot Suggestions</h4>';
+    
+    suggestions.forEach((suggestion, index) => {
+        const shotType = SHOT_TYPES[suggestion.type];
+        html += `
+            <div class="vd-suggestion-item">
+                <div class="vd-suggestion-info">
+                    <span class="vd-suggestion-type">${shotType?.shortName || suggestion.type} - ${shotType?.name || ''}</span>
+                    <span class="vd-suggestion-reason">${suggestion.reason}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="vd-suggestion-priority ${suggestion.priority}">${suggestion.priority}</span>
+                    <button class="btn vd-suggestion-apply" onclick="applyShotSuggestion(${sceneIndex}, '${suggestion.type}')">Apply</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Global function for applying suggestion
+window.applyShotSuggestion = function(sceneIndex, shotType) {
+    if (!AppState.three.visualDirector) return;
+    
+    const scene = AppState.scenes[sceneIndex];
+    if (!scene) return;
+    
+    // Create a new shot and add to scene shot plan
+    if (!scene.shotPlan) scene.shotPlan = [];
+    
+    const newShot = AppState.three.visualDirector.createShot({
+        sceneIndex,
+        shotIndex: scene.shotPlan.length,
+        type: shotType,
+        characters: scene.characters || [],
+        duration: 3,
+        purpose: 'suggested',
+        cameraMovement: 'static',
+        composition: { rule: 'rule_of_thirds', focus: 'subject' }
+    });
+    
+    scene.shotPlan.push(newShot);
+    
+    // Refresh display
+    if (AppState.lastShotPlan) {
+        displayShotPlan(AppState.lastShotPlan);
+    }
+    
+    showToast(`"${SHOT_TYPES[shotType]?.name || shotType}" shot added`, 'success');
+};
+
+// ========================================
+// Multi-Track Timeline
+// ========================================
+
+function initializeTimeline() {
+    // Create timeline instance
+    AppState.timeline = new MultiTrackTimeline();
+    AppState.timeline.createDefaultTracks();
+    
+    // Initialize UI
+    AppState.timelineUI = new TimelineUI(AppState.timeline, 'timelineContainer');
+    
+    // Set up timeline callbacks
+    AppState.timeline.onTimeUpdate = (time) => {
+        updateTimelinePlayhead(time);
+    };
+    
+    AppState.timeline.onClipSelect = (clipIds) => {
+        updateTimelineSelectionInfo(clipIds);
+    };
+    
+    AppState.timeline.onClipMove = (clip, oldTrackId, newTrackId) => {
+        updateTimelineTotalDuration();
+    };
+    
+    AppState.timeline.onClipTrim = (clip) => {
+        updateTimelineTotalDuration();
+    };
+    
+    AppState.timeline.onTrackChange = (action, track) => {
+        updateTimelineTotalDuration();
+    };
+    
+    // Auto-sequence scenes to timeline
+    autoSequenceScenesToTimeline();
+    
+    // Event listeners for timeline toolbar
+    $('#timelineAddVideoTrack').addEventListener('click', () => {
+        const track = AppState.timeline.addTrack('video', `Video ${AppState.timeline.tracks.filter(t => t.type === 'video').length + 1}`);
+        AppState.timelineUI.render();
+    });
+    
+    $('#timelineAddAudioTrack').addEventListener('click', () => {
+        const track = AppState.timeline.addTrack('audio', `Audio ${AppState.timeline.tracks.filter(t => t.type === 'audio').length + 1}`);
+        AppState.timelineUI.render();
+    });
+    
+    $('#timelineAddTextTrack').addEventListener('click', () => {
+        const track = AppState.timeline.addTrack('text', `Text ${AppState.timeline.tracks.filter(t => t.type === 'text').length + 1}`);
+        AppState.timelineUI.render();
+    });
+    
+    $('#timelineAddEffectTrack').addEventListener('click', () => {
+        const track = AppState.timeline.addTrack('effect', `Effect ${AppState.timeline.tracks.filter(t => t.type === 'effect').length + 1}`);
+        AppState.timelineUI.render();
+    });
+    
+    $('#timelineImportClips').addEventListener('click', handleTimelineImportClips);
+    
+    $('#timelineAutoSequence').addEventListener('click', () => {
+        autoSequenceScenesToTimeline();
+        showToast('Scenes auto-sequenced', 'success');
+    });
+    
+    $('#timelineClearAll').addEventListener('click', () => {
+        if (confirm('Delete all tracks and clips?')) {
+            AppState.timeline.tracks = [];
+            AppState.timeline.createDefaultTracks();
+            AppState.timelineUI.render();
+            showToast('Timeline reset', 'info');
+        }
+    });
+    
+    $('#timelineSnap').addEventListener('change', (e) => {
+        AppState.timeline.snapToGrid = e.target.checked;
+    });
+    
+    $('#timelineLoop').addEventListener('change', (e) => {
+        AppState.timeline.loop = e.target.checked;
+    });
+}
+
+// ========================================
+// Export Manager Initialization
+// ========================================
+
+function initializeExportManager() {
+    if (!AppState.timeline) {
+        console.warn('Timeline not ready for export manager');
+        return;
+    }
+    
+    AppState.exportManager = new ExportManager(AppState.three, AppState.timeline);
+    
+    // Create export UI in the export step
+    createExportUI(AppState.exportManager, 'exportWizardContainer');
+    
+    // Connect export button
+    $('#exportVideoBtn').addEventListener('click', () => {
+        goToStep(4); // Navigate to export step
+    });
+    
+    // Also add export button in timeline tab
+    const timelineToolbar = document.querySelector('.timeline-toolbar .toolbar-group:last-child');
+    if (timelineToolbar) {
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'btn btn-primary';
+        exportBtn.textContent = '📤 एक्सपोर्ट';
+        exportBtn.addEventListener('click', () => {
+            goToStep(4);
+        });
+        timelineToolbar.appendChild(exportBtn);
+    }
+}
+
+// ========================================
+// Project Manager Initialization
+// ========================================
+
+function initializeProjectManager() {
+    AppState.projectManager = new ProjectManager(AppState);
+    AppState.projectManager.init();
+    
+    // Create project UI in a suitable location
+    // We'll add it to the timeline tab toolbar or create a new panel
+    const timelineToolbar = document.querySelector('.timeline-toolbar .toolbar-group:first-child');
+    if (timelineToolbar) {
+        const projectBtn = document.createElement('button');
+        projectBtn.className = 'btn btn-secondary';
+        projectBtn.textContent = '📁 प्रोजेक्ट';
+        projectBtn.addEventListener('click', () => {
+            showProjectModal();
+        });
+        timelineToolbar.appendChild(projectBtn);
+    }
+    
+    // Add project management to step 1 (Story) as well
+    addProjectButtonsToStoryStep();
+}
+
+function showProjectModal() {
+    // Create modal for project management
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal project-modal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>प्रोजेक्ट प्रबंधन</h3>
+                <button class="modal-close" onclick="closeProjectModal()">&times;</button>
+            </div>
+            <div id="projectManagerContainer"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Initialize project UI
+    createProjectUI(AppState.projectManager, 'projectManagerContainer');
+    
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeProjectModal();
+    });
+    
+    // Make close function global
+    window.closeProjectModal = () => {
+        modal.remove();
+        delete window.closeProjectModal;
+        delete window.restoreAutosave;
+        delete window.deleteAutosave;
+    };
+}
+
+function addProjectButtonsToStoryStep() {
+    const storyActions = document.querySelector('#step1 .action-buttons') || 
+                         document.querySelector('#step1 .panel-actions');
+    if (storyActions) {
+        const projectGroup = document.createElement('div');
+        projectGroup.className = 'project-buttons';
+        projectGroup.style.display = 'flex';
+        projectGroup.style.gap = '8px';
+        projectGroup.style.marginTop = '12px';
+        projectGroup.innerHTML = `
+            <button class="btn btn-secondary" id="storyNewProject" style="flex: 1;">📁 नया प्रोजेक्ट</button>
+            <button class="btn btn-secondary" id="storyOpenProject" style="flex: 1;">📂 खोलें</button>
+            <button class="btn btn-success" id="storySaveProject" style="flex: 1;">💾 सेव</button>
+        `;
+        storyActions.parentNode.insertBefore(projectGroup, storyActions.nextSibling);
+        
+        $('#storyNewProject').addEventListener('click', () => {
+            if (AppState.projectManager.hasUnsavedChanges && !confirm('Unsaved changes will be lost. Continue?')) return;
+            AppState.projectManager.createNewProject();
+            AppState.projectManager.applyProjectData(AppState.projectManager.currentProject);
+            showToast('New project created', 'success');
+        });
+        
+        $('#storyOpenProject').addEventListener('click', () => {
+            AppState.projectManager.loadProject();
+        });
+        
+        $('#storySaveProject').addEventListener('click', () => {
+            AppState.projectManager.saveProject();
+        });
+    }
+}
+
+function autoSequenceScenesToTimeline() {
+    if (!AppState.scenes || AppState.scenes.length === 0) {
+        showToast('No scenes to sequence', 'warning');
+        return;
+    }
+    
+    const videoTrack = AppState.timeline.tracks.find(t => t.type === 'video' && !t.hidden);
+    const audioTrack = AppState.timeline.tracks.find(t => t.type === 'audio' && t.name === 'संगीत');
+    const textTrack = AppState.timeline.tracks.find(t => t.type === 'text');
+    
+    if (!videoTrack) return;
+    
+    let currentTime = 0;
+    
+    AppState.scenes.forEach((scene, index) => {
+        const sceneDuration = scene.duration || 8;
+        
+        // Add video clip for scene
+        const videoClip = new TimelineClip({
+            type: 'video',
+            name: `सीन ${index + 1}: ${scene.background || 'सीन'}`,
+            startTime: currentTime,
+            duration: sceneDuration,
+            color: '#3b82f6',
+            metadata: { sceneIndex: index, sceneData: scene }
+        });
+        videoTrack.addClip(videoClip, currentTime);
+        
+        // Add audio clip if scene has narration
+        if (audioTrack && scene.narration) {
+            const audioClip = new TimelineClip({
+                type: 'audio',
+                name: `नरेशन ${index + 1}`,
+                startTime: currentTime,
+                duration: sceneDuration,
+                color: '#10b981',
+                metadata: { sceneIndex: index, text: scene.narration }
+            });
+            audioTrack.addClip(audioClip, currentTime);
+        }
+        
+        // Add subtitle clip
+        if (textTrack && scene.subtitles) {
+            const textClip = new TimelineClip({
+                type: 'text',
+                name: `उपशीर्षक ${index + 1}`,
+                startTime: currentTime,
+                duration: sceneDuration,
+                color: '#f59e0b',
+                metadata: { sceneIndex: index, subtitles: scene.subtitles }
+            });
+            textTrack.addClip(textClip, currentTime);
+        }
+        
+        currentTime += sceneDuration + 0.5; // 0.5s gap between scenes
+    });
+    
+    AppState.timeline.autoSetDuration();
+    AppState.timelineUI.render();
+    updateTimelineTotalDuration();
+}
+
+function handleTimelineImportClips() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                AppState.timeline.importJSON(data);
+                AppState.timelineUI.render();
+                updateTimelineTotalDuration();
+                showToast('Timeline imported', 'success');
+            } catch (err) {
+                showToast('Import failed: ' + err.message, 'error');
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+function updateTimelinePlayhead(time) {
+    // Update playhead position in UI
+    if (AppState.timelineUI) {
+        AppState.timelineUI.renderPlayhead();
+        AppState.timelineUI.updateTimeDisplay();
+    }
+}
+
+function updateTimelineSelectionInfo(clipIds) {
+    const info = $('#timelineSelectedInfo');
+    if (!info) return;
+    
+    if (clipIds.length === 0) {
+        info.textContent = 'No clip selected';
+    } else if (clipIds.length === 1) {
+        const track = AppState.timeline.tracks.find(t => t.clips.some(c => c.id === clipIds[0]));
+        const clip = track?.clips.find(c => c.id === clipIds[0]);
+        if (clip) {
+            info.textContent = `Selected: ${clip.name} (${clip.startTime.toFixed(1)}s - ${clip.endTime.toFixed(1)}s, ${clip.duration.toFixed(1)}s)`;
+        }
+    } else {
+        info.textContent = `${clipIds.length} clips selected`;
+    }
+}
+
+function updateTimelineTotalDuration() {
+    const duration = $('#timelineTotalDuration');
+    if (duration) {
+        duration.textContent = `Total Duration: ${AppState.timeline.duration.toFixed(1)}s`;
+    }
+}
+
+// Update timeline in animation loop
+function updateTimeline(deltaTime) {
+    if (AppState.timeline) {
+        AppState.timeline.update(deltaTime);
+    }
+}
+
+function handleGenerateProp() {
+    const category = $('#propCategory').value;
+    const propType = $('#propType').value;
+    const variation = $('#propVariation').value || 'default';
+    const color = $('#propColor').value;
+    const material = $('#propMaterial').value;
+    const size = parseFloat($('#propSize').value);
+
+    if (!category || !propType) {
+        showToast('Please select category and prop type', 'warning');
+        return;
+    }
+
+    if (!AppState.three.propGenerator) {
+        showToast('Prop generator not initialized', 'error');
+        return;
+    }
+
+    showLoading('Generating prop...');
+
+    setTimeout(() => {
+        try {
+            const customization = { color, material, size };
+            const prop = AppState.three.propGenerator.generateProp(propType, {
+                variation,
+                customization,
+                seed: Math.random()
+            });
+
+            if (prop) {
+                // Store generated prop
+                if (!AppState.generatedProps) AppState.generatedProps = [];
+                AppState.generatedProps.push({
+                    prop,
+                    propType,
+                    variation,
+                    customization,
+                    position: new THREE.Vector3(
+                        parseFloat($('#propPosX').value),
+                        parseFloat($('#propPosY').value),
+                        parseFloat($('#propPosZ').value)
+                    )
+                });
+
+                // Add to scene for preview
+                const { scene } = AppState.three;
+                prop.position.copy(AppState.generatedProps[AppState.generatedProps.length - 1].position);
+                scene.add(prop);
+                
+                // Track for cleanup
+                if (!AppState.three.generatedPropObjects) AppState.three.generatedPropObjects = [];
+                AppState.three.generatedPropObjects.push(prop);
+
+                updateGeneratedPropsList();
+                showToast(`"${propType}" (${variation}) prop generated!`, 'success');
+            } else {
+                showToast('Failed to generate prop', 'error');
+            }
+            hideLoading();
+        } catch (e) {
+            hideLoading();
+            console.error('Prop generation failed:', e);
+            showToast('Generation failed: ' + e.message, 'error');
+        }
+    }, 100);
+}
+
+function handleAddPropToScene() {
+    if (!AppState.generatedProps || AppState.generatedProps.length === 0) {
+        showToast('No generated props to add', 'warning');
+        return;
+    }
+
+    const sceneIndex = AppState.three.currentScene;
+    const sceneData = AppState.scenes[sceneIndex];
+    
+    if (!sceneData) {
+        showToast('Scene data not found', 'error');
+        return;
+    }
+
+    // Initialize assets array if needed
+    if (!sceneData.assets) sceneData.assets = [];
+
+    let added = 0;
+    AppState.generatedProps.forEach(genProp => {
+        if (AppState.three.assetManager) {
+            const instanceId = AppState.three.assetManager.addAsset(genProp.propType, {
+                position: genProp.position.clone(),
+                rotation: new THREE.Euler(0, 0, 0),
+                scale: new THREE.Vector3(genProp.customization.size, genProp.customization.size, genProp.customization.size),
+                customization: genProp.customization,
+                variation: genProp.variation
+            });
+            
+            if (instanceId) {
+                sceneData.assets.push({
+                    instanceId,
+                    assetId: genProp.propType,
+                    assetName: genProp.propType,
+                    variation: genProp.variation,
+                    customization: genProp.customization
+                });
+                added++;
+            }
+        }
+    });
+
+    // Clear generated props from preview (they're now in asset manager)
+    if (AppState.three.generatedPropObjects) {
+        AppState.three.generatedPropObjects.forEach(obj => {
+            AppState.three.scene.remove(obj);
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => m.dispose());
+                } else {
+                    obj.material.dispose();
+                }
+            }
+        });
+        AppState.three.generatedPropObjects = [];
+    }
+    AppState.generatedProps = [];
+    updateGeneratedPropsList();
+
+    showToast(`${added} prop(s) added to scene`, 'success');
+    
+    // Rebuild scene preview
+    rebuildSceneForPreview(sceneIndex);
+}
+
+function handleClearGeneratedProps() {
+    if (AppState.three.generatedPropObjects) {
+        AppState.three.generatedPropObjects.forEach(obj => {
+            AppState.three.scene.remove(obj);
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => m.dispose());
+                } else {
+                    obj.material.dispose();
+                }
+            }
+        });
+        AppState.three.generatedPropObjects = [];
+    }
+    AppState.generatedProps = [];
+    updateGeneratedPropsList();
+    showToast('Generated props cleared', 'info');
+}
+
+function updateGeneratedPropsList() {
+    const container = $('#generatedPropsList');
+    if (!container) return;
+
+    if (!AppState.generatedProps || AppState.generatedProps.length === 0) {
+        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">No generated props</p>';
+        return;
+    }
+
+    let html = '';
+    AppState.generatedProps.forEach((genProp, index) => {
+        html += `
+            <div class="generated-prop-item">
+                <div class="generated-prop-info">
+                    <span class="generated-prop-name">${genProp.propType} (${genProp.variation})</span>
+                    <span class="generated-prop-details">Size: ${genProp.customization.size}x | Color: ${genProp.customization.color} | Material: ${genProp.customization.material}</span>
+                </div>
+                <div class="generated-prop-actions">
+                    <button class="btn" onclick="removeGeneratedProp(${index})">Remove</button>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Make remove function global for onclick
+window.removeGeneratedProp = function(index) {
+    if (AppState.generatedProps && AppState.generatedProps[index]) {
+        // Remove from scene
+        if (AppState.three.generatedPropObjects && AppState.three.generatedPropObjects[index]) {
+            const obj = AppState.three.generatedPropObjects[index];
+            AppState.three.scene.remove(obj);
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => m.dispose());
+                } else {
+                    obj.material.dispose();
+                }
+            }
+            AppState.three.generatedPropObjects.splice(index, 1);
+        }
+        AppState.generatedProps.splice(index, 1);
+        updateGeneratedPropsList();
+        showToast('Prop removed', 'info');
+    }
+};
+
+function handleRunContinuityCheck() {
+    if (!AppState.scenes || AppState.scenes.length === 0) {
+        showToast('No scenes to check', 'warning');
+        return;
+    }
+    
+    showLoading('Checking continuity...');
+    
+    setTimeout(() => {
+        try {
+            const validator = new ContinuityValidator(AppState.scenes);
+            const result = validator.validate();
+            AppState.lastContinuityResult = result;
+            
+            displayContinuityResults(result);
+            hideLoading();
+            
+            const summary = result.summary;
+            if (summary.bySeverity.error > 0) {
+                showToast(`${summary.bySeverity.error} errors, ${summary.bySeverity.warning} warnings found`, 'error');
+            } else if (summary.bySeverity.warning > 0) {
+                showToast(`${summary.bySeverity.warning} warnings found`, 'warning');
+            } else {
+                showToast('Continuity check passed!', 'success');
+            }
+        } catch (e) {
+            hideLoading();
+            console.error('Continuity check failed:', e);
+            showToast('Check failed: ' + e.message, 'error');
+        }
+    }, 100);
+}
+
+function displayContinuityResults(result) {
+    const container = $('#continuityResults');
+    if (!container) return;
+    
+    container.style.display = 'block';
+    
+    const { issues, warnings, info, summary } = result;
+    const allItems = [...issues, ...warnings, ...info];
+    
+    if (allItems.length === 0) {
+        container.innerHTML = `
+            <div class="continuity-summary">
+                <div class="continuity-summary-item info">
+                    <span class="continuity-summary-count">✓</span>
+                    <span class="continuity-summary-label">कोई समस्या नहीं</span>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); text-align: center; padding: 20px;">सभी निरंतरता जांच पास हुईं!</p>
+        `;
+        return;
+    }
+    
+    // Summary
+    let html = `
+        <div class="continuity-summary">
+            <div class="continuity-summary-item error">
+                <span class="continuity-summary-count">${summary.bySeverity.error}</span>
+                <span class="continuity-summary-label">त्रुटियां</span>
+            </div>
+            <div class="continuity-summary-item warning">
+                <span class="continuity-summary-count">${summary.bySeverity.warning}</span>
+                <span class="continuity-summary-label">चेतावनियां</span>
+            </div>
+            <div class="continuity-summary-item info">
+                <span class="continuity-summary-count">${summary.bySeverity.info}</span>
+                <span class="continuity-summary-label">सूचनाएं</span>
+            </div>
+        </div>
+    `;
+    
+    // Issues grouped by type
+    const grouped = {};
+    allItems.forEach(item => {
+        if (!grouped[item.type]) grouped[item.type] = [];
+        grouped[item.type].push(item);
+    });
+    
+    Object.entries(grouped).forEach(([type, items]) => {
+        const checkInfo = CONTINUITY_CHECKS[type] || { name: type };
+        html += `<h4 style="margin: 16px 0 8px; font-size: 0.8125rem; color: var(--text-secondary);">${checkInfo.name}</h4>`;
+        
+        items.forEach(item => {
+            const severityClass = item.severity || 'info';
+            const icon = severityClass === 'error' ? '✕' : severityClass === 'warning' ? '⚠' : 'ℹ';
+            
+            html += `
+                <div class="continuity-issue ${severityClass}">
+                    <div class="continuity-issue-icon">${icon}</div>
+                    <div class="continuity-issue-content">
+                        <div class="continuity-issue-header">
+                            <span class="continuity-issue-type ${severityClass}">${severityClass}</span>
+                            <span class="continuity-issue-scene">सीन ${item.sceneIndex + 1}</span>
+                        </div>
+                        <div class="continuity-issue-message">${item.message}</div>
+                        ${item.details ? `<div class="continuity-issue-details">${JSON.stringify(item.details, null, 2)}</div>` : ''}
+                        ${item.suggestion ? `<div class="continuity-issue-suggestion">💡 ${item.suggestion}</div>` : ''}
+                    </div>
+                    ${item.character ? `<button class="btn continuity-fix-btn" onclick="focusCharacter(${item.sceneIndex}, '${item.character}')">पात्र पर जाएं</button>` : ''}
+                </div>
+            `;
+        });
+    });
+    
+    container.innerHTML = html;
+}
+
+function handleAutoFixContinuity() {
+    if (!AppState.lastContinuityResult) {
+        showToast('Run continuity check first', 'warning');
+        return;
+    }
+    
+    const suggestions = generateFixSuggestions(AppState.lastContinuityResult);
+    
+    if (suggestions.length === 0) {
+        showToast('No fixes to apply', 'info');
+        return;
+    }
+    
+    showLoading('Applying auto-fixes...');
+    
+    setTimeout(() => {
+        let applied = 0;
+        
+        suggestions.forEach(suggestion => {
+            switch (suggestion.action) {
+                case 'reset_to_first_scene':
+                    // Reset character appearance to first scene
+                    const firstScene = AppState.scenes[0];
+                    const charIndex = firstScene.characters.indexOf(suggestion.character);
+                    if (charIndex >= 0 && firstScene.characters3d[charIndex]) {
+                        const sourceChar = firstScene.characters3d[charIndex];
+                        AppState.scenes.forEach(scene => {
+                            const idx = scene.characters.indexOf(suggestion.character);
+                            if (idx >= 0 && scene.characters3d[idx]) {
+                                Object.assign(scene.characters3d[idx], {
+                                    bodyType: sourceChar.bodyType,
+                                    skinTone: sourceChar.skinTone,
+                                    hairStyle: sourceChar.hairStyle,
+                                    hairColor: sourceChar.hairColor,
+                                    eyeColor: sourceChar.eyeColor,
+                                    clothing: sourceChar.clothing,
+                                    shirtColor: sourceChar.shirtColor,
+                                    pantsColor: sourceChar.pantsColor,
+                                    shoesColor: sourceChar.shoesColor,
+                                    bodyScale: sourceChar.bodyScale,
+                                    headScale: sourceChar.headScale,
+                                    limbLength: sourceChar.limbLength
+                                });
+                            }
+                        });
+                        applied++;
+                    }
+                    break;
+                    
+                case 'add_walk_animation':
+                    // Add walk animation to character in previous scene
+                    const prevScene = AppState.scenes[suggestion.sceneIndex - 1];
+                    if (prevScene) {
+                        const charIdx = prevScene.characters.indexOf(suggestion.character);
+                        if (charIdx >= 0 && prevScene.characters3d[charIdx]) {
+                            prevScene.characters3d[charIdx].animation = 'walk';
+                            applied++;
+                        }
+                    }
+                    break;
+            }
+        });
+        
+        hideLoading();
+        
+        if (applied > 0) {
+            // Rebuild current scene preview
+            const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+            if (sceneIndex !== undefined && sceneIndex !== null) {
+                rebuildSceneForPreview(parseInt(sceneIndex));
+            }
+            showToast(`${applied} fixes applied`, 'success');
+        } else {
+            showToast('No fixes could be applied', 'warning');
+        }
+    }, 100);
+}
+
+function focusCharacter(sceneIndex, characterName) {
+    // Switch to scene editor tab and select the character
+    const sceneSelector = $('#sceneSelector');
+    if (sceneSelector) {
+        sceneSelector.value = sceneIndex;
+        sceneSelector.dispatchEvent(new Event('change'));
+    }
+    
+    // Focus on character in position controls
+    setTimeout(() => {
+        const charItems = $$('.character-control-row');
+        charItems.forEach(item => {
+            if (item.textContent.includes(characterName)) {
+                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                item.style.boxShadow = '0 0 0 2px var(--accent-primary)';
+                setTimeout(() => item.style.boxShadow = '', 2000);
+            }
+        });
+    }, 100);
+}
+
+function handleAutoDirectScene() {
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    
+    if (sceneIndex === undefined || sceneIndex === null || sceneIndex === '') {
+        showToast('Select a scene first', 'warning');
+        return;
+    }
+    
+    showLoading('Directing scene...');
+    
+    // Use setTimeout to allow loading to show
+    setTimeout(() => {
+        try {
+            const directions = autoDirectScene(parseInt(sceneIndex));
+            hideLoading();
+            showToast('Scene auto-directed!', 'success');
+            
+            // Update UI to reflect changes
+            loadSceneControls(parseInt(sceneIndex));
+        } catch (e) {
+            hideLoading();
+            console.error('Auto-direct failed:', e);
+            showToast('Auto-direct failed: ' + e.message, 'error');
+        }
+    }, 100);
+}
+
+function handleShowDirectionSuggestions() {
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    
+    if (sceneIndex === undefined || sceneIndex === null || sceneIndex === '') {
+        showToast('Select a scene first', 'warning');
+        return;
+    }
+    
+    const scene = AppState.scenes[sceneIndex];
+    if (!scene) return;
+    
+    const suggestions = getDirectionSuggestions(scene.description, scene.characters);
+    
+    const container = $('#directionSuggestions');
+    if (!container) return;
+    
+    container.style.display = 'block';
+    
+    if (suggestions.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No suggestions found</p>';
+        return;
+    }
+    
+    container.innerHTML = suggestions.map(s => `
+        <div class="direction-suggestion">
+            <span class="type-badge ${s.type}">${s.type}</span>
+            <div class="details">
+                ${s.character ? `<div class="character">${s.character}</div>` : ''}
+                <div class="action">${s.action || s.expression || s.shot || s.mood || ''}</div>
+                <div class="reason">${s.reason}</div>
+            </div>
+            <button class="btn apply-btn" onclick="applyDirectionSuggestion(${JSON.stringify(s).replace(/"/g, '"')})">Apply</button>
+        </div>
+    `).join('');
+}
+
+function applyDirectionSuggestion(suggestion) {
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    const scene = AppState.scenes[sceneIndex];
+    if (!scene) return;
+    
+    // Find character
+    const charData = AppState.three.characters3d.find(c => 
+        c.sceneIndex === sceneIndex && 
+        scene.characters[c.charIndex] === suggestion.character
+    );
+    
+    if (!charData || !charData.character3d) {
+        showToast('Character not found', 'error');
+        return;
+    }
+    
+    const character3d = charData.character3d;
+    
+    switch (suggestion.type) {
+        case 'animation':
+            character3d.playAnimation(suggestion.action);
+            showToast(`${suggestion.character}: ${suggestion.action} animation applied`, 'success');
+            break;
+        case 'expression':
+            character3d.setExpression(suggestion.expression, 1.0);
+            showToast(`${suggestion.character}: ${suggestion.expression} expression applied`, 'success');
+            break;
+        case 'interaction':
+            // Find target character
+            const targetChar = scene.characters.indexOf(suggestion.target);
+            if (targetChar >= 0) {
+                const targetData = AppState.three.characters3d.find(c => 
+                    c.sceneIndex === sceneIndex && c.charIndex === targetChar
+                );
+                if (targetData?.character3d) {
+                    character3d.interactWith(targetData.character3d, suggestion.action);
+                    showToast(`${suggestion.character} -> ${suggestion.target}: ${suggestion.action}`, 'success');
+                }
+            }
+            break;
+        case 'camera':
+            applyCameraShot(suggestion.shot);
+            showToast(`Camera: ${suggestion.shot}`, 'success');
+            break;
+        case 'lighting':
+            applyLightingMood(suggestion.mood);
+            showToast(`Lighting: ${suggestion.mood}`, 'success');
+            break;
+    }
+}
+
+function applyCameraShot(shot) {
+    const cameraControls = AppState.three.cameraControls;
+    if (!cameraControls) return;
+    
+    const shots = {
+        closeup: { distance: 5, height: 1.6, fov: 30 },
+        medium: { distance: 10, height: 1.2, fov: 45 },
+        wide: { distance: 20, height: 3, fov: 60 },
+        over_shoulder: { distance: 8, height: 1.5, fov: 40 },
+        two_shot: { distance: 12, height: 1.2, fov: 50 }
+    };
+    
+    if (shots[shot]) {
+        Object.assign(cameraControls, shots[shot]);
+    }
+}
+
+function applyLightingMood(mood) {
+    const moods = {
+        bright: { ambientIntensity: 1.0, keyIntensity: 1.5, exposure: 1.5 },
+        dark: { ambientIntensity: 0.2, keyIntensity: 0.5, exposure: 0.8 },
+        warm: { ambientColor: 0xffcc88, keyColor: 0xffaa44, rimColor: 0xff8800 },
+        cool: { ambientColor: 0x88aacc, keyColor: 0x4488ff, rimColor: 0x0044aa },
+        dramatic: { keyIntensity: 2.0, fillIntensity: 0.1, rimIntensity: 0.5, exposure: 1.3 },
+        soft: { ambientIntensity: 0.8, keyIntensity: 0.8, fillIntensity: 0.6, shadowQuality: 'high' }
+    };
+    
+    if (moods[mood]) {
+        Object.assign(AppState.three.lighting, moods[mood]);
+    }
+}
+
+// ========================================
+// Script Editor
+// ========================================
+
+let scriptManager = null;
+let currentEditingScriptSceneId = null;
+
+function initializeScriptEditor() {
+    // Create script manager
+    scriptManager = new ScriptManager();
+    AppState.scriptManager = scriptManager;
+    
+    // Event listeners
+    const newScriptBtn = $('#newScriptBtn');
+    const templateBtn = $('#scriptTemplateBtn');
+    const importBtn = $('#importScriptBtn');
+    const exportBtn = $('#exportScriptBtn');
+    const addSceneBtn = $('#addScriptSceneBtn');
+    const addDialogueBtn = $('#addDialogueBtn');
+    const addActionBtn = $('#addActionBtn');
+    const saveBtn = $('#saveScriptSceneBtn');
+    const deleteBtn = $('#deleteScriptSceneBtn');
+    const closeBtn = $('#closeScriptEditorBtn');
+    const generateBtn = $('#generateScenesFromScriptBtn');
+    const languageSelect = $('#scriptLanguage');
+    const backBtn = $('#backToStoryFromScriptBtn');
+    
+    if (newScriptBtn) newScriptBtn.addEventListener('click', handleNewScript);
+    if (templateBtn) templateBtn.addEventListener('click', handleScriptTemplate);
+    if (importBtn) importBtn.addEventListener('click', handleImportScript);
+    if (exportBtn) exportBtn.addEventListener('click', handleExportScript);
+    if (addSceneBtn) addSceneBtn.addEventListener('click', handleAddScriptScene);
+    if (addDialogueBtn) addDialogueBtn.addEventListener('click', handleAddDialogue);
+    if (addActionBtn) addActionBtn.addEventListener('click', handleAddAction);
+    if (saveBtn) saveBtn.addEventListener('click', handleSaveScriptScene);
+    if (deleteBtn) deleteBtn.addEventListener('click', handleDeleteScriptScene);
+    if (closeBtn) closeBtn.addEventListener('click', handleCloseScriptEditor);
+    if (generateBtn) generateBtn.addEventListener('click', handleGenerateScenesFromScript);
+    if (languageSelect) languageSelect.addEventListener('change', (e) => {
+        if (scriptManager) scriptManager.script.language = e.target.value;
+    });
+    if (backBtn) backBtn.addEventListener('click', () => goToStep(1));
+    
+    // Load script scenes list
+    renderScriptScenesList();
+}
+
+function handleNewScript() {
+    if (scriptManager && scriptManager.script.scenes.length > 0) {
+        if (!confirm('वर्तमान स्क्रिप्ट खो जाएगी। जारी रखें?')) return;
+    }
+    scriptManager.newScript('', '');
+    currentEditingScriptSceneId = null;
+    renderScriptScenesList();
+    closeScriptEditorPanel();
+    showToast('New script created', 'success');
+}
+
+function handleScriptTemplate() {
+    // Show template selection modal
+    const templates = Object.entries(SCRIPT_TEMPLATES).map(([id, t]) => `
+        <button class="btn btn-secondary template-btn" data-template="${id}" style="width: 100%; margin: 4px 0; text-align: left;">
+            <strong>${t.name}</strong><br>
+            <small>${t.description}</small>
+        </button>
+    `).join('');
+    
+    const modal = createModal('Choose Script Template', templates);
+    modal.querySelectorAll('.template-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const script = createScriptFromTemplate(btn.dataset.template, '');
+            if (script) {
+                scriptManager.script = script;
+                scriptManager.updateCharactersList();
+                renderScriptScenesList();
+                closeScriptEditorPanel();
+                modal.remove();
+                showToast(`${SCRIPT_TEMPLATES[btn.dataset.template].name} template loaded`, 'success');
+            }
+        });
+    });
+}
+
+function handleImportScript() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (scriptManager.importFromJSON(event.target.result)) {
+                    renderScriptScenesList();
+                    showToast('Script imported', 'success');
+                } else {
+                    showToast('Import failed: Invalid format', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
+
+function handleExportScript() {
+    if (!scriptManager || scriptManager.script.scenes.length === 0) {
+        showToast('No script to export', 'warning');
+        return;
+    }
+    
+    const json = scriptManager.exportAsJSON();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${scriptManager.script.title || 'script'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Script exported', 'success');
+}
+
+function handleAddScriptScene() {
+    const scene = scriptManager.addScene({
+        title: `Scene ${scriptManager.script.scenes.length + 1}`,
+        duration: 8
+    });
+    renderScriptScenesList();
+    openScriptSceneEditor(scene.id);
+    showToast('Scene added', 'success');
+}
+
+function handleAddDialogue() {
+    if (!currentEditingScriptSceneId) return;
+    
+    scriptManager.addDialogue(currentEditingScriptSceneId, {
+        speaker: '',
+        text: '',
+        emotion: 'neutral',
+        animation: 'talk'
+    });
+    renderDialoguesList(currentEditingScriptSceneId);
+}
+
+function handleAddAction() {
+    if (!currentEditingScriptSceneId) return;
+    
+    scriptManager.addAction(currentEditingScriptSceneId, {
+        character: '',
+        action: 'walk',
+        target: '',
+        description: ''
+    });
+    renderActionsList(currentEditingScriptSceneId);
+}
+
+function handleSaveScriptScene() {
+    if (!currentEditingScriptSceneId) return;
+    
+    const updates = {
+        title: $('#scriptSceneTitle').value,
+        location: $('#scriptSceneLocation').value,
+        timeOfDay: $('#scriptSceneTimeOfDay').value,
+        duration: parseInt($('#scriptSceneDuration').value) || 8,
+        narration: $('#scriptSceneNarration').value,
+        cameraNotes: $('#scriptCameraNotes').value,
+        lightingNotes: $('#scriptLightingNotes').value,
+        soundNotes: $('#scriptSoundNotes').value
+    };
+    
+    scriptManager.updateScene(currentEditingScriptSceneId, updates);
+    renderScriptScenesList();
+    showToast('Scene saved', 'success');
+}
+
+function handleDeleteScriptScene() {
+    if (!currentEditingScriptSceneId) return;
+    
+    if (!confirm('Deleting this scene will remove all dialogues and actions. Continue?')) return;
+    
+    scriptManager.deleteScene(currentEditingScriptSceneId);
+    currentEditingScriptSceneId = null;
+    renderScriptScenesList();
+    closeScriptEditorPanel();
+    showToast('Scene deleted', 'success');
+}
+
+function handleCloseScriptEditor() {
+    closeScriptEditorPanel();
+}
+
+function handleGenerateScenesFromScript() {
+    if (!scriptManager || scriptManager.script.scenes.length === 0) {
+        showToast('Add scenes to script first', 'warning');
+        return;
+    }
+    
+    showLoading('Creating scenes from script...');
+    
+    setTimeout(() => {
+        // Convert script scenes to app scenes
+        const breakdown = scriptManager.generateSceneBreakdown();
+        AppState.scenes = breakdown.map((s, i) => ({
+            ...s,
+            id: s.id || generateId(),
+            characters: s.characters.length > 0 ? s.characters : ['Character'],
+            background: s.background || 'Garden'
+        }));
+        
+        // Initialize 3D character data
+        AppState.scenes.forEach((scene, sceneIndex) => {
+            scene.characters3d = scene.characters.map((_, charIndex) => ({
+                id: `char_${sceneIndex}_${charIndex}`,
+                bodyType: 'adult',
+                skinTone: 2,
+                hairStyle: 'short',
+                hairColor: 0,
+                eyeColor: 0,
+                clothing: 'casual',
+                shirtColor: null,
+                pantsColor: null,
+                shoesColor: null,
+                bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
+                headScale: 1.0,
+                limbLength: 1.0,
+                expression: 'neutral',
+                expressionIntensity: 1.0
+            }));
+        });
+        
+        // Store subtitles for later use
+        AppState.generatedSubtitles = generateSubtitlesFromScript(scriptManager.script);
+        
+        renderSceneList();
+        updateGenerateAnimationButton();
+        goToStep(3); // Go to scene editor
+        hideLoading();
+        showToast(`${AppState.scenes.length} scenes created from script`, 'success');
+    }, 100);
+}
+
+function renderScriptScenesList() {
+    const container = $('#scriptScenesList');
+    if (!container || !scriptManager) return;
+    
+    container.innerHTML = '';
+    
+    if (scriptManager.script.scenes.length === 0) {
+        container.innerHTML = `
+            <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+                <p>No scenes yet</p>
+                <p style="font-size: 0.8125rem;">Click "Add Scene" to start</p>
+            </div>
+        `;
+        return;
+    }
+    
+    scriptManager.script.scenes.forEach(scene => {
+        const item = document.createElement('div');
+        item.className = 'script-scene-item' + (currentEditingScriptSceneId === scene.id ? ' active' : '');
+        item.dataset.sceneId = scene.id;
+        item.innerHTML = `
+            <div class="script-scene-info">
+                <div class="script-scene-number">Scene ${scene.number}</div>
+                <div class="script-scene-title">${scene.title || 'Untitled'}</div>
+                <div class="script-scene-duration">${scene.duration}s • ${scene.dialogues.length} dialogues • ${scene.actions.length} actions</div>
+            </div>
+        `;
+        item.addEventListener('click', () => openScriptSceneEditor(scene.id));
+        container.appendChild(item);
+    });
+}
+
+function openScriptSceneEditor(sceneId) {
+    const scene = scriptManager.script.scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    
+    currentEditingScriptSceneId = sceneId;
+    
+    // Update UI
+    $$('.script-scene-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.sceneId === sceneId);
+    });
+    
+    const panel = $('#scriptEditorPanel');
+    if (panel) panel.style.display = 'block';
+    
+    $('#editingScriptSceneTitle').textContent = `सीन ${scene.number}: ${scene.title}`;
+    $('#scriptSceneTitle').value = scene.title;
+    $('#scriptSceneLocation').value = scene.location;
+    $('#scriptSceneTimeOfDay').value = scene.timeOfDay;
+    $('#scriptSceneDuration').value = scene.duration;
+    $('#scriptSceneNarration').value = scene.narration;
+    $('#scriptCameraNotes').value = scene.cameraNotes;
+    $('#scriptLightingNotes').value = scene.lightingNotes;
+    $('#scriptSoundNotes').value = scene.soundNotes;
+    
+    renderDialoguesList(sceneId);
+    renderActionsList(sceneId);
+}
+
+function closeScriptEditorPanel() {
+    currentEditingScriptSceneId = null;
+    const panel = $('#scriptEditorPanel');
+    if (panel) panel.style.display = 'none';
+    
+    $$('.script-scene-item').forEach(item => item.classList.remove('active'));
+}
+
+function renderDialoguesList(sceneId) {
+    const container = $('#scriptDialoguesList');
+    if (!container) return;
+    
+    const scene = scriptManager.script.scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    
+    if (scene.dialogues.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.8125rem; padding: 8px;">कोई संवाद नहीं</p>';
+        return;
+    }
+    
+    container.innerHTML = scene.dialogues.map((dialogue, index) => `
+        <div class="dialogue-item" data-dialogue-id="${dialogue.id}">
+            <div class="dialogue-fields">
+                <div class="dialogue-row">
+                    <select class="select" data-field="speaker">
+                        <option value="">स्पीकर चुनें</option>
+                        ${scriptManager.script.characters.map(c => `<option value="${c}" ${c === dialogue.speaker ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                    <select class="select" data-field="emotion">
+                        <option value="neutral" ${dialogue.emotion === 'neutral' ? 'selected' : ''}>तटस्थ</option>
+                        <option value="happy" ${dialogue.emotion === 'happy' ? 'selected' : ''}>खुश</option>
+                        <option value="sad" ${dialogue.emotion === 'sad' ? 'selected' : ''}>उदास</option>
+                        <option value="angry" ${dialogue.emotion === 'angry' ? 'selected' : ''}>गुस्सा</option>
+                        <option value="surprised" ${dialogue.emotion === 'surprised' ? 'selected' : ''}>आश्चर्य</option>
+                        <option value="scared" ${dialogue.emotion === 'scared' ? 'selected' : ''}>डर</option>
+                        <option value="thinking" ${dialogue.emotion === 'thinking' ? 'selected' : ''}>सोच</option>
+                    </select>
+                    <select class="select" data-field="animation">
+                        <option value="talk" ${dialogue.animation === 'talk' ? 'selected' : ''}>बात करना</option>
+                        <option value="idle" ${dialogue.animation === 'idle' ? 'selected' : ''}>इडल</option>
+                        <option value="wave" ${dialogue.animation === 'wave' ? 'selected' : ''}>हाथ हिलाना</option>
+                        <option value="point" ${dialogue.animation === 'point' ? 'selected' : ''}>इशारा करना</option>
+                    </select>
+                </div>
+                <div class="dialogue-row">
+                    <input type="text" class="input" data-field="text" placeholder="संवाद टेक्स्ट" value="${dialogue.text}">
+                    <input type="number" class="input" data-field="timing" placeholder="समय (सेकंड)" value="${dialogue.timing || 0}" step="0.5" min="0" style="width: 100px;">
+                    <input type="number" class="input" data-field="duration" placeholder="अवधि" value="${dialogue.duration || 3}" step="0.5" min="1" style="width: 80px;">
+                </div>
+            </div>
+            <div class="dialogue-actions">
+                <button class="btn btn-danger btn-sm" data-action="delete">हटाएं</button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners
+    container.querySelectorAll('.dialogue-item').forEach(item => {
+        const dialogueId = item.dataset.dialogueId;
+        const dialogue = scene.dialogues.find(d => d.id === dialogueId);
+        if (!dialogue) return;
+        
+        item.querySelectorAll('[data-field]').forEach(field => {
+            field.addEventListener('change', () => {
+                const updates = { [field.dataset.field]: field.value };
+                if (['timing', 'duration'].includes(field.dataset.field)) {
+                    updates[field.dataset.field] = parseFloat(field.value) || 0;
+                }
+                scriptManager.updateDialogue(sceneId, dialogueId, updates);
+            });
+        });
+        
+        item.querySelector('[data-action="delete"]').addEventListener('click', () => {
+            if (confirm('इस संवाद को हटाएं?')) {
+                scriptManager.deleteDialogue(sceneId, dialogueId);
+                renderDialoguesList(sceneId);
+            }
+        });
+    });
+}
+
+function renderActionsList(sceneId) {
+    const container = $('#scriptActionsList');
+    if (!container) return;
+    
+    const scene = scriptManager.script.scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    
+    const actionTypes = ['walk', 'run', 'sit', 'stand', 'wave', 'point', 'look', 'give', 'take', 'hug', 'highfive', 'nod', 'shake_head', 'jump', 'dance'];
+    
+    if (scene.actions.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.8125rem; padding: 8px;">कोई क्रिया नहीं</p>';
+        return;
+    }
+    
+    container.innerHTML = scene.actions.map((action, index) => `
+        <div class="action-item" data-action-id="${action.id}">
+            <div class="action-fields">
+                <div class="action-row">
+                    <select class="select" data-field="character">
+                        <option value="">पात्र चुनें</option>
+                        ${scriptManager.script.characters.map(c => `<option value="${c}" ${c === action.character ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                    <select class="select" data-field="action">
+                        ${actionTypes.map(a => `<option value="${a}" ${a === action.action ? 'selected' : ''}>${a}</option>`).join('')}
+                    </select>
+                    <select class="select" data-field="target">
+                        <option value="">लक्ष्य (वैकल्पिक)</option>
+                        ${scriptManager.script.characters.map(c => `<option value="${c}" ${c === action.target ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="action-row">
+                    <input type="text" class="input" data-field="description" placeholder="विवरण" value="${action.description || ''}" style="flex: 1;">
+                    <input type="number" class="input" data-field="timing" placeholder="समय" value="${action.timing || 0}" step="0.5" min="0" style="width: 100px;">
+                    <input type="number" class="input" data-field="duration" placeholder="अवधि" value="${action.duration || 2}" step="0.5" min="1" style="width: 80px;">
+                </div>
+            </div>
+            <div class="action-actions">
+                <button class="btn btn-danger btn-sm" data-action="delete">हटाएं</button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners
+    container.querySelectorAll('.action-item').forEach(item => {
+        const actionId = item.dataset.actionId;
+        const action = scene.actions.find(a => a.id === actionId);
+        if (!action) return;
+        
+        item.querySelectorAll('[data-field]').forEach(field => {
+            field.addEventListener('change', () => {
+                const updates = { [field.dataset.field]: field.value };
+                if (['timing', 'duration'].includes(field.dataset.field)) {
+                    updates[field.dataset.field] = parseFloat(field.value) || 0;
+                }
+                scriptManager.updateAction(sceneId, actionId, updates);
+            });
+        });
+        
+        item.querySelector('[data-action="delete"]').addEventListener('click', () => {
+            if (confirm('इस क्रिया को हटाएं?')) {
+                scriptManager.deleteAction(sceneId, actionId);
+                renderActionsList(sceneId);
+            }
+        });
+    });
+}
+
+function createModal(title, content) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    `;
+    modal.innerHTML = `
+        <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 24px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto;">
+            <h3 style="margin: 0 0 16px;">${title}</h3>
+            <div>${content}</div>
+            <button class="btn btn-ghost" style="margin-top: 16px; width: 100%;" onclick="this.closest('.modal-overlay').remove()">रद्द करें</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+    
+    return modal;
 }
 
 function updateKeyLightPosition() {
@@ -2847,7 +9068,7 @@ function applySceneSettings() {
     // Rebuild scene with new settings
     rebuildSceneForPreview(sceneIndex);
     
-    showToast('सीन सेटिंग्स लागू की गईं', 'success');
+    showToast('Scene settings applied', 'success');
 }
 
 // ========================================
@@ -2883,6 +9104,9 @@ function addCharacterToScene() {
         hairColor: 0,
         eyeColor: 0,
         clothing: 'casual',
+        shirtColor: null,
+        pantsColor: null,
+        shoesColor: null,
         bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
         headScale: 1.0,
         limbLength: 1.0,
@@ -2893,7 +9117,7 @@ function addCharacterToScene() {
     renderSceneList();
     openSceneEditor(index);
     updateCharacter3DList();
-    showToast('नया पात्र जोड़ा गया', 'success');
+    showToast('New character added', 'success');
 }
 
 function updateCharacter3DList() {
@@ -2995,12 +9219,12 @@ function selectCharacterForCustomization(sceneIndex, charIndex) {
     populateEyeColorPalette(char3dData.eyeColor || 0);
     populateHairColorPalette(char3dData.hairColor || 0);
     
-    // Set shirt/pants/shoes colors from clothing preset
+    // Set shirt/pants/shoes colors from clothing preset or custom colors
     const clothing = CLOTHING_PRESETS[char3dData.clothing || 'casual'];
     if (clothing) {
-        $('#shirtColor').value = rgbToHex(clothing.shirt?.color || 0x42a5f5);
-        $('#pantsColor').value = rgbToHex(clothing.pants?.color || 0x1565c0);
-        $('#shoesColor').value = rgbToHex(clothing.shoes?.color || 0xffffff);
+        $('#shirtColor').value = rgbToHex(char3dData.shirtColor || clothing.shirt?.color || 0x42a5f5);
+        $('#pantsColor').value = rgbToHex(char3dData.pantsColor || clothing.pants?.color || 0x1565c0);
+        $('#shoesColor').value = rgbToHex(char3dData.shoesColor || clothing.shoes?.color || 0xffffff);
     }
 }
 
@@ -3105,13 +9329,16 @@ function updateCharacter3DCustomization(property, value) {
             if (char3d?.character3d) char3d.character3d.setClothing(value);
             break;
         case 'shirtColor':
+            char3dData.shirtColor = value;
+            if (char3d?.character3d) char3d.character3d.setShirtColor(value);
+            break;
         case 'pantsColor':
+            char3dData.pantsColor = value;
+            if (char3d?.character3d) char3d.character3d.setPantsColor(value);
+            break;
         case 'shoesColor':
-            // Update clothing colors
-            if (char3d?.character3d) {
-                // Would need to update clothing materials
-                console.log(`Update ${property} to ${value}`);
-            }
+            char3dData.shoesColor = value;
+            if (char3d?.character3d) char3d.character3d.setShoesColor(value);
             break;
     }
     
@@ -3167,7 +9394,7 @@ function selectHairColor(index) {
 function removeCharacter(sceneIndex, charIndex) {
     const scene = AppState.scenes[sceneIndex];
     if (!scene || scene.characters.length <= 1) {
-        showToast('कम से कम एक पात्र होना चाहिए', 'warning');
+        showToast('At least one character required', 'warning');
         return;
     }
     
@@ -3190,7 +9417,7 @@ function removeCharacter(sceneIndex, charIndex) {
     // Rebuild scene preview
     rebuildSceneForPreview(sceneIndex);
     
-    showToast('पात्र हटाया गया', 'info');
+    showToast('Character removed', 'info');
 }
 
 function updateCharacterPosition(sceneIndex, charIndex, prop, value) {
@@ -3241,12 +9468,54 @@ function rgbToHex(color) {
 }
 
 // ========================================
+// Mobile-friendly button helper
+// ========================================
+function addMobileButtonListener(buttonId, handler) {
+    const btn = $(buttonId);
+    if (!btn) return;
+    
+    // Add click handler (works on desktop and mobile)
+    btn.addEventListener('click', handler);
+    
+    // Add touchend handler for better mobile responsiveness
+    // This helps when click events are delayed or not fired
+    let touchHandled = false;
+    btn.addEventListener('touchstart', () => {
+        touchHandled = false;
+    }, { passive: true });
+    
+    btn.addEventListener('touchend', (e) => {
+        if (!touchHandled) {
+            touchHandled = true;
+            // Only call handler if button is not disabled
+            if (!btn.disabled) {
+                e.preventDefault(); // Prevent ghost click
+                handler(e);
+            }
+        }
+    }, { passive: false });
+    
+    // Also handle touchcancel to reset state
+    btn.addEventListener('touchcancel', () => {
+        touchHandled = false;
+    }, { passive: true });
+}
+
+// ========================================
 // UI Event Handlers
 // ========================================
 function initEventListeners() {
     $('#themeToggle').addEventListener('click', toggleTheme);
     
-    $('#storyInput').addEventListener('input', debounce(handleStoryInput, 300));
+    // Mobile-friendly input handling: input, keyup, and change events
+    const storyInput = $('#storyInput');
+    if (storyInput) {
+        storyInput.addEventListener('input', debounce(handleStoryInput, 300));
+        storyInput.addEventListener('keyup', debounce(handleStoryInput, 300));
+        storyInput.addEventListener('change', handleStoryInput);
+        // Also handle paste on mobile
+        storyInput.addEventListener('paste', () => setTimeout(handleStoryInput, 50));
+    }
     
     $('#videoStyle').addEventListener('change', e => { AppState.settings.videoStyle = e.target.value; });
     $('#colorTheme').addEventListener('change', e => { 
@@ -3262,7 +9531,7 @@ function initEventListeners() {
         updateSceneDurations();
     });
     
-    $('#generateScenesBtn').addEventListener('click', handleGenerateScenes);
+    addMobileButtonListener('#generateScenesBtn', handleGenerateScenes);
     
     // 3D Character Customization
     $('#addCharacterBtn').addEventListener('click', addCharacterToScene);
@@ -3446,6 +9715,178 @@ function initEventListeners() {
         if (AppState.three.groundPlane) AppState.three.groundPlane.material.roughness = AppState.three.background.groundRoughness;
     });
     
+    // 3D Environment Preset
+    $('#environmentPreset3D').addEventListener('change', e => {
+        const preset = e.target.value;
+        if (preset) {
+            applyEnvironmentPreset(preset);
+        }
+    });
+    
+    // Weather Preset (enhanced with EffectManager)
+    $('#weatherPreset').addEventListener('change', e => {
+        const weather = e.target.value;
+        AppState.three.background.weather = weather;
+        
+        // Use new EffectManager for advanced weather
+        if (AppState.three.effectManager) {
+            AppState.three.effectManager.applyWeather(weather);
+        } else {
+            applyWeatherPreset(weather);
+        }
+    });
+    
+    $('#weatherIntensity').addEventListener('input', e => {
+        AppState.three.background.weatherIntensity = parseFloat(e.target.value);
+        $('#weatherIntensityValue').textContent = Math.round(e.target.value * 100) + '%';
+        
+        // Re-apply weather with new intensity
+        const weather = AppState.three.background.weather;
+        if (AppState.three.effectManager) {
+            // EffectManager handles intensity internally
+            AppState.three.effectManager.applyWeather(weather);
+        } else {
+            applyWeatherPreset(weather);
+        }
+    });
+    
+    // Time of Day Preset
+    $('#timeOfDayPreset').addEventListener('change', e => {
+        AppState.three.background.timeOfDay = e.target.value;
+        applyTimeOfDayPreset(e.target.value);
+    });
+    
+    // Visual Effects Controls
+    $('#enableBloom').addEventListener('change', e => {
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.bloom = e.target.checked;
+        updatePostProcessing();
+    });
+    
+    $('#enableVignette').addEventListener('change', e => {
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.vignette = e.target.checked;
+        updatePostProcessing();
+    });
+    
+    $('#enableFilmGrain').addEventListener('change', e => {
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.filmGrain = e.target.checked;
+        updatePostProcessing();
+    });
+    
+    $('#enableChromaticAberration').addEventListener('change', e => {
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.chromaticAberration = e.target.checked;
+        updatePostProcessing();
+    });
+    
+    $('#saturation').addEventListener('input', e => {
+        $('#saturationValue').textContent = parseFloat(e.target.value).toFixed(2);
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.saturation = parseFloat(e.target.value);
+        updatePostProcessing();
+    });
+    
+    $('#contrast').addEventListener('input', e => {
+        $('#contrastValue').textContent = parseFloat(e.target.value).toFixed(2);
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.contrast = parseFloat(e.target.value);
+        updatePostProcessing();
+    });
+    
+    $('#brightness').addEventListener('input', e => {
+        $('#brightnessValue').textContent = parseFloat(e.target.value).toFixed(2);
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.brightness = parseFloat(e.target.value);
+        updatePostProcessing();
+    });
+    
+    $('#temperature').addEventListener('input', e => {
+        $('#temperatureValue').textContent = e.target.value;
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.temperature = parseInt(e.target.value);
+        updatePostProcessing();
+    });
+    
+    // Audio Controls
+    $('#musicGenre').addEventListener('change', e => {
+        const genre = e.target.value;
+        const template = GENRE_TEMPLATES[genre];
+        if (template) {
+            $('#musicTempo').value = template.tempo;
+            $('#musicTempoValue').textContent = template.tempo;
+        }
+    });
+    
+    $('#musicTempo').addEventListener('input', e => {
+        $('#musicTempoValue').textContent = e.target.value;
+    });
+    
+    $('#playMusicBtn').addEventListener('click', () => {
+        const genre = $('#musicGenre').value;
+        const tempo = parseInt($('#musicTempo').value);
+        
+        if (AppState.audioManager) {
+            // Update genre template tempo
+            if (GENRE_TEMPLATES[genre]) {
+                GENRE_TEMPLATES[genre].tempo = tempo;
+            }
+            AppState.audioManager.playMusic(genre, 120);
+            showToast(`"${GENRE_TEMPLATES[genre]?.name || genre}" music playing`, 'success');
+        }
+    });
+    
+    $('#stopMusicBtn').addEventListener('click', () => {
+        if (AppState.audioManager) {
+            AppState.audioManager.stopMusic();
+            showToast('Music stopped', 'info');
+        }
+    });
+    
+    $('#crossfadeMusicBtn').addEventListener('click', () => {
+        const genre = $('#musicGenre').value;
+        if (AppState.audioManager) {
+            AppState.audioManager.crossfadeMusic(genre, 3);
+            showToast(`Crossfading to "${GENRE_TEMPLATES[genre]?.name || genre}"`, 'success');
+        }
+    });
+    
+    // SFX test buttons
+    $$('.sfx-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sfx = btn.dataset.sfx;
+            if (AppState.audioManager) {
+                AppState.audioManager.playSFX(sfx);
+            }
+        });
+    });
+    
+    // Volume controls
+    $('#masterVolume').addEventListener('input', e => {
+        const vol = parseFloat(e.target.value);
+        $('#masterVolValue').textContent = Math.round(vol * 100) + '%';
+        if (AppState.audioManager) AppState.audioManager.setMasterVolume(vol);
+    });
+    
+    $('#musicVolume').addEventListener('input', e => {
+        const vol = parseFloat(e.target.value);
+        $('#musicVolValue').textContent = Math.round(vol * 100) + '%';
+        if (AppState.audioManager) AppState.audioManager.setMusicVolume(vol);
+    });
+    
+    $('#sfxVolume').addEventListener('input', e => {
+        const vol = parseFloat(e.target.value);
+        $('#sfxVolValue').textContent = Math.round(vol * 100) + '%';
+        if (AppState.audioManager) AppState.audioManager.setSFXVolume(vol);
+    });
+    
+    $('#voiceVolume').addEventListener('input', e => {
+        const vol = parseFloat(e.target.value);
+        $('#voiceVolValue').textContent = Math.round(vol * 100) + '%';
+        if (AppState.audioManager) AppState.audioManager.setVoiceVolume(vol);
+    });
+    
     // Professional 3D Controls - Scene Edit Tab
     $('#sceneSelector').addEventListener('change', e => loadSceneControls(parseInt(e.target.value)));
     $('#sceneDurationPerScene').addEventListener('input', e => { 
@@ -3461,15 +9902,43 @@ function initEventListeners() {
         btn.addEventListener('click', () => switchProTab(btn.dataset.proTab));
     });
     
+    // Asset Library initialization
+    initializeAssetLibrary();
+    
+    // Keyframe Animation Editor initialization
+    initializeKeyframeEditor();
+    
+    // Character Interactions initialization
+    initializeInteractions();
+    
+    // Auto-Direction initialization
+    initializeAutoDirect();
+    
+    // Continuity Validation initialization
+    initializeContinuityValidation();
+    
+    // Prop Generator initialization
+    initializePropGenerator();
+    
+    // Visual Director initialization
+    initializeVisualDirector();
+    
+    // Timeline initialization
+    initializeTimeline();
+    
+    // Script Editor initialization
+    initializeScriptEditor();
+    
     $('#closeEditorBtn').addEventListener('click', closeSceneEditor);
     $('#saveSceneBtn').addEventListener('click', saveSceneEdit);
     $('#regenerateSceneBtn').addEventListener('click', regenerateScene);
     
-    $('#backToStoryBtn').addEventListener('click', () => goToStep(1));
-    $('#backToScenesBtn').addEventListener('click', () => goToStep(2));
-    $('#backToPreviewBtn').addEventListener('click', () => goToStep(3));
+    addMobileButtonListener('#backToStoryBtn', () => goToStep(1));
+    addMobileButtonListener('#backToScenesBtn', () => goToStep(3));
+    addMobileButtonListener('#backToPreviewBtn', () => goToStep(4));
+    addMobileButtonListener('#backToStoryFromScriptBtn', () => goToStep(1));
     
-    $('#generateAnimationBtn').addEventListener('click', handleGenerateAnimation);
+    addMobileButtonListener('#generateAnimationBtn', handleGenerateAnimation);
     $('#playPauseBtn').addEventListener('click', togglePlayPause);
     $('#stopBtn').addEventListener('click', stopAnimation);
     $('#restartBtn').addEventListener('click', restartAnimation);
@@ -3496,21 +9965,39 @@ function initEventListeners() {
         rebuildAllScenes();
     });
     
-    $('#exportVideoBtn').addEventListener('click', () => goToStep(4));
-    $('#startExportBtn').addEventListener('click', startExport);
-    $('#downloadVideoBtn').addEventListener('click', downloadVideo);
-    $('#shareVideoBtn').addEventListener('click', shareVideo);
+    addMobileButtonListener('#exportVideoBtn', () => goToStep(5));
+    addMobileButtonListener('#startExportBtn', startExport);
+    addMobileButtonListener('#downloadVideoBtn', downloadVideo);
+    addMobileButtonListener('#shareVideoBtn', shareVideo);
     
     $$('input[name="resolution"]').forEach(r => r.addEventListener('change', e => { AppState.exportSettings.resolution = e.target.value; }));
     $$('input[name="framerate"]').forEach(r => r.addEventListener('change', e => { AppState.exportSettings.framerate = parseInt(e.target.value); }));
     $$('input[name="format"]').forEach(r => r.addEventListener('change', e => { AppState.exportSettings.format = e.target.value; }));
     
     $$('.nav-item').forEach(btn => {
-        btn.addEventListener('click', () => goToStep(parseInt(btn.dataset.step)));
+        if (btn.id) {
+            addMobileButtonListener('#' + btn.id, () => goToStep(parseInt(btn.dataset.step)));
+        } else {
+            btn.addEventListener('click', () => goToStep(parseInt(btn.dataset.step)));
+            btn.addEventListener('touchend', (e) => {
+                if (!btn.disabled) {
+                    e.preventDefault();
+                    goToStep(parseInt(btn.dataset.step));
+                }
+            }, { passive: false });
+        }
     });
     
     $$('.progress-step').forEach(step => {
-        step.addEventListener('click', () => goToStep(parseInt(step.dataset.step)));
+        if (step.id) {
+            addMobileButtonListener('#' + step.id, () => goToStep(parseInt(step.dataset.step)));
+        } else {
+            step.addEventListener('click', () => goToStep(parseInt(step.dataset.step)));
+            step.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                goToStep(parseInt(step.dataset.step));
+            }, { passive: false });
+        }
     });
     
     document.addEventListener('keydown', handleKeydown);
@@ -3531,11 +10018,11 @@ function handleStoryInput() {
 
 function handleGenerateScenes() {
     if (!AppState.story || AppState.story.length === 0) {
-        showToast('कृपया कहानी या विषय लिखें', 'warning');
+        showToast('Please write a story or topic', 'warning');
         return;
     }
     
-    showLoading('सीन बनाए जा रहे हैं...');
+    showLoading('Creating scenes...');
     
     setTimeout(() => {
         AppState.scenes = generateScenesFromStory(AppState.story, AppState.settings);
@@ -3550,6 +10037,9 @@ function handleGenerateScenes() {
                 hairColor: 0,
                 eyeColor: 0,
                 clothing: 'casual',
+                shirtColor: null,
+                pantsColor: null,
+                shoesColor: null,
                 bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
                 headScale: 1.0,
                 limbLength: 1.0,
@@ -3560,9 +10050,9 @@ function handleGenerateScenes() {
         
         renderSceneList();
         updateGenerateAnimationButton();
-        goToStep(2);
+        goToStep(2); // Go to script editor
         hideLoading();
-        showToast(`${AppState.scenes.length} सीन बनाए गए`, 'success');
+        showToast(`${AppState.scenes.length} scenes created`, 'success');
     }, 500);
 }
 
@@ -3579,7 +10069,7 @@ function renderSceneList() {
             createElement('div', { class: 'scene-card-header' }, [
                 createElement('div', { class: 'scene-number' }, [String(index + 1)]),
                 createElement('h4', { class: 'scene-title' }, [scene.title]),
-                createElement('span', { class: 'scene-duration' }, [`${scene.duration} सेकंड`])
+                createElement('span', { class: 'scene-duration' }, [`${scene.duration} seconds`])
             ]),
             
             // Visual preview area
@@ -3660,6 +10150,9 @@ function openSceneEditor(index) {
             hairColor: 0,
             eyeColor: 0,
             clothing: 'casual',
+            shirtColor: null,
+            pantsColor: null,
+            shoesColor: null,
             bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
             headScale: 1.0,
             limbLength: 1.0,
@@ -3706,6 +10199,9 @@ function saveSceneEdit() {
             hairColor: 0,
             eyeColor: 0,
             clothing: 'casual',
+            shirtColor: null,
+            pantsColor: null,
+            shoesColor: null,
             bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
             headScale: 1.0,
             limbLength: 1.0,
@@ -3722,6 +10218,11 @@ function saveSceneEdit() {
     scene.background = $('#sceneBackground').value;
     scene.hindiText = $('#sceneHindiText').value;
     
+    // Save assets for this scene
+    if (AppState.three.assetManager) {
+        scene.assets = AppState.three.assetManager.toJSON();
+    }
+    
     renderSceneList();
     updateGenerateAnimationButton();
     
@@ -3729,7 +10230,7 @@ function saveSceneEdit() {
     rebuildSceneForPreview(index);
     
     closeSceneEditor();
-    showToast('सीन सेव हो गया', 'success');
+    showToast('Scene saved', 'success');
 }
 
 function regenerateScene() {
@@ -3738,9 +10239,9 @@ function regenerateScene() {
     
     const scene = AppState.scenes[index];
     const variations = [
-        `${scene.description} और भी दिलचस्प तरीके से।`,
-        `यह सीन अब नए पात्रों के साथ: ${['नया पात्र', 'दोस्त', 'साथी'][Math.floor(Math.random() * 3)]}।`,
-        `${scene.background} में एक नया रोमांच शुरू होता है।`
+        `${scene.description} in an even more interesting way.`,
+        `This scene now with new characters: ${['New Character', 'Friend', 'Companion'][Math.floor(Math.random() * 3)]}.`,
+        `A new adventure begins in ${scene.background}.`
     ];
     
     scene.description = variations[Math.floor(Math.random() * variations.length)];
@@ -3749,17 +10250,17 @@ function regenerateScene() {
     $('#sceneDescription').value = scene.description;
     $('#sceneHindiText').value = scene.hindiText;
     
-    showToast('सीन पुनः बनाया गया', 'info');
+    showToast('Scene regenerated', 'info');
 }
 
 function handleGenerateAnimation() {
-    showLoading('एनिमेशन तैयार हो रही है...');
+    showLoading('Preparing animation...');
     
     setTimeout(() => {
         buildAnimationTimeline();
-        goToStep(3);
+        goToStep(4); // Animation preview
         hideLoading();
-        showToast('एनिमेशन तैयार! प्ले बटन दबाएं', 'success');
+        showToast('Animation ready! Press play', 'success');
     }, 1000);
 }
 
@@ -3893,23 +10394,31 @@ function handleKeydown(e) {
 }
 
 function goToStep(step) {
-    if (step < 1 || step > 4) return;
+    if (step < 1 || step > 5) return;
     
-    if (step === 2 && AppState.scenes.length === 0) {
-        showToast('पहले सीन बनाएं', 'warning');
+    // Step 2: Script Editor - need script
+    if (step === 2 && (!AppState.scriptManager || AppState.scriptManager.script.scenes.length === 0)) {
+        showToast('Create script first', 'warning');
         return;
     }
-    if (step === 3 && !AppState.animationData) {
-        showToast('पहले एनिमेशन बनाएं', 'warning');
+    // Step 3: Scene Editor - need scenes
+    if (step === 3 && AppState.scenes.length === 0) {
+        showToast('Create scenes first', 'warning');
         return;
     }
+    // Step 4: Animation Preview - need animation
     if (step === 4 && !AppState.animationData) {
-        showToast('पहले एनिमेशन बनाएं', 'warning');
+        showToast('Create animation first', 'warning');
+        return;
+    }
+    // Step 5: Video Export - need animation
+    if (step === 5 && !AppState.animationData) {
+        showToast('Create animation first', 'warning');
         return;
     }
     
-    // Update button state when navigating to step 2
-    if (step === 2) {
+    // Update button state when navigating to step 3 (scene editor)
+    if (step === 3) {
         updateGenerateAnimationButton();
     }
     
@@ -3996,10 +10505,24 @@ async function init() {
     initEventListeners();
     updateCanvasAspectRatio();
     
+    // Initialize button states
+    handleStoryInput();
+    updateGenerateAnimationButton();
+    
+    // Initialize export manager after timeline
+    setTimeout(() => {
+        initializeExportManager();
+    }, 100);
+    
+    // Initialize project manager
+    setTimeout(() => {
+        initializeProjectManager();
+    }, 200);
+    
     $('#storyInput').focus();
     
     console.log('App initialized successfully');
-    showToast('ऐप तैयार है! अपनी कहानी लिखें', 'info');
+    showToast('App ready! Write your story', 'info');
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -4013,7 +10536,9 @@ document.addEventListener('visibilitychange', () => {
 let lastTouchEnd = 0;
 document.addEventListener('touchend', (e) => {
     const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
+    // Only prevent default on double-tap for canvas/preview area, not on buttons/inputs
+    const target = e.target.closest('button, input, textarea, select, .btn, [role="button"]');
+    if (!target && now - lastTouchEnd <= 300) {
         e.preventDefault();
     }
     lastTouchEnd = now;

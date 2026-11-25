@@ -16,6 +16,7 @@
 // Import 3D Character System
 import { Character3D } from './character3d.js';
 import { CLOTHING_PRESETS, SKIN_TONES, HAIR_COLORS, EYE_COLORS } from './characters.js';
+import { assetLibrary, SceneAssetManager, ASSET_CATEGORIES, ALL_ASSETS } from './assets.js';
 
 // ========================================
 // Global State Management
@@ -56,6 +57,7 @@ const AppState = {
         characters: [],  // Legacy paper-cutout characters
         characters3d: [],  // New 3D human characters
         backgrounds: [],
+        assetManager: null,  // Asset library manager
         currentScene: 0,
         transitionProgress: 0,
         isTransitioning: false,
@@ -558,6 +560,9 @@ async function initThreeJS() {
     const { FXAAShader } = await import('three/addons/shaders/FXAAShader.js');
 
     AppState.three.scene = new THREE.Scene();
+    
+    // Initialize asset manager
+    AppState.three.assetManager = new SceneAssetManager(AppState.three.scene);
     
     // Initialize background
     updateBackground();
@@ -1581,6 +1586,14 @@ async function buildScene(sceneIndex) {
         await buildCharacter(sceneData.characters[i], colors, sceneIndex, i);
     }
     
+    // Load assets for this scene
+    if (sceneData.assets && AppState.three.assetManager) {
+        // Clear existing assets first
+        AppState.three.assetManager.clear();
+        // Load saved assets
+        AppState.three.assetManager.fromJSON(sceneData.assets);
+    }
+    
     console.log(`Scene ${sceneIndex + 1} built`);
 }
 
@@ -1889,6 +1902,11 @@ function clearSceneObjects(sceneIndex) {
     });
     
     char3dIndices.reverse().forEach(i => AppState.three.characters3d.splice(i, 1));
+    
+    // Clear assets for this scene
+    if (AppState.three.assetManager) {
+        AppState.three.assetManager.clear();
+    }
 }
 
 function disposeObject(obj) {
@@ -2719,6 +2737,289 @@ function switchProTab(tabName) {
     if (tabName === 'scene') {
         populateSceneSelector();
     }
+    
+    // Load asset library when assets tab is selected
+    if (tabName === 'assets') {
+        loadAssetLibrary();
+    }
+}
+
+// Asset Library state
+let currentAssetSearch = '';
+let currentAssetCategory = 'all';
+let selectedAssetId = null;
+let selectedAssetInstanceId = null;
+
+function initializeAssetLibrary() {
+    // Populate category dropdown
+    const categorySelect = $('#assetCategory');
+    if (categorySelect) {
+        ASSET_CATEGORIES.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            categorySelect.appendChild(option);
+        });
+    }
+    
+    // Search input
+    const searchInput = $('#assetSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(() => {
+            currentAssetSearch = searchInput.value.toLowerCase();
+            loadAssetLibrary();
+        }, 300));
+    }
+    
+    // Category select
+    if (categorySelect) {
+        categorySelect.addEventListener('change', () => {
+            currentAssetCategory = categorySelect.value;
+            loadAssetLibrary();
+        });
+    }
+    
+    // Transform controls
+    ['X', 'Y', 'Z'].forEach(axis => {
+        const slider = $('#assetPos' + axis);
+        const valEl = $('#assetPos' + axis + 'Val');
+        if (slider && valEl) {
+            slider.addEventListener('input', () => {
+                valEl.textContent = parseFloat(slider.value).toFixed(1);
+                updateSelectedAssetTransform();
+            });
+        }
+    });
+    
+    const rotSlider = $('#assetRotY');
+    const rotVal = $('#assetRotYVal');
+    if (rotSlider && rotVal) {
+        rotSlider.addEventListener('input', () => {
+            rotVal.textContent = rotSlider.value;
+            updateSelectedAssetTransform();
+        });
+    }
+    
+    const scaleSlider = $('#assetScale');
+    const scaleVal = $('#assetScaleVal');
+    if (scaleSlider && scaleVal) {
+        scaleSlider.addEventListener('input', () => {
+            scaleVal.textContent = parseFloat(scaleSlider.value).toFixed(1);
+            updateSelectedAssetTransform();
+        });
+    }
+    
+    // Add/Remove buttons
+    const addBtn = $('#addAssetToScene');
+    const removeBtn = $('#removeAssetFromScene');
+    if (addBtn) addBtn.addEventListener('click', addSelectedAssetToScene);
+    if (removeBtn) removeBtn.addEventListener('click', removeSelectedAssetFromScene);
+}
+
+function loadAssetLibrary() {
+    const grid = $('#assetGrid');
+    if (!grid) return;
+    
+    // Filter assets
+    let assets = ALL_ASSETS;
+    
+    if (currentAssetCategory !== 'all') {
+        assets = assets.filter(a => a.category === currentAssetCategory);
+    }
+    
+    if (currentAssetSearch) {
+        assets = assets.filter(a => 
+            a.name.toLowerCase().includes(currentAssetSearch) ||
+            a.id.toLowerCase().includes(currentAssetSearch)
+        );
+    }
+    
+    // Render grid
+    grid.innerHTML = '';
+    assets.forEach(asset => {
+        const item = document.createElement('div');
+        item.className = 'asset-item' + (selectedAssetId === asset.id ? ' selected' : '');
+        item.dataset.assetId = asset.id;
+        item.innerHTML = `
+            <div class="asset-preview">${getAssetIcon(asset.category)}</div>
+            <div class="asset-name">${asset.name}</div>
+        `;
+        item.addEventListener('click', () => selectAsset(asset.id));
+        grid.appendChild(item);
+    });
+    
+    // If selected asset is no longer in filtered list, clear selection
+    if (selectedAssetId && !assets.find(a => a.id === selectedAssetId)) {
+        clearAssetSelection();
+    }
+}
+
+function getAssetIcon(category) {
+    const cat = ASSET_CATEGORIES.find(c => c.id === category);
+    return cat ? cat.icon : '📦';
+}
+
+function selectAsset(assetId) {
+    selectedAssetId = assetId;
+    const asset = assetLibrary.getAsset(assetId);
+    
+    if (!asset) return;
+    
+    // Update UI
+    $$('#assetGrid .asset-item').forEach(item => {
+        item.classList.toggle('selected', item.dataset.assetId === assetId);
+    });
+    
+    // Show asset info
+    const info = $('#selectedAssetInfo');
+    const nameEl = $('#selectedAssetName');
+    if (info && nameEl) {
+        info.style.display = 'block';
+        nameEl.textContent = asset.name;
+    }
+    
+    // Check if this asset is already in the scene
+    const assetManager = AppState.three.assetManager;
+    if (assetManager) {
+        const instances = assetManager.getAllAssets();
+        const existing = instances.find(inst => inst.assetId === assetId);
+        if (existing) {
+            selectedAssetInstanceId = existing.instanceId;
+            loadAssetTransform(existing);
+            const removeBtn = $('#removeAssetFromScene');
+            const addBtn = $('#addAssetToScene');
+            if (removeBtn) removeBtn.style.display = 'inline-block';
+            if (addBtn) addBtn.textContent = 'अपडेट करें';
+        } else {
+            selectedAssetInstanceId = null;
+            resetAssetTransform();
+            const removeBtn = $('#removeAssetFromScene');
+            const addBtn = $('#addAssetToScene');
+            if (removeBtn) removeBtn.style.display = 'none';
+            if (addBtn) addBtn.textContent = 'सीन में जोड़ें';
+        }
+    }
+}
+
+function clearAssetSelection() {
+    selectedAssetId = null;
+    selectedAssetInstanceId = null;
+    $$('#assetGrid .asset-item').forEach(item => item.classList.remove('selected'));
+    const info = $('#selectedAssetInfo');
+    if (info) info.style.display = 'none';
+}
+
+function loadAssetTransform(data) {
+    const asset = data.asset;
+    $('#assetPosX').value = asset.position.x.toFixed(1);
+    $('#assetPosXVal').textContent = asset.position.x.toFixed(1);
+    $('#assetPosY').value = asset.position.y.toFixed(1);
+    $('#assetPosYVal').textContent = asset.position.y.toFixed(1);
+    $('#assetPosZ').value = asset.position.z.toFixed(1);
+    $('#assetPosZVal').textContent = asset.position.z.toFixed(1);
+    $('#assetRotY').value = THREE.MathUtils.radToDeg(asset.rotation.y).toFixed(0);
+    $('#assetRotYVal').textContent = THREE.MathUtils.radToDeg(asset.rotation.y).toFixed(0);
+    $('#assetScale').value = asset.scale.x.toFixed(1);
+    $('#assetScaleVal').textContent = asset.scale.x.toFixed(1);
+}
+
+function resetAssetTransform() {
+    $('#assetPosX').value = 0;
+    $('#assetPosXVal').textContent = '0';
+    $('#assetPosY').value = 0;
+    $('#assetPosYVal').textContent = '0';
+    $('#assetPosZ').value = 0;
+    $('#assetPosZVal').textContent = '0';
+    $('#assetRotY').value = 0;
+    $('#assetRotYVal').textContent = '0';
+    $('#assetScale').value = 1.0;
+    $('#assetScaleVal').textContent = '1.0';
+}
+
+function updateSelectedAssetTransform() {
+    if (!selectedAssetInstanceId) return;
+    
+    const assetManager = AppState.three.assetManager;
+    if (!assetManager) return;
+    
+    const data = assetManager.getAsset(selectedAssetInstanceId);
+    if (!data) return;
+    
+    const position = new AppState.three.THREE.Vector3(
+        parseFloat($('#assetPosX').value),
+        parseFloat($('#assetPosY').value),
+        parseFloat($('#assetPosZ').value)
+    );
+    const rotation = new AppState.three.THREE.Euler(
+        0,
+        AppState.three.THREE.MathUtils.degToRad(parseFloat($('#assetRotY').value)),
+        0
+    );
+    const scale = new AppState.three.THREE.Vector3(
+        parseFloat($('#assetScale').value),
+        parseFloat($('#assetScale').value),
+        parseFloat($('#assetScale').value)
+    );
+    
+    assetManager.updateAsset(selectedAssetInstanceId, { position, rotation, scale });
+}
+
+function addSelectedAssetToScene() {
+    if (!selectedAssetId) return;
+    
+    const assetManager = AppState.three.assetManager;
+    if (!assetManager) return;
+    
+    const position = new AppState.three.THREE.Vector3(
+        parseFloat($('#assetPosX').value),
+        parseFloat($('#assetPosY').value),
+        parseFloat($('#assetPosZ').value)
+    );
+    const rotation = new AppState.three.THREE.Euler(
+        0,
+        AppState.three.THREE.MathUtils.degToRad(parseFloat($('#assetRotY').value)),
+        0
+    );
+    const scale = new AppState.three.THREE.Vector3(
+        parseFloat($('#assetScale').value),
+        parseFloat($('#assetScale').value),
+        parseFloat($('#assetScale').value)
+    );
+    
+    if (selectedAssetInstanceId) {
+        // Update existing
+        assetManager.updateAsset(selectedAssetInstanceId, { position, rotation, scale });
+        showToast('एसेट अपडेट किया गया', 'success');
+    } else {
+        // Add new
+        const instanceId = assetManager.addAsset(selectedAssetId, { position, rotation, scale });
+        if (instanceId) {
+            selectedAssetInstanceId = instanceId;
+            const removeBtn = $('#removeAssetFromScene');
+            const addBtn = $('#addAssetToScene');
+            if (removeBtn) removeBtn.style.display = 'inline-block';
+            if (addBtn) addBtn.textContent = 'अपडेट करें';
+            showToast('एसेट सीन में जोड़ा गया', 'success');
+        }
+    }
+}
+
+function removeSelectedAssetFromScene() {
+    if (!selectedAssetInstanceId) return;
+    
+    const assetManager = AppState.three.assetManager;
+    if (!assetManager) return;
+    
+    assetManager.removeAsset(selectedAssetInstanceId);
+    selectedAssetInstanceId = null;
+    resetAssetTransform();
+    
+    const removeBtn = $('#removeAssetFromScene');
+    const addBtn = $('#addAssetToScene');
+    if (removeBtn) removeBtn.style.display = 'none';
+    if (addBtn) addBtn.textContent = 'सीन में जोड़ें';
+    
+    showToast('एसेट हटाया गया', 'success');
 }
 
 function updateKeyLightPosition() {
@@ -3471,6 +3772,9 @@ function initEventListeners() {
         btn.addEventListener('click', () => switchProTab(btn.dataset.proTab));
     });
     
+    // Asset Library initialization
+    initializeAssetLibrary();
+    
     $('#closeEditorBtn').addEventListener('click', closeSceneEditor);
     $('#saveSceneBtn').addEventListener('click', saveSceneEdit);
     $('#regenerateSceneBtn').addEventListener('click', regenerateScene);
@@ -3740,6 +4044,11 @@ function saveSceneEdit() {
     
     scene.background = $('#sceneBackground').value;
     scene.hindiText = $('#sceneHindiText').value;
+    
+    // Save assets for this scene
+    if (AppState.three.assetManager) {
+        scene.assets = AppState.three.assetManager.toJSON();
+    }
     
     renderSceneList();
     updateGenerateAnimationButton();

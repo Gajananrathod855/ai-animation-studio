@@ -394,6 +394,7 @@
                             <button class="pro-tab-btn" data-pro-tab="camera">3D कैमरा</button>
                             <button class="pro-tab-btn" data-pro-tab="lighting">लाइटिंग</button>
                             <button class="pro-tab-btn" data-pro-tab="background">पृष्ठभूमि</button>
+                            <button class="pro-tab-btn" data-pro-tab="assets">एसेट लाइब्रेरी</button>
                             <button class="pro-tab-btn" data-pro-tab="scene">सीन एडिट</button>
                         </div>
                         
@@ -602,6 +603,46 @@
                                     <div class="setting-item">
                                         <label class="label" for="groundRoughness">रफनेस <span id="groundRoughValue">0.8</span></label>
                                         <input type="range" id="groundRoughness" min="0" max="1" step="0.1" value="0.8" class="slider">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Assets Tab -->
+                            <div class="pro-tab-panel" id="pro-tab-assets">
+                                <div class="settings-grid">
+                                    <div class="setting-item full-width">
+                                        <label class="label">एसेट खोजें</label>
+                                        <input type="text" id="assetSearch" class="input" placeholder="एसेट नाम टाइप करें...">
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">श्रेणी</label>
+                                        <select id="assetCategory" class="select">
+                                            <option value="all">सभी श्रेणियाँ</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <div id="assetGrid" class="asset-grid"></div>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <div id="selectedAssetInfo" class="selected-asset-info" style="display: none;">
+                                            <h4>चयनित: <span id="selectedAssetName"></span></h4>
+                                            <div class="asset-transform-controls">
+                                                <label>स्थिति X <span id="assetPosXVal">0</span></label>
+                                                <input type="range" id="assetPosX" min="-10" max="10" step="0.1" value="0" class="slider">
+                                                <label>स्थिति Y <span id="assetPosYVal">0</span></label>
+                                                <input type="range" id="assetPosY" min="0" max="10" step="0.1" value="0" class="slider">
+                                                <label>स्थिति Z <span id="assetPosZVal">0</span></label>
+                                                <input type="range" id="assetPosZ" min="-10" max="10" step="0.1" value="0" class="slider">
+                                                <label>रोटेशन Y <span id="assetRotYVal">0</span>°</label>
+                                                <input type="range" id="assetRotY" min="-180" max="180" step="1" value="0" class="slider">
+                                                <label>स्केल <span id="assetScaleVal">1.0</span></label>
+                                                <input type="range" id="assetScale" min="0.1" max="5" step="0.1" value="1.0" class="slider">
+                                            </div>
+                                            <div class="asset-actions">
+                                                <button class="btn btn-primary" id="addAssetToScene">सीन में जोड़ें</button>
+                                                <button class="btn btn-danger" id="removeAssetFromScene" style="display: none;">हटाएं</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

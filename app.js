@@ -3022,6 +3022,502 @@ function removeSelectedAssetFromScene() {
     showToast('एसेट हटाया गया', 'success');
 }
 
+// ========================================
+// Keyframe Animation Editor
+// ========================================
+
+let keyframeState = {
+    selectedCharacter: null,
+    selectedAnimation: 'custom',
+    currentTime: 0,
+    duration: 2,
+    isPlaying: false,
+    keyframes: {}, // trackName -> array of keyframes
+    selectedKeyframe: null,
+    animationId: null
+};
+
+function initializeKeyframeEditor() {
+    // Character select
+    const charSelect = $('#keyframeCharacter');
+    if (charSelect) {
+        charSelect.addEventListener('change', () => {
+            keyframeState.selectedCharacter = charSelect.value;
+            updateKeyframeTracks();
+        });
+    }
+    
+    // Animation select
+    const animSelect = $('#keyframeAnimation');
+    if (animSelect) {
+        // Populate with preset animations
+        const presets = ['custom', 'idle', 'walk', 'run', 'talk', 'sit', 'wave', 'point', 'nod', 'shakeHead', 'jump'];
+        presets.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+            animSelect.appendChild(option);
+        });
+        
+        animSelect.addEventListener('change', () => {
+            keyframeState.selectedAnimation = animSelect.value;
+            if (animSelect.value !== 'custom') {
+                loadPresetAnimation(animSelect.value);
+            } else {
+                clearKeyframes();
+            }
+        });
+    }
+    
+    // Timeline click to add keyframe
+    const timeline = $('#keyframeTimeline');
+    if (timeline) {
+        timeline.addEventListener('click', (e) => {
+            if (e.target.classList.contains('keyframe-marker')) return;
+            const rect = timeline.getBoundingClientRect();
+            const x = e.clientX - rect.left - 80; // Account for track header
+            if (x < 0) return;
+            const time = (x / (rect.width - 80)) * keyframeState.duration;
+            addKeyframeAtTime(time);
+        });
+    }
+    
+    // Duration slider
+    const durationSlider = $('#kfTime');
+    const durationVal = $('#kfTimeVal');
+    if (durationSlider && durationVal) {
+        durationSlider.addEventListener('input', () => {
+            durationVal.textContent = parseFloat(durationSlider.value).toFixed(2);
+        });
+    }
+    
+    // Control buttons
+    const addBtn = $('#keyframeAdd');
+    const delBtn = $('#keyframeDelete');
+    const playBtn = $('#keyframePlay');
+    const stopBtn = $('#keyframeStop');
+    
+    if (addBtn) addBtn.addEventListener('click', () => addKeyframeAtTime(keyframeState.currentTime));
+    if (delBtn) delBtn.addEventListener('click', deleteSelectedKeyframe);
+    if (playBtn) playBtn.addEventListener('click', playKeyframeAnimation);
+    if (stopBtn) stopBtn.addEventListener('click', stopKeyframeAnimation);
+    
+    // Pose textarea
+    const poseInput = $('#kfPose');
+    if (poseInput) {
+        poseInput.addEventListener('change', updateSelectedKeyframePose);
+    }
+    
+    // Easing select
+    const easingSelect = $('#kfEasing');
+    if (easingSelect) {
+        easingSelect.addEventListener('change', updateSelectedKeyframeEasing);
+    }
+    
+    // Populate character list
+    updateKeyframeCharacterList();
+}
+
+function updateKeyframeCharacterList() {
+    const select = $('#keyframeCharacter');
+    if (!select) return;
+    
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">पात्र चुनें</option>';
+    
+    // Add 3D characters from current scene
+    const sceneIndex = AppState.three.currentScene;
+    const scene = AppState.scenes[sceneIndex];
+    if (scene && scene.characters3d) {
+        scene.characters3d.forEach((char, i) => {
+            const option = document.createElement('option');
+            option.value = `char3d_${sceneIndex}_${i}`;
+            option.textContent = `${scene.characters[i]} (3D)`;
+            select.appendChild(option);
+        });
+    }
+    
+    // Add legacy characters
+    const chars3d = AppState.three.characters3d.filter(c => c.sceneIndex === sceneIndex);
+    chars3d.forEach((char, i) => {
+        const option = document.createElement('option');
+        option.value = char.sceneIndex + '_' + char.charIndex;
+        option.textContent = `${scene?.characters[i] || 'Character'} (3D)`;
+        select.appendChild(option);
+    });
+    
+    if (currentValue) select.value = currentValue;
+}
+
+function updateKeyframeTracks() {
+    const tracksContainer = $('#keyframeTracks');
+    const ruler = $('#keyframeRuler');
+    if (!tracksContainer || !ruler) return;
+    
+    // Build ruler
+    const ticks = Math.ceil(keyframeState.duration);
+    ruler.innerHTML = '';
+    for (let i = 0; i <= ticks; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick' + (i % 1 === 0 ? ' major' : '');
+        tick.style.left = `${80 + (i / ticks) * (tracksContainer.parentElement.clientWidth - 80)}px`;
+        if (i % 1 === 0) {
+            const label = document.createElement('span');
+            label.className = 'tick-label';
+            label.style.left = tick.style.left;
+            label.textContent = `${i}s`;
+            ruler.appendChild(label);
+        }
+        ruler.appendChild(tick);
+    }
+    
+    // Build tracks for selected character
+    if (!keyframeState.selectedCharacter) {
+        tracksContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">पात्र चुनें</div>';
+        return;
+    }
+    
+    const trackNames = ['position', 'rotation', 'scale'];
+    tracksContainer.innerHTML = '';
+    
+    trackNames.forEach(trackName => {
+        const track = document.createElement('div');
+        track.className = 'keyframe-track';
+        track.dataset.track = trackName;
+        
+        const header = document.createElement('div');
+        header.className = 'keyframe-track-header';
+        header.textContent = trackName;
+        track.appendChild(header);
+        
+        const content = document.createElement('div');
+        content.className = 'keyframe-track-content';
+        track.appendChild(content);
+        
+        // Render keyframes for this track
+        const keyframes = keyframeState.keyframes[trackName] || [];
+        keyframes.forEach((kf, idx) => {
+            const marker = document.createElement('div');
+            marker.className = 'keyframe-marker' + (keyframeState.selectedKeyframe === `${trackName}_${idx}` ? ' selected' : '');
+            marker.dataset.track = trackName;
+            marker.dataset.index = idx;
+            const xPos = 80 + (kf.time / keyframeState.duration) * (tracksContainer.parentElement.clientWidth - 80);
+            marker.style.left = `${xPos}px`;
+            marker.innerHTML = `<span class="keyframe-value">${kf.time.toFixed(2)}s</span>`;
+            marker.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectKeyframe(trackName, idx);
+            });
+            marker.addEventListener('mousedown', (e) => startDragKeyframe(e, trackName, idx));
+            content.appendChild(marker);
+        });
+        
+        tracksContainer.appendChild(track);
+    });
+}
+
+function selectKeyframe(trackName, index) {
+    keyframeState.selectedKeyframe = `${trackName}_${index}`;
+    const kf = keyframeState.keyframes[trackName]?.[index];
+    
+    if (kf) {
+        const props = $('#keyframeProperties');
+        const timeInput = $('#kfTime');
+        const timeVal = $('#kfTimeVal');
+        const easingSelect = $('#kfEasing');
+        const poseInput = $('#kfPose');
+        
+        if (props) props.style.display = 'block';
+        if (timeInput) { timeInput.value = kf.time; timeInput.max = keyframeState.duration; }
+        if (timeVal) timeVal.textContent = kf.time.toFixed(2);
+        if (easingSelect) easingSelect.value = kf.easing || 'linear';
+        if (poseInput) poseInput.value = JSON.stringify(kf.pose || {}, null, 2);
+    }
+    
+    updateKeyframeTracks();
+}
+
+function clearSelection() {
+    keyframeState.selectedKeyframe = null;
+    const props = $('#keyframeProperties');
+    if (props) props.style.display = 'none';
+    updateKeyframeTracks();
+}
+
+function addKeyframeAtTime(time) {
+    if (!keyframeState.selectedCharacter) {
+        showToast('पहले पात्र चुनें', 'warning');
+        return;
+    }
+    
+    // Clamp time
+    time = Math.max(0, Math.min(keyframeState.duration, time));
+    
+    // Add keyframe to each track with default pose
+    const defaultPoses = {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+        scale: { x: 1, y: 1, z: 1 }
+    };
+    
+    Object.keys(defaultPoses).forEach(trackName => {
+        if (!keyframeState.keyframes[trackName]) {
+            keyframeState.keyframes[trackName] = [];
+        }
+        
+        const keyframes = keyframeState.keyframes[trackName];
+        const newKf = {
+            time,
+            pose: defaultPoses[trackName],
+            easing: 'easeInOut'
+        };
+        
+        // Insert in sorted order
+        const insertIdx = keyframes.findIndex(kf => kf.time > time);
+        if (insertIdx === -1) {
+            keyframes.push(newKf);
+        } else {
+            keyframes.splice(insertIdx, 0, newKf);
+        }
+    });
+    
+    updateKeyframeTracks();
+    showToast('कीफ्रेम जोड़ा गया', 'success');
+}
+
+function deleteSelectedKeyframe() {
+    if (!keyframeState.selectedKeyframe) return;
+    
+    const [trackName, idx] = keyframeState.selectedKeyframe.split('_');
+    const index = parseInt(idx);
+    
+    if (keyframeState.keyframes[trackName]) {
+        keyframeState.keyframes[trackName].splice(index, 1);
+    }
+    
+    clearSelection();
+    showToast('कीफ्रेम हटाया गया', 'success');
+}
+
+function updateSelectedKeyframePose() {
+    if (!keyframeState.selectedKeyframe) return;
+    
+    const [trackName, idx] = keyframeState.selectedKeyframe.split('_');
+    const index = parseInt(idx);
+    const poseInput = $('#kfPose');
+    
+    try {
+        const pose = JSON.parse(poseInput.value);
+        if (keyframeState.keyframes[trackName] && keyframeState.keyframes[trackName][index]) {
+            keyframeState.keyframes[trackName][index].pose = pose;
+            showToast('पोज़ अपडेट किया गया', 'success');
+        }
+    } catch (e) {
+        showToast('अमान्य JSON', 'error');
+    }
+}
+
+function updateSelectedKeyframeEasing() {
+    if (!keyframeState.selectedKeyframe) return;
+    
+    const [trackName, idx] = keyframeState.selectedKeyframe.split('_');
+    const index = parseInt(idx);
+    const easingSelect = $('#kfEasing');
+    
+    if (keyframeState.keyframes[trackName] && keyframeState.keyframes[trackName][index]) {
+        keyframeState.keyframes[trackName][index].easing = easingSelect.value;
+    }
+}
+
+function clearKeyframes() {
+    keyframeState.keyframes = {};
+    clearSelection();
+    updateKeyframeTracks();
+}
+
+function loadPresetAnimation(name) {
+    // Load preset animation keyframes
+    // This would load from ANIMATION_CLIPS
+    clearKeyframes();
+    showToast(`${name} एनिमेशन लोड किया गया`, 'info');
+}
+
+function playKeyframeAnimation() {
+    if (keyframeState.isPlaying) return;
+    if (!keyframeState.selectedCharacter) {
+        showToast('पात्र चुनें', 'warning');
+        return;
+    }
+    
+    keyframeState.isPlaying = true;
+    keyframeState.currentTime = 0;
+    keyframeState.animationId = requestAnimationFrame(keyframeAnimationLoop);
+    
+    const playBtn = $('#keyframePlay');
+    const stopBtn = $('#keyframeStop');
+    if (playBtn) playBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'inline-block';
+}
+
+function stopKeyframeAnimation() {
+    keyframeState.isPlaying = false;
+    if (keyframeState.animationId) {
+        cancelAnimationFrame(keyframeState.animationId);
+        keyframeState.animationId = null;
+    }
+    
+    const playBtn = $('#keyframePlay');
+    const stopBtn = $('#keyframeStop');
+    if (playBtn) playBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+    
+    // Reset playhead
+    keyframeState.currentTime = 0;
+    updateKeyframePlayhead();
+}
+
+function keyframeAnimationLoop(timestamp) {
+    if (!keyframeState.isPlaying) return;
+    
+    const delta = 1/60;
+    keyframeState.currentTime += delta;
+    
+    if (keyframeState.currentTime >= keyframeState.duration) {
+        keyframeState.currentTime = 0; // Loop
+    }
+    
+    updateKeyframePlayhead();
+    applyKeyframeAnimation(keyframeState.currentTime);
+    
+    keyframeState.animationId = requestAnimationFrame(keyframeAnimationLoop);
+}
+
+function updateKeyframePlayhead() {
+    const playhead = $('#keyframePlayhead');
+    const timeEl = $('#keyframeCurrentTime');
+    const timeline = $('#keyframeTimeline');
+    
+    if (playhead && timeline) {
+        const rect = timeline.getBoundingClientRect();
+        const x = 80 + (keyframeState.currentTime / keyframeState.duration) * (rect.width - 80);
+        playhead.style.left = `${x}px`;
+    }
+    
+    if (timeEl) {
+        timeEl.textContent = keyframeState.currentTime.toFixed(2);
+    }
+}
+
+function applyKeyframeAnimation(time) {
+    // Apply interpolated keyframe values to character
+    // This is a simplified version - in production you'd interpolate between keyframes
+    const charKey = keyframeState.selectedCharacter;
+    let character3d = null;
+    
+    if (charKey.startsWith('char3d_')) {
+        const parts = charKey.split('_');
+        const sceneIndex = parseInt(parts[1]);
+        const charIndex = parseInt(parts[2]);
+        character3d = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex)?.character3d;
+    }
+    
+    if (!character3d) return;
+    
+    // For each track, find the current interpolated value
+    ['position', 'rotation', 'scale'].forEach(trackName => {
+        const keyframes = keyframeState.keyframes[trackName] || [];
+        if (keyframes.length === 0) return;
+        
+        // Find surrounding keyframes
+        let prev = null;
+        let next = null;
+        for (let i = 0; i < keyframes.length; i++) {
+            if (keyframes[i].time <= time) {
+                prev = keyframes[i];
+            } else {
+                next = keyframes[i];
+                break;
+            }
+        }
+        
+        if (!prev) prev = keyframes[0];
+        if (!next) next = keyframes[keyframes.length - 1];
+        
+        if (prev === next) {
+            // Apply directly
+            applyPoseToCharacter(character3d, trackName, prev.pose);
+        } else {
+            // Interpolate
+            const t = (time - prev.time) / (next.time - prev.time);
+            const easedT = ease(t, prev.easing);
+            const interpolated = interpolatePose(prev.pose, next.pose, easedT);
+            applyPoseToCharacter(character3d, trackName, interpolated);
+        }
+    });
+}
+
+function ease(t, type) {
+    switch (type) {
+        case 'easeIn': return t * t;
+        case 'easeOut': return 1 - (1 - t) * (1 - t);
+        case 'easeInOut': return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        default: return t; // linear
+    }
+}
+
+function interpolatePose(a, b, t) {
+    const result = {};
+    for (const key in a) {
+        if (typeof a[key] === 'number' && typeof b[key] === 'number') {
+            result[key] = a[key] + (b[key] - a[key]) * t;
+        } else if (Array.isArray(a[key]) && Array.isArray(b[key])) {
+            result[key] = a[key].map((v, i) => v + (b[key][i] - v) * t);
+        }
+    }
+    return result;
+}
+
+function applyPoseToCharacter(character3d, trackName, pose) {
+    if (trackName === 'position') {
+        character3d.group.position.set(pose.x || 0, pose.y || 0, pose.z || 0);
+    } else if (trackName === 'rotation') {
+        character3d.group.rotation.set(pose.x || 0, pose.y || 0, pose.z || 0);
+    } else if (trackName === 'scale') {
+        character3d.group.scale.set(pose.x || 1, pose.y || 1, pose.z || 1);
+    }
+}
+
+function startDragKeyframe(e, trackName, index) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const timeline = $('#keyframeTimeline');
+    const marker = e.target.closest('.keyframe-marker');
+    if (!marker) return;
+    
+    const startX = e.clientX;
+    const startTime = keyframeState.keyframes[trackName][index].time;
+    
+    function onMouseMove(e) {
+        const rect = timeline.getBoundingClientRect();
+        const deltaX = e.clientX - rect.left - 80 - startX;
+        const deltaTime = (deltaX / (rect.width - 80)) * keyframeState.duration;
+        let newTime = startTime + deltaTime;
+        newTime = Math.max(0, Math.min(keyframeState.duration, newTime));
+        
+        keyframeState.keyframes[trackName][index].time = newTime;
+        updateKeyframeTracks();
+    }
+    
+    function onMouseUp() {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+}
+
 function updateKeyLightPosition() {
     const { keyLight, lighting } = AppState.three;
     const THREE = AppState.three.THREE;
@@ -3774,6 +4270,9 @@ function initEventListeners() {
     
     // Asset Library initialization
     initializeAssetLibrary();
+    
+    // Keyframe Animation Editor initialization
+    initializeKeyframeEditor();
     
     $('#closeEditorBtn').addEventListener('click', closeSceneEditor);
     $('#saveSceneBtn').addEventListener('click', saveSceneEdit);

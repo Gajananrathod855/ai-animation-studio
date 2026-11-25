@@ -1726,6 +1726,212 @@ body {
 }
 
 /* ========================================
+   Keyframe Animation Editor
+   ======================================== */
+.keyframe-editor-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.keyframe-editor-section h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.keyframe-timeline-container {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.keyframe-timeline {
+    position: relative;
+    height: 120px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.keyframe-timeline-ruler {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 0.625rem;
+    color: var(--text-muted);
+}
+
+.keyframe-timeline-ruler .tick {
+    position: absolute;
+    height: 8px;
+    border-left: 1px solid var(--border-color);
+}
+
+.keyframe-timeline-ruler .tick.major {
+    height: 16px;
+}
+
+.keyframe-timeline-ruler .tick-label {
+    position: absolute;
+    top: 18px;
+    transform: translateX(-50%);
+    font-size: 0.625rem;
+    color: var(--text-muted);
+}
+
+.keyframe-timeline-tracks {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    overflow-y: auto;
+}
+
+.keyframe-track {
+    height: 28px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.keyframe-track-header {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.keyframe-track-content {
+    position: absolute;
+    left: 80px;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.keyframe-marker {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    width: 12px;
+    background: var(--accent-primary);
+    border: 2px solid var(--bg-primary);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    z-index: 1;
+}
+
+.keyframe-marker:hover {
+    transform: scaleY(1.2);
+    box-shadow: 0 0 8px var(--accent-primary);
+}
+
+.keyframe-marker.selected {
+    background: var(--accent-secondary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 12px var(--accent-primary);
+}
+
+.keyframe-marker .keyframe-value {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.keyframe-playhead {
+    position: absolute;
+    top: 24px;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent-primary);
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 0 8px var(--accent-primary);
+}
+
+.keyframe-playhead::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -4px;
+    width: 10px;
+    height: 10px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    border: 2px solid var(--bg-primary);
+}
+
+.keyframe-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+}
+
+.keyframe-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-left: auto;
+}
+
+.keyframe-properties {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+
+.keyframe-properties h5 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.keyframe-properties .setting-item.full-width {
+    grid-column: 1 / -1;
+}
+
+/* ========================================
    Utility Classes
    ======================================== */
 .hidden { display: none !important; }

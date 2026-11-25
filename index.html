@@ -426,6 +426,61 @@
                                         </select>
                                     </div>
                                 </div>
+                                
+                                <!-- Keyframe Animation Editor -->
+                                <div class="keyframe-editor-section">
+                                    <h4>कीफ्रेम एनिमेशन एडिटर</h4>
+                                    
+                                    <div class="setting-item full-width">
+                                        <label class="label">पात्र चुनें</label>
+                                        <select id="keyframeCharacter" class="select"></select>
+                                    </div>
+                                    
+                                    <div class="setting-item full-width">
+                                        <label class="label">एनिमेशन चुनें</label>
+                                        <select id="keyframeAnimation" class="select">
+                                            <option value="custom">कस्टम एनिमेशन</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="keyframe-timeline-container">
+                                        <div class="keyframe-timeline" id="keyframeTimeline">
+                                            <div class="keyframe-timeline-ruler" id="keyframeRuler"></div>
+                                            <div class="keyframe-timeline-tracks" id="keyframeTracks"></div>
+                                            <div class="keyframe-playhead" id="keyframePlayhead"></div>
+                                        </div>
+                                        <div class="keyframe-controls">
+                                            <button class="btn btn-sm" id="keyframeAdd">+ कीफ्रेम जोड़ें</button>
+                                            <button class="btn btn-sm" id="keyframeDelete">हटाएं</button>
+                                            <button class="btn btn-sm btn-secondary" id="keyframePlay">▶ प्ले</button>
+                                            <button class="btn btn-sm btn-secondary" id="keyframeStop">■ स्टॉप</button>
+                                            <span class="keyframe-time">समय: <span id="keyframeCurrentTime">0.00</span>s / <span id="keyframeDuration">2.00</span>s</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="keyframe-properties" id="keyframeProperties" style="display: none;">
+                                        <h5>कीफ्रेम गुण</h5>
+                                        <div class="settings-grid">
+                                            <div class="setting-item">
+                                                <label class="label">समय <span id="kfTimeVal">0.00</span>s</label>
+                                                <input type="range" id="kfTime" min="0" max="10" step="0.01" value="0" class="slider">
+                                            </div>
+                                            <div class="setting-item">
+                                                <label class="label">ईजिंग</label>
+                                                <select id="kfEasing" class="select">
+                                                    <option value="linear">लीनियर</option>
+                                                    <option value="easeIn">ईज इन</option>
+                                                    <option value="easeOut">ईज आउट</option>
+                                                    <option value="easeInOut">ईज इन-आउट</option>
+                                                </select>
+                                            </div>
+                                            <div class="setting-item full-width">
+                                                <label class="label">पोज़ (JSON)</label>
+                                                <textarea id="kfPose" class="textarea" rows="4" placeholder='{"position": [0,0,0], "rotation": [0,0,0], "scale": [1,1,1]}'></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- Camera Tab -->

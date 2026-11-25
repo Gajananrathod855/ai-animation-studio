@@ -34,6 +34,10 @@ export class Character3D {
         this.headScale = options.headScale || 1.0;
         this.limbLength = options.limbLength || 1.0;
         
+        // Visual style
+        this.visualStyle = options.visualStyle || 'paper-cutout'; // 'paper-cutout' or 'realistic'
+        this.paperThickness = options.paperThickness || 0.06;
+        
         // Animation state
         this.currentAnimation = 'idle';
         this.animationTime = 0;
@@ -48,6 +52,11 @@ export class Character3D {
         // Three.js objects
         this.group = new THREE.Group();
         this.group.name = `Character_${this.id}`;
+        
+        // Outline group for paper-cutout style
+        this.outlineGroup = new THREE.Group();
+        this.outlineGroup.name = 'Outlines';
+        this.group.add(this.outlineGroup);
         
         // Body parts references
         this.parts = {
@@ -164,96 +173,66 @@ export class Character3D {
         // Setup shadows
         this.enableShadows(true);
         
+        // Create paper-cutout outlines
+        this.createOutlines();
+        
         // Create animation mixer
         this.mixer = new THREE.AnimationMixer(this.group);
     }
     
     createMaterials(skinTone, hairColor, eyeColor, clothing) {
-        const skinMat = new THREE.MeshStandardMaterial({
-            color: skinTone.color,
-            roughness: 0.7,
-            metalness: 0.1,
-            subsurfaceScattering: true,
-            skinning: true
+        const isPaperStyle = this.visualStyle === 'paper-cutout';
+        
+        const createMaterial = (color, options = {}) => new THREE.MeshStandardMaterial({
+            color,
+            roughness: isPaperStyle ? 0.95 : 0.7,
+            metalness: isPaperStyle ? 0.0 : 0.1,
+            flatShading: isPaperStyle,
+            ...options
         });
         
-        const skinMatDark = new THREE.MeshStandardMaterial({
-            color: skinTone.shade,
-            roughness: 0.7,
-            metalness: 0.1,
+        // Skin materials
+        const skinMat = createMaterial(skinTone.color, { 
+            subsurfaceScattering: !isPaperStyle,
             skinning: true
         });
+        const skinMatDark = createMaterial(skinTone.shade, { skinning: true });
         
-        const hairMat = new THREE.MeshStandardMaterial({
-            color: hairColor.color,
-            roughness: 0.6,
-            metalness: 0.0,
-            sheen: 0.3,
+        // Hair material
+        const hairMat = createMaterial(hairColor.color, { 
+            sheen: isPaperStyle ? 0.0 : 0.3,
             sheenColor: new THREE.Color(hairColor.highlight)
         });
         
-        const eyeWhiteMat = new THREE.MeshStandardMaterial({
-            color: eyeColor.sclera,
-            roughness: 0.1,
-            metalness: 0.0
+        // Eye materials
+        const eyeWhiteMat = createMaterial(eyeColor.sclera, { 
+            roughness: isPaperStyle ? 0.9 : 0.1
         });
-        
-        const irisMat = new THREE.MeshStandardMaterial({
-            color: eyeColor.iris,
-            roughness: 0.3,
-            metalness: 0.1
+        const irisMat = createMaterial(eyeColor.iris, { 
+            roughness: isPaperStyle ? 0.8 : 0.3
         });
+        const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
         
-        const pupilMat = new THREE.MeshBasicMaterial({
-            color: 0x000000
-        });
+        // Eyebrow material
+        const eyebrowMat = createMaterial(hairColor.color);
         
-        const eyebrowMat = new THREE.MeshStandardMaterial({
-            color: hairColor.color,
-            roughness: 0.8,
-            metalness: 0.0
-        });
+        // Mouth and teeth
+        const mouthMat = createMaterial(0x8b3a3a);
+        const teethMat = createMaterial(0xf5f0e1);
         
-        const mouthMat = new THREE.MeshStandardMaterial({
-            color: 0x8b3a3a,
-            roughness: 0.5,
-            metalness: 0.0
-        });
-        
-        const teethMat = new THREE.MeshStandardMaterial({
-            color: 0xf5f0e1,
-            roughness: 0.2,
-            metalness: 0.0
-        });
-        
+        // Clothing materials
         const clothingMats = {};
         if (clothing.shirt) {
-            clothingMats.shirt = new THREE.MeshStandardMaterial({
-                color: clothing.shirt.color,
-                roughness: 0.8,
-                metalness: 0.0
-            });
+            clothingMats.shirt = createMaterial(clothing.shirt.color);
         }
         if (clothing.pants) {
-            clothingMats.pants = new THREE.MeshStandardMaterial({
-                color: clothing.pants.color,
-                roughness: 0.7,
-                metalness: 0.0
-            });
+            clothingMats.pants = createMaterial(clothing.pants.color);
         }
         if (clothing.shoes) {
-            clothingMats.shoes = new THREE.MeshStandardMaterial({
-                color: clothing.shoes.color,
-                roughness: 0.6,
-                metalness: 0.1
-            });
+            clothingMats.shoes = createMaterial(clothing.shoes.color);
         }
         if (clothing.jacket) {
-            clothingMats.jacket = new THREE.MeshStandardMaterial({
-                color: clothing.jacket.color,
-                roughness: 0.7,
-                metalness: 0.0
-            });
+            clothingMats.jacket = createMaterial(clothing.jacket.color);
         }
         
         return {
@@ -1130,6 +1109,82 @@ export class Character3D {
         });
     }
     
+    createOutlines() {
+        if (this.visualStyle !== 'paper-cutout') return;
+        
+        // Clear existing outlines
+        this.outlineGroup.clear();
+        
+        const outlineMaterial = new THREE.MeshBasicMaterial({
+            color: 0x1a1a1a,
+            side: THREE.BackSide,
+            depthWrite: false,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        // Create outline meshes for main body parts
+        this.group.traverse(child => {
+            if (child.isMesh && child.name && !child.name.includes('Outline')) {
+                // Skip small parts like eyes, teeth, etc.
+                const bbox = new THREE.Box3().setFromObject(child);
+                const size = bbox.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                
+                if (maxDim > 0.15) { // Only outline larger parts
+                    const outlineMesh = child.clone();
+                    outlineMesh.material = outlineMaterial;
+                    outlineMesh.scale.multiplyScalar(1 + this.paperThickness);
+                    outlineMesh.name = child.name + 'Outline';
+                    outlineMesh.castShadow = false;
+                    outlineMesh.receiveShadow = false;
+                    outlineMesh.renderOrder = -1;
+                    
+                    // Add to outline group at same position
+                    const parent = child.parent;
+                    if (parent) {
+                        // We need to add the outline to the same parent hierarchy
+                        // For simplicity, add to outline group with same world transform
+                        const worldPos = new THREE.Vector3();
+                        const worldQuat = new THREE.Quaternion();
+                        const worldScale = new THREE.Vector3();
+                        child.matrixWorld.decompose(worldPos, worldQuat, worldScale);
+                        outlineMesh.position.copy(worldPos);
+                        outlineMesh.quaternion.copy(worldQuat);
+                        outlineMesh.scale.copy(worldScale).multiplyScalar(1 + this.paperThickness);
+                        this.outlineGroup.add(outlineMesh);
+                    }
+                }
+            }
+        });
+    }
+    
+    updateOutlines() {
+        if (this.visualStyle !== 'paper-cutout') return;
+        
+        // Update outline positions to match character
+        this.outlineGroup.children.forEach((outlineMesh, index) => {
+            // Find corresponding original mesh
+            const originalName = outlineMesh.name.replace('Outline', '');
+            let originalMesh = null;
+            this.group.traverse(child => {
+                if (child.isMesh && child.name === originalName) {
+                    originalMesh = child;
+                }
+            });
+            
+            if (originalMesh) {
+                const worldPos = new THREE.Vector3();
+                const worldQuat = new THREE.Quaternion();
+                const worldScale = new THREE.Vector3();
+                originalMesh.matrixWorld.decompose(worldPos, worldQuat, worldScale);
+                outlineMesh.position.copy(worldPos);
+                outlineMesh.quaternion.copy(worldQuat);
+                outlineMesh.scale.copy(worldScale).multiplyScalar(1 + this.paperThickness);
+            }
+        });
+    }
+    
     createAnimations() {
         // Create animation clips procedurally
         Object.entries(ANIMATION_CLIPS).forEach(([name, clipData]) => {
@@ -1782,6 +1837,9 @@ export class Character3D {
         if (this.lookAtTarget) {
             this.lookAt(this.lookAtTarget);
         }
+        
+        // Update paper-cutout outlines
+        this.updateOutlines();
     }
     
     updateExpressions(delta) {
@@ -1830,6 +1888,18 @@ export class Character3D {
             this.preset = preset;
             this.rebuildBody();
         }
+    }
+    
+    setVisualStyle(style) {
+        if (style === 'paper-cutout' || style === 'realistic') {
+            this.visualStyle = style;
+            this.rebuildBody();
+        }
+    }
+    
+    setPaperThickness(thickness) {
+        this.paperThickness = Math.max(0.01, Math.min(0.2, thickness));
+        this.createOutlines();
     }
     
     updateSkinMaterial() {
@@ -1941,6 +2011,20 @@ export class Character3D {
                 }
             }
         });
+        
+        // Dispose outline group
+        if (this.outlineGroup) {
+            this.outlineGroup.traverse(child => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => m.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            });
+        }
     }
     
     // Serialization for saving/loading
@@ -1957,6 +2041,8 @@ export class Character3D {
             bodyScale: this.bodyScale,
             headScale: this.headScale,
             limbLength: this.limbLength,
+            visualStyle: this.visualStyle,
+            paperThickness: this.paperThickness,
             position: this.group.position.toArray(),
             rotation: this.group.rotation.toArray(),
             scale: this.group.scale.toArray()

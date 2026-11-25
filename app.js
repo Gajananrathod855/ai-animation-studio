@@ -1750,7 +1750,9 @@ async function buildCharacter3D(charName, char3dData, sceneIndex, charIndex) {
         clothing: char3dData.clothing || 'casual',
         bodyScale: char3dData.bodyScale || { height: 1.0, width: 1.0, depth: 1.0 },
         headScale: char3dData.headScale || 1.0,
-        limbLength: char3dData.limbLength || 1.0
+        limbLength: char3dData.limbLength || 1.0,
+        visualStyle: AppState.settings.videoStyle || 'paper-cutout',
+        paperThickness: (AppState.settings.paperThickness || 3) * 0.02
     });
     
     // Position character
@@ -1788,7 +1790,9 @@ async function buildCharacter3D(charName, char3dData, sceneIndex, charIndex) {
             headScale: char3dData.headScale || 1.0,
             limbLength: char3dData.limbLength || 1.0,
             expression: char3dData.expression || 'neutral',
-            expressionIntensity: char3dData.expressionIntensity || 1.0
+            expressionIntensity: char3dData.expressionIntensity || 1.0,
+            visualStyle: AppState.settings.videoStyle || 'paper-cutout',
+            paperThickness: (AppState.settings.paperThickness || 3) * 0.02
         }
     };
     

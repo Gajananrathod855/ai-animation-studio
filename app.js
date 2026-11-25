@@ -26,6 +26,7 @@ import { EffectManager, PARTICLE_TYPES, POST_PROCESSING_EFFECTS, WEATHER_PRESETS
 import { AudioManager, MusicGenerator, INSTRUMENTS, GENRE_TEMPLATES, SOUND_EFFECTS, MUSICAL_SCALES, CHORD_PROGRESSIONS } from './audio.js';
 import { MultiTrackTimeline, TimelineUI, TimelineClip, TimelineTrack, TRACK_TYPES } from './timeline.js';
 import { ExportManager, createExportUI, EXPORT_FORMATS, EXPORT_PRESETS, RESOLUTIONS } from './export.js';
+import { ProjectManager, createProjectUI, PROJECT_SCHEMA } from './projectManager.js';
 
 // ========================================
 // Global State Management
@@ -74,6 +75,7 @@ const AppState = {
         timeline: null,  // Multi-track timeline
         timelineUI: null,  // Timeline UI controller
         exportManager: null,  // Video Export Manager
+        projectManager: null,  // Project Manager
         currentScene: 0,
         transitionProgress: 0,
         isTransitioning: false,
@@ -7665,6 +7667,97 @@ function initializeExportManager() {
     }
 }
 
+// ========================================
+// Project Manager Initialization
+// ========================================
+
+function initializeProjectManager() {
+    AppState.projectManager = new ProjectManager(AppState);
+    AppState.projectManager.init();
+    
+    // Create project UI in a suitable location
+    // We'll add it to the timeline tab toolbar or create a new panel
+    const timelineToolbar = document.querySelector('.timeline-toolbar .toolbar-group:first-child');
+    if (timelineToolbar) {
+        const projectBtn = document.createElement('button');
+        projectBtn.className = 'btn btn-secondary';
+        projectBtn.textContent = '📁 प्रोजेक्ट';
+        projectBtn.addEventListener('click', () => {
+            showProjectModal();
+        });
+        timelineToolbar.appendChild(projectBtn);
+    }
+    
+    // Add project management to step 1 (Story) as well
+    addProjectButtonsToStoryStep();
+}
+
+function showProjectModal() {
+    // Create modal for project management
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal project-modal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>प्रोजेक्ट प्रबंधन</h3>
+                <button class="modal-close" onclick="closeProjectModal()">&times;</button>
+            </div>
+            <div id="projectManagerContainer"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Initialize project UI
+    createProjectUI(AppState.projectManager, 'projectManagerContainer');
+    
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeProjectModal();
+    });
+    
+    // Make close function global
+    window.closeProjectModal = () => {
+        modal.remove();
+        delete window.closeProjectModal;
+        delete window.restoreAutosave;
+        delete window.deleteAutosave;
+    };
+}
+
+function addProjectButtonsToStoryStep() {
+    const storyActions = document.querySelector('#step1 .action-buttons') || 
+                         document.querySelector('#step1 .panel-actions');
+    if (storyActions) {
+        const projectGroup = document.createElement('div');
+        projectGroup.className = 'project-buttons';
+        projectGroup.style.display = 'flex';
+        projectGroup.style.gap = '8px';
+        projectGroup.style.marginTop = '12px';
+        projectGroup.innerHTML = `
+            <button class="btn btn-secondary" id="storyNewProject" style="flex: 1;">📁 नया प्रोजेक्ट</button>
+            <button class="btn btn-secondary" id="storyOpenProject" style="flex: 1;">📂 खोलें</button>
+            <button class="btn btn-success" id="storySaveProject" style="flex: 1;">💾 सेव</button>
+        `;
+        storyActions.parentNode.insertBefore(projectGroup, storyActions.nextSibling);
+        
+        $('#storyNewProject').addEventListener('click', () => {
+            if (AppState.projectManager.hasUnsavedChanges && !confirm('सेव न किए गए बदलाव खो जाएंगे। जारी रखें?')) return;
+            AppState.projectManager.createNewProject();
+            AppState.projectManager.applyProjectData(AppState.projectManager.currentProject);
+            showToast('नया प्रोजेक्ट बनाया गया', 'success');
+        });
+        
+        $('#storyOpenProject').addEventListener('click', () => {
+            AppState.projectManager.loadProject();
+        });
+        
+        $('#storySaveProject').addEventListener('click', () => {
+            AppState.projectManager.saveProject();
+        });
+    }
+}
+
 function autoSequenceScenesToTimeline() {
     if (!AppState.scenes || AppState.scenes.length === 0) {
         showToast('सीक्वेंस करने के लिए कोई सीन नहीं', 'warning');
@@ -10335,6 +10428,11 @@ async function init() {
     setTimeout(() => {
         initializeExportManager();
     }, 100);
+    
+    // Initialize project manager
+    setTimeout(() => {
+        initializeProjectManager();
+    }, 200);
     
     $('#storyInput').focus();
     

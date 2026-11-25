@@ -24,6 +24,7 @@ import { PropGenerator, PROP_CATEGORIES, PROP_VARIATIONS, MATERIAL_PRESETS, PROP
 import { VisualDirector, autoDirectWithVisualDirector, getShotSuggestions, SHOT_TYPES, CAMERA_MOVEMENTS, SCENE_SHOT_RULES, COMPOSITION_RULES, TRANSITION_TYPES } from './visualDirector.js';
 import { EffectManager, PARTICLE_TYPES, POST_PROCESSING_EFFECTS, WEATHER_PRESETS, EFFECT_SHADERS } from './effects.js';
 import { AudioManager, MusicGenerator, INSTRUMENTS, GENRE_TEMPLATES, SOUND_EFFECTS, MUSICAL_SCALES, CHORD_PROGRESSIONS } from './audio.js';
+import { MultiTrackTimeline, TimelineUI, TimelineClip, TimelineTrack, TRACK_TYPES } from './timeline.js';
 
 // ========================================
 // Global State Management
@@ -69,6 +70,8 @@ const AppState = {
         visualDirector: null,  // AI Visual Director
         effectManager: null,  // Visual Effects Manager
         audioManager: null,  // Enhanced Audio Manager
+        timeline: null,  // Multi-track timeline
+        timelineUI: null,  // Timeline UI controller
         currentScene: 0,
         transitionProgress: 0,
         isTransitioning: false,
@@ -3865,6 +3868,9 @@ function animateThree() {
         effectManager.update(deltaTime);
     }
     
+    // Update timeline
+    updateTimeline(deltaTime);
+    
     if (composer) {
         composer.render();
     } else {
@@ -7542,6 +7548,214 @@ window.applyShotSuggestion = function(sceneIndex, shotType) {
     showToast(`"${SHOT_TYPES[shotType]?.name || shotType}" शॉट जोड़ा गया`, 'success');
 };
 
+// ========================================
+// Multi-Track Timeline
+// ========================================
+
+function initializeTimeline() {
+    // Create timeline instance
+    AppState.timeline = new MultiTrackTimeline();
+    AppState.timeline.createDefaultTracks();
+    
+    // Initialize UI
+    AppState.timelineUI = new TimelineUI(AppState.timeline, 'timelineContainer');
+    
+    // Set up timeline callbacks
+    AppState.timeline.onTimeUpdate = (time) => {
+        updateTimelinePlayhead(time);
+    };
+    
+    AppState.timeline.onClipSelect = (clipIds) => {
+        updateTimelineSelectionInfo(clipIds);
+    };
+    
+    AppState.timeline.onClipMove = (clip, oldTrackId, newTrackId) => {
+        updateTimelineTotalDuration();
+    };
+    
+    AppState.timeline.onClipTrim = (clip) => {
+        updateTimelineTotalDuration();
+    };
+    
+    AppState.timeline.onTrackChange = (action, track) => {
+        updateTimelineTotalDuration();
+    };
+    
+    // Auto-sequence scenes to timeline
+    autoSequenceScenesToTimeline();
+    
+    // Event listeners for timeline toolbar
+    $('#timelineAddVideoTrack').addEventListener('click', () => {
+        const track = AppState.timeline.addTrack('video', `वीडियो ${AppState.timeline.tracks.filter(t => t.type === 'video').length + 1}`);
+        AppState.timelineUI.render();
+    });
+    
+    $('#timelineAddAudioTrack').addEventListener('click', () => {
+        const track = AppState.timeline.addTrack('audio', `ऑडियो ${AppState.timeline.tracks.filter(t => t.type === 'audio').length + 1}`);
+        AppState.timelineUI.render();
+    });
+    
+    $('#timelineAddTextTrack').addEventListener('click', () => {
+        const track = AppState.timeline.addTrack('text', `टेक्स्ट ${AppState.timeline.tracks.filter(t => t.type === 'text').length + 1}`);
+        AppState.timelineUI.render();
+    });
+    
+    $('#timelineAddEffectTrack').addEventListener('click', () => {
+        const track = AppState.timeline.addTrack('effect', `इफेक्ट ${AppState.timeline.tracks.filter(t => t.type === 'effect').length + 1}`);
+        AppState.timelineUI.render();
+    });
+    
+    $('#timelineImportClips').addEventListener('click', handleTimelineImportClips);
+    
+    $('#timelineAutoSequence').addEventListener('click', () => {
+        autoSequenceScenesToTimeline();
+        showToast('सीन ऑटो-सीक्वेंस किए गए', 'success');
+    });
+    
+    $('#timelineClearAll').addEventListener('click', () => {
+        if (confirm('सभी ट्रैक और क्लिप हटा दें?')) {
+            AppState.timeline.tracks = [];
+            AppState.timeline.createDefaultTracks();
+            AppState.timelineUI.render();
+            showToast('टाइमलाइन रीसेट किया गया', 'info');
+        }
+    });
+    
+    $('#timelineSnap').addEventListener('change', (e) => {
+        AppState.timeline.snapToGrid = e.target.checked;
+    });
+    
+    $('#timelineLoop').addEventListener('change', (e) => {
+        AppState.timeline.loop = e.target.checked;
+    });
+}
+
+function autoSequenceScenesToTimeline() {
+    if (!AppState.scenes || AppState.scenes.length === 0) {
+        showToast('सीक्वेंस करने के लिए कोई सीन नहीं', 'warning');
+        return;
+    }
+    
+    const videoTrack = AppState.timeline.tracks.find(t => t.type === 'video' && !t.hidden);
+    const audioTrack = AppState.timeline.tracks.find(t => t.type === 'audio' && t.name === 'संगीत');
+    const textTrack = AppState.timeline.tracks.find(t => t.type === 'text');
+    
+    if (!videoTrack) return;
+    
+    let currentTime = 0;
+    
+    AppState.scenes.forEach((scene, index) => {
+        const sceneDuration = scene.duration || 8;
+        
+        // Add video clip for scene
+        const videoClip = new TimelineClip({
+            type: 'video',
+            name: `सीन ${index + 1}: ${scene.background || 'सीन'}`,
+            startTime: currentTime,
+            duration: sceneDuration,
+            color: '#3b82f6',
+            metadata: { sceneIndex: index, sceneData: scene }
+        });
+        videoTrack.addClip(videoClip, currentTime);
+        
+        // Add audio clip if scene has narration
+        if (audioTrack && scene.narration) {
+            const audioClip = new TimelineClip({
+                type: 'audio',
+                name: `नरेशन ${index + 1}`,
+                startTime: currentTime,
+                duration: sceneDuration,
+                color: '#10b981',
+                metadata: { sceneIndex: index, text: scene.narration }
+            });
+            audioTrack.addClip(audioClip, currentTime);
+        }
+        
+        // Add subtitle clip
+        if (textTrack && scene.subtitles) {
+            const textClip = new TimelineClip({
+                type: 'text',
+                name: `उपशीर्षक ${index + 1}`,
+                startTime: currentTime,
+                duration: sceneDuration,
+                color: '#f59e0b',
+                metadata: { sceneIndex: index, subtitles: scene.subtitles }
+            });
+            textTrack.addClip(textClip, currentTime);
+        }
+        
+        currentTime += sceneDuration + 0.5; // 0.5s gap between scenes
+    });
+    
+    AppState.timeline.autoSetDuration();
+    AppState.timelineUI.render();
+    updateTimelineTotalDuration();
+}
+
+function handleTimelineImportClips() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                AppState.timeline.importJSON(data);
+                AppState.timelineUI.render();
+                updateTimelineTotalDuration();
+                showToast('टाइमलाइन आयात किया गया', 'success');
+            } catch (err) {
+                showToast('आयात विफल: ' + err.message, 'error');
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+function updateTimelinePlayhead(time) {
+    // Update playhead position in UI
+    if (AppState.timelineUI) {
+        AppState.timelineUI.renderPlayhead();
+        AppState.timelineUI.updateTimeDisplay();
+    }
+}
+
+function updateTimelineSelectionInfo(clipIds) {
+    const info = $('#timelineSelectedInfo');
+    if (!info) return;
+    
+    if (clipIds.length === 0) {
+        info.textContent = 'कोई क्लिप चयनित नहीं';
+    } else if (clipIds.length === 1) {
+        const track = AppState.timeline.tracks.find(t => t.clips.some(c => c.id === clipIds[0]));
+        const clip = track?.clips.find(c => c.id === clipIds[0]);
+        if (clip) {
+            info.textContent = `चयनित: ${clip.name} (${clip.startTime.toFixed(1)}s - ${clip.endTime.toFixed(1)}s, ${clip.duration.toFixed(1)}s)`;
+        }
+    } else {
+        info.textContent = `${clipIds.length} क्लिप्स चयनित`;
+    }
+}
+
+function updateTimelineTotalDuration() {
+    const duration = $('#timelineTotalDuration');
+    if (duration) {
+        duration.textContent = `कुल अवधि: ${AppState.timeline.duration.toFixed(1)}s`;
+    }
+}
+
+// Update timeline in animation loop
+function updateTimeline(deltaTime) {
+    if (AppState.timeline) {
+        AppState.timeline.update(deltaTime);
+    }
+}
+
 function handleGenerateProp() {
     const category = $('#propCategory').value;
     const propType = $('#propType').value;
@@ -9517,6 +9731,9 @@ function initEventListeners() {
     
     // Visual Director initialization
     initializeVisualDirector();
+    
+    // Timeline initialization
+    initializeTimeline();
     
     // Script Editor initialization
     initializeScriptEditor();

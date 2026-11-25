@@ -534,6 +534,7 @@
                             <button class="pro-tab-btn" data-pro-tab="assets">एसेट लाइब्रेरी</button>
                             <button class="pro-tab-btn" data-pro-tab="interactions">इंटरैक्शन</button>
                             <button class="pro-tab-btn" data-pro-tab="scene">सीन एडिट</button>
+                            <button class="pro-tab-btn" data-pro-tab="timeline">टाइमलाइन</button>
                         </div>
                         
                         <div class="pro-tab-content">
@@ -1243,6 +1244,38 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Tab -->
+                <div class="pro-tab-panel" id="pro-tab-timeline">
+                    <div class="timeline-editor-container">
+                        <div class="timeline-toolbar">
+                            <div class="toolbar-group">
+                                <button class="btn btn-primary" id="timelineAddVideoTrack">➕ वीडियो ट्रैक</button>
+                                <button class="btn btn-secondary" id="timelineAddAudioTrack">🔊 ऑडियो ट्रैक</button>
+                                <button class="btn btn-secondary" id="timelineAddTextTrack">📝 टेक्स्ट ट्रैक</button>
+                                <button class="btn btn-secondary" id="timelineAddEffectTrack">✨ इफेक्ट ट्रैक</button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button class="btn btn-secondary" id="timelineImportClips">📥 क्लिप आयात करें</button>
+                                <button class="btn btn-secondary" id="timelineAutoSequence">🔄 ऑटो-सीक्वेंस</button>
+                                <button class="btn btn-danger" id="timelineClearAll">🗑️ सब हटाएं</button>
+                            </div>
+                            <div class="toolbar-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="timelineSnap" checked> स्नैप टू ग्रिड
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="timelineLoop"> लूप
+                                </label>
+                            </div>
+                        </div>
+                        <div id="timelineContainer" class="timeline-container-wrapper"></div>
+                        <div class="timeline-info-bar">
+                            <span id="timelineSelectedInfo">कोई क्लिप चयनित नहीं</span>
+                            <span id="timelineTotalDuration">कुल अवधि: 0s</span>
                         </div>
                     </div>
                 </div>

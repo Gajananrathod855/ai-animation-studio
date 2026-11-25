@@ -19,6 +19,7 @@ import { CLOTHING_PRESETS, SKIN_TONES, HAIR_COLORS, EYE_COLORS } from './charact
 import { assetLibrary, SceneAssetManager, ASSET_CATEGORIES, ALL_ASSETS } from './assets.js';
 import { DirectionParser, CharacterDirector, autoDirectScene, getDirectionSuggestions } from './direction.js';
 import { ScriptManager, SCRIPT_TEMPLATES, createScriptFromTemplate, syncScriptToAnimation, generateSubtitlesFromScript } from './script.js';
+import { ContinuityValidator, generateFixSuggestions, CONTINUITY_CHECKS } from './continuity.js';
 
 // ========================================
 // Global State Management
@@ -5073,6 +5074,226 @@ function initializeAutoDirect() {
     if (suggestBtn) suggestBtn.addEventListener('click', handleShowDirectionSuggestions);
 }
 
+// ========================================
+// Continuity Validation
+// ========================================
+
+function initializeContinuityValidation() {
+    const checkBtn = $('#runContinuityCheck');
+    const fixBtn = $('#autoFixContinuity');
+    
+    if (checkBtn) checkBtn.addEventListener('click', handleRunContinuityCheck);
+    if (fixBtn) fixBtn.addEventListener('click', handleAutoFixContinuity);
+}
+
+function handleRunContinuityCheck() {
+    if (!AppState.scenes || AppState.scenes.length === 0) {
+        showToast('जांच के लिए कोई सीन नहीं', 'warning');
+        return;
+    }
+    
+    showLoading('निरंतरता जांची जा रही है...');
+    
+    setTimeout(() => {
+        try {
+            const validator = new ContinuityValidator(AppState.scenes);
+            const result = validator.validate();
+            AppState.lastContinuityResult = result;
+            
+            displayContinuityResults(result);
+            hideLoading();
+            
+            const summary = result.summary;
+            if (summary.bySeverity.error > 0) {
+                showToast(`${summary.bySeverity.error} त्रुटियां, ${summary.bySeverity.warning} चेतावनियां मिलीं`, 'error');
+            } else if (summary.bySeverity.warning > 0) {
+                showToast(`${summary.bySeverity.warning} चेतावनियां मिलीं`, 'warning');
+            } else {
+                showToast('निरंतरता जांच पास हुई!', 'success');
+            }
+        } catch (e) {
+            hideLoading();
+            console.error('Continuity check failed:', e);
+            showToast('जांच विफल: ' + e.message, 'error');
+        }
+    }, 100);
+}
+
+function displayContinuityResults(result) {
+    const container = $('#continuityResults');
+    if (!container) return;
+    
+    container.style.display = 'block';
+    
+    const { issues, warnings, info, summary } = result;
+    const allItems = [...issues, ...warnings, ...info];
+    
+    if (allItems.length === 0) {
+        container.innerHTML = `
+            <div class="continuity-summary">
+                <div class="continuity-summary-item info">
+                    <span class="continuity-summary-count">✓</span>
+                    <span class="continuity-summary-label">कोई समस्या नहीं</span>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); text-align: center; padding: 20px;">सभी निरंतरता जांच पास हुईं!</p>
+        `;
+        return;
+    }
+    
+    // Summary
+    let html = `
+        <div class="continuity-summary">
+            <div class="continuity-summary-item error">
+                <span class="continuity-summary-count">${summary.bySeverity.error}</span>
+                <span class="continuity-summary-label">त्रुटियां</span>
+            </div>
+            <div class="continuity-summary-item warning">
+                <span class="continuity-summary-count">${summary.bySeverity.warning}</span>
+                <span class="continuity-summary-label">चेतावनियां</span>
+            </div>
+            <div class="continuity-summary-item info">
+                <span class="continuity-summary-count">${summary.bySeverity.info}</span>
+                <span class="continuity-summary-label">सूचनाएं</span>
+            </div>
+        </div>
+    `;
+    
+    // Issues grouped by type
+    const grouped = {};
+    allItems.forEach(item => {
+        if (!grouped[item.type]) grouped[item.type] = [];
+        grouped[item.type].push(item);
+    });
+    
+    Object.entries(grouped).forEach(([type, items]) => {
+        const checkInfo = CONTINUITY_CHECKS[type] || { name: type };
+        html += `<h4 style="margin: 16px 0 8px; font-size: 0.8125rem; color: var(--text-secondary);">${checkInfo.name}</h4>`;
+        
+        items.forEach(item => {
+            const severityClass = item.severity || 'info';
+            const icon = severityClass === 'error' ? '✕' : severityClass === 'warning' ? '⚠' : 'ℹ';
+            
+            html += `
+                <div class="continuity-issue ${severityClass}">
+                    <div class="continuity-issue-icon">${icon}</div>
+                    <div class="continuity-issue-content">
+                        <div class="continuity-issue-header">
+                            <span class="continuity-issue-type ${severityClass}">${severityClass}</span>
+                            <span class="continuity-issue-scene">सीन ${item.sceneIndex + 1}</span>
+                        </div>
+                        <div class="continuity-issue-message">${item.message}</div>
+                        ${item.details ? `<div class="continuity-issue-details">${JSON.stringify(item.details, null, 2)}</div>` : ''}
+                        ${item.suggestion ? `<div class="continuity-issue-suggestion">💡 ${item.suggestion}</div>` : ''}
+                    </div>
+                    ${item.character ? `<button class="btn continuity-fix-btn" onclick="focusCharacter(${item.sceneIndex}, '${item.character}')">पात्र पर जाएं</button>` : ''}
+                </div>
+            `;
+        });
+    });
+    
+    container.innerHTML = html;
+}
+
+function handleAutoFixContinuity() {
+    if (!AppState.lastContinuityResult) {
+        showToast('पहले निरंतरता जांचें', 'warning');
+        return;
+    }
+    
+    const suggestions = generateFixSuggestions(AppState.lastContinuityResult);
+    
+    if (suggestions.length === 0) {
+        showToast('लागू करने के लिए कोई फिक्स नहीं', 'info');
+        return;
+    }
+    
+    showLoading('ऑटो-फिक्स लागू किए जा रहे हैं...');
+    
+    setTimeout(() => {
+        let applied = 0;
+        
+        suggestions.forEach(suggestion => {
+            switch (suggestion.action) {
+                case 'reset_to_first_scene':
+                    // Reset character appearance to first scene
+                    const firstScene = AppState.scenes[0];
+                    const charIndex = firstScene.characters.indexOf(suggestion.character);
+                    if (charIndex >= 0 && firstScene.characters3d[charIndex]) {
+                        const sourceChar = firstScene.characters3d[charIndex];
+                        AppState.scenes.forEach(scene => {
+                            const idx = scene.characters.indexOf(suggestion.character);
+                            if (idx >= 0 && scene.characters3d[idx]) {
+                                Object.assign(scene.characters3d[idx], {
+                                    bodyType: sourceChar.bodyType,
+                                    skinTone: sourceChar.skinTone,
+                                    hairStyle: sourceChar.hairStyle,
+                                    hairColor: sourceChar.hairColor,
+                                    eyeColor: sourceChar.eyeColor,
+                                    clothing: sourceChar.clothing,
+                                    shirtColor: sourceChar.shirtColor,
+                                    pantsColor: sourceChar.pantsColor,
+                                    shoesColor: sourceChar.shoesColor,
+                                    bodyScale: sourceChar.bodyScale,
+                                    headScale: sourceChar.headScale,
+                                    limbLength: sourceChar.limbLength
+                                });
+                            }
+                        });
+                        applied++;
+                    }
+                    break;
+                    
+                case 'add_walk_animation':
+                    // Add walk animation to character in previous scene
+                    const prevScene = AppState.scenes[suggestion.sceneIndex - 1];
+                    if (prevScene) {
+                        const charIdx = prevScene.characters.indexOf(suggestion.character);
+                        if (charIdx >= 0 && prevScene.characters3d[charIdx]) {
+                            prevScene.characters3d[charIdx].animation = 'walk';
+                            applied++;
+                        }
+                    }
+                    break;
+            }
+        });
+        
+        hideLoading();
+        
+        if (applied > 0) {
+            // Rebuild current scene preview
+            const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+            if (sceneIndex !== undefined && sceneIndex !== null) {
+                rebuildSceneForPreview(parseInt(sceneIndex));
+            }
+            showToast(`${applied} फिक्स लागू किए गए`, 'success');
+        } else {
+            showToast('कोई फिक्स लागू नहीं किया जा सका', 'warning');
+        }
+    }, 100);
+}
+
+function focusCharacter(sceneIndex, characterName) {
+    // Switch to scene editor tab and select the character
+    const sceneSelector = $('#sceneSelector');
+    if (sceneSelector) {
+        sceneSelector.value = sceneIndex;
+        sceneSelector.dispatchEvent(new Event('change'));
+    }
+    
+    // Focus on character in position controls
+    setTimeout(() => {
+        const charItems = $$('.character-control-row');
+        charItems.forEach(item => {
+            if (item.textContent.includes(characterName)) {
+                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                item.style.boxShadow = '0 0 0 2px var(--accent-primary)';
+                setTimeout(() => item.style.boxShadow = '', 2000);
+            }
+        });
+    }, 100);
+}
+
 function handleAutoDirectScene() {
     const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
     
@@ -6458,6 +6679,9 @@ function initEventListeners() {
     
     // Auto-Direction initialization
     initializeAutoDirect();
+    
+    // Continuity Validation initialization
+    initializeContinuityValidation();
     
     // Script Editor initialization
     initializeScriptEditor();

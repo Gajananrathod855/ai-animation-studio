@@ -22,6 +22,7 @@ import { ScriptManager, SCRIPT_TEMPLATES, createScriptFromTemplate, syncScriptTo
 import { ContinuityValidator, generateFixSuggestions, CONTINUITY_CHECKS } from './continuity.js';
 import { PropGenerator, PROP_CATEGORIES, PROP_VARIATIONS, MATERIAL_PRESETS, PROP_CUSTOMIZATION_OPTIONS } from './propGenerator.js';
 import { VisualDirector, autoDirectWithVisualDirector, getShotSuggestions, SHOT_TYPES, CAMERA_MOVEMENTS, SCENE_SHOT_RULES, COMPOSITION_RULES, TRANSITION_TYPES } from './visualDirector.js';
+import { EffectManager, PARTICLE_TYPES, POST_PROCESSING_EFFECTS, WEATHER_PRESETS, EFFECT_SHADERS } from './effects.js';
 
 // ========================================
 // Global State Management
@@ -65,6 +66,7 @@ const AppState = {
         assetManager: null,  // Asset library manager
         propGenerator: null,  // Procedural prop generator
         visualDirector: null,  // AI Visual Director
+        effectManager: null,  // Visual Effects Manager
         currentScene: 0,
         transitionProgress: 0,
         isTransitioning: false,
@@ -1419,6 +1421,9 @@ async function initThreeJS() {
     
     // Initialize visual director
     AppState.three.visualDirector = new VisualDirector(AppState.scenes, AppState.three.characters3d, AppState.three);
+    
+    // Initialize effect manager
+    AppState.three.effectManager = new EffectManager(AppState.three);
     
     // Initialize background
     updateBackground();
@@ -3775,6 +3780,28 @@ function applyTimeOfDayPreset(timeOfDay) {
     showToast(`दिन का समय "${timeOfDay}" लागू किया गया`, 'success');
 }
 
+// Post-processing update
+function updatePostProcessing() {
+    const effects = AppState.three.effects || {};
+    
+    // Apply color grading through renderer tone mapping
+    if (AppState.three.renderer) {
+        const exposure = 1.0 + (effects.brightness || 0);
+        AppState.three.renderer.toneMappingExposure = exposure;
+    }
+    
+    // Note: Full post-processing effects (bloom, vignette, film grain, chromatic aberration)
+    // would require additional passes in the EffectComposer.
+    // For now, we apply basic color grading through renderer settings.
+    
+    // Update sky sphere uniforms if available
+    if (AppState.three.skySphere && AppState.three.skySphere.material.uniforms) {
+        // Temperature affects sky color
+        const temp = effects.temperature || 0;
+        // This would need custom shader uniforms for full effect
+    }
+}
+
 function onThreeResize() {
     const { camera, renderer, composer, cameraControls } = AppState.three;
     const canvas = $('#previewCanvas');
@@ -3805,7 +3832,7 @@ function onThreeResize() {
 }
 
 function animateThree() {
-    const { scene, camera, renderer, composer, animationId, characters3d } = AppState.three;
+    const { scene, camera, renderer, composer, animationId, characters3d, effectManager } = AppState.three;
     
     AppState.three.animationId = requestAnimationFrame(animateThree);
     
@@ -3830,6 +3857,11 @@ function animateThree() {
     
     updateCameraMovement(time);
     updateSubtitlesForCurrentTime();
+    
+    // Update visual effects (particles, etc.)
+    if (effectManager) {
+        effectManager.update(deltaTime);
+    }
     
     if (composer) {
         composer.render();
@@ -9275,22 +9307,90 @@ function initEventListeners() {
         }
     });
     
-    // Weather Preset
+    // Weather Preset (enhanced with EffectManager)
     $('#weatherPreset').addEventListener('change', e => {
-        AppState.three.background.weather = e.target.value;
-        applyWeatherPreset(e.target.value);
+        const weather = e.target.value;
+        AppState.three.background.weather = weather;
+        
+        // Use new EffectManager for advanced weather
+        if (AppState.three.effectManager) {
+            AppState.three.effectManager.applyWeather(weather);
+        } else {
+            applyWeatherPreset(weather);
+        }
     });
     
     $('#weatherIntensity').addEventListener('input', e => {
         AppState.three.background.weatherIntensity = parseFloat(e.target.value);
         $('#weatherIntensityValue').textContent = Math.round(e.target.value * 100) + '%';
-        applyWeatherPreset(AppState.three.background.weather);
+        
+        // Re-apply weather with new intensity
+        const weather = AppState.three.background.weather;
+        if (AppState.three.effectManager) {
+            // EffectManager handles intensity internally
+            AppState.three.effectManager.applyWeather(weather);
+        } else {
+            applyWeatherPreset(weather);
+        }
     });
     
     // Time of Day Preset
     $('#timeOfDayPreset').addEventListener('change', e => {
         AppState.three.background.timeOfDay = e.target.value;
         applyTimeOfDayPreset(e.target.value);
+    });
+    
+    // Visual Effects Controls
+    $('#enableBloom').addEventListener('change', e => {
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.bloom = e.target.checked;
+        updatePostProcessing();
+    });
+    
+    $('#enableVignette').addEventListener('change', e => {
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.vignette = e.target.checked;
+        updatePostProcessing();
+    });
+    
+    $('#enableFilmGrain').addEventListener('change', e => {
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.filmGrain = e.target.checked;
+        updatePostProcessing();
+    });
+    
+    $('#enableChromaticAberration').addEventListener('change', e => {
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.chromaticAberration = e.target.checked;
+        updatePostProcessing();
+    });
+    
+    $('#saturation').addEventListener('input', e => {
+        $('#saturationValue').textContent = parseFloat(e.target.value).toFixed(2);
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.saturation = parseFloat(e.target.value);
+        updatePostProcessing();
+    });
+    
+    $('#contrast').addEventListener('input', e => {
+        $('#contrastValue').textContent = parseFloat(e.target.value).toFixed(2);
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.contrast = parseFloat(e.target.value);
+        updatePostProcessing();
+    });
+    
+    $('#brightness').addEventListener('input', e => {
+        $('#brightnessValue').textContent = parseFloat(e.target.value).toFixed(2);
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.brightness = parseFloat(e.target.value);
+        updatePostProcessing();
+    });
+    
+    $('#temperature').addEventListener('input', e => {
+        $('#temperatureValue').textContent = e.target.value;
+        AppState.three.effects = AppState.three.effects || {};
+        AppState.three.effects.temperature = parseInt(e.target.value);
+        updatePostProcessing();
     });
     
     // Professional 3D Controls - Scene Edit Tab

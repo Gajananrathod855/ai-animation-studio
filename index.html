@@ -1306,7 +1306,11 @@
                     <p class="panel-subtitle">अपना वीडियो रेंडर करें और डाउनलोड करें</p>
                 </div>
 
-                <div class="export-options">
+                <!-- Export Wizard Container -->
+                <div id="exportWizardContainer"></div>
+
+                <!-- Legacy Export Options (fallback) -->
+                <div class="export-options legacy-export" id="legacyExportOptions" style="display: none;">
                     <div class="option-card">
                         <h4>रिज़ॉल्यूशन</h4>
                         <div class="radio-group" id="resolutionOptions">
@@ -1433,7 +1437,11 @@
     {
         "imports": {
             "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+            "@ffmpeg/ffmpeg": "https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js",
+            "@ffmpeg/util": "https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js",
+            "gif.js": "https://unpkg.com/gif.js@0.2.0/dist/gif.js",
+            "jszip": "https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"
         }
     }
     </script>

@@ -25,6 +25,7 @@ import { VisualDirector, autoDirectWithVisualDirector, getShotSuggestions, SHOT_
 import { EffectManager, PARTICLE_TYPES, POST_PROCESSING_EFFECTS, WEATHER_PRESETS, EFFECT_SHADERS } from './effects.js';
 import { AudioManager, MusicGenerator, INSTRUMENTS, GENRE_TEMPLATES, SOUND_EFFECTS, MUSICAL_SCALES, CHORD_PROGRESSIONS } from './audio.js';
 import { MultiTrackTimeline, TimelineUI, TimelineClip, TimelineTrack, TRACK_TYPES } from './timeline.js';
+import { ExportManager, createExportUI, EXPORT_FORMATS, EXPORT_PRESETS, RESOLUTIONS } from './export.js';
 
 // ========================================
 // Global State Management
@@ -72,6 +73,7 @@ const AppState = {
         audioManager: null,  // Enhanced Audio Manager
         timeline: null,  // Multi-track timeline
         timelineUI: null,  // Timeline UI controller
+        exportManager: null,  // Video Export Manager
         currentScene: 0,
         transitionProgress: 0,
         isTransitioning: false,
@@ -7630,6 +7632,39 @@ function initializeTimeline() {
     });
 }
 
+// ========================================
+// Export Manager Initialization
+// ========================================
+
+function initializeExportManager() {
+    if (!AppState.timeline) {
+        console.warn('Timeline not ready for export manager');
+        return;
+    }
+    
+    AppState.exportManager = new ExportManager(AppState.three, AppState.timeline);
+    
+    // Create export UI in the export step
+    createExportUI(AppState.exportManager, 'exportWizardContainer');
+    
+    // Connect export button
+    $('#exportVideoBtn').addEventListener('click', () => {
+        goToStep(4); // Navigate to export step
+    });
+    
+    // Also add export button in timeline tab
+    const timelineToolbar = document.querySelector('.timeline-toolbar .toolbar-group:last-child');
+    if (timelineToolbar) {
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'btn btn-primary';
+        exportBtn.textContent = '📤 एक्सपोर्ट';
+        exportBtn.addEventListener('click', () => {
+            goToStep(4);
+        });
+        timelineToolbar.appendChild(exportBtn);
+    }
+}
+
 function autoSequenceScenesToTimeline() {
     if (!AppState.scenes || AppState.scenes.length === 0) {
         showToast('सीक्वेंस करने के लिए कोई सीन नहीं', 'warning');
@@ -10295,6 +10330,11 @@ async function init() {
     await initThreeJS();
     initEventListeners();
     updateCanvasAspectRatio();
+    
+    // Initialize export manager after timeline
+    setTimeout(() => {
+        initializeExportManager();
+    }, 100);
     
     $('#storyInput').focus();
     

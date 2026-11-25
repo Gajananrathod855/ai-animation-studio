@@ -21,6 +21,7 @@ import { DirectionParser, CharacterDirector, autoDirectScene, getDirectionSugges
 import { ScriptManager, SCRIPT_TEMPLATES, createScriptFromTemplate, syncScriptToAnimation, generateSubtitlesFromScript } from './script.js';
 import { ContinuityValidator, generateFixSuggestions, CONTINUITY_CHECKS } from './continuity.js';
 import { PropGenerator, PROP_CATEGORIES, PROP_VARIATIONS, MATERIAL_PRESETS, PROP_CUSTOMIZATION_OPTIONS } from './propGenerator.js';
+import { VisualDirector, autoDirectWithVisualDirector, getShotSuggestions, SHOT_TYPES, CAMERA_MOVEMENTS, SCENE_SHOT_RULES, COMPOSITION_RULES, TRANSITION_TYPES } from './visualDirector.js';
 
 // ========================================
 // Global State Management
@@ -63,6 +64,7 @@ const AppState = {
         backgrounds: [],
         assetManager: null,  // Asset library manager
         propGenerator: null,  // Procedural prop generator
+        visualDirector: null,  // AI Visual Director
         currentScene: 0,
         transitionProgress: 0,
         isTransitioning: false,
@@ -1414,6 +1416,9 @@ async function initThreeJS() {
     
     // Initialize prop generator
     AppState.three.propGenerator = new PropGenerator(AppState.three);
+    
+    // Initialize visual director
+    AppState.three.visualDirector = new VisualDirector(AppState.scenes, AppState.three.characters3d, AppState.three);
     
     // Initialize background
     updateBackground();
@@ -7260,6 +7265,240 @@ function initializePropGenerator() {
     $('#clearGeneratedProps').addEventListener('click', handleClearGeneratedProps);
 }
 
+// ========================================
+// Visual Director
+// ========================================
+
+function initializeVisualDirector() {
+    // Generate shot plan button
+    $('#generateShotPlan').addEventListener('click', handleGenerateShotPlan);
+    
+    // Apply shot plan button
+    $('#applyShotPlan').addEventListener('click', handleApplyShotPlan);
+    
+    // Show shot suggestions button
+    $('#showShotSuggestions').addEventListener('click', handleShowShotSuggestions);
+}
+
+function handleGenerateShotPlan() {
+    if (!AppState.scenes || AppState.scenes.length === 0) {
+        showToast('शॉट प्लान के लिए कोई सीन नहीं', 'warning');
+        return;
+    }
+
+    if (!AppState.three.visualDirector) {
+        showToast('विज़ुअल डायरेक्टर प्रारंभ नहीं हुआ', 'error');
+        return;
+    }
+
+    showLoading('AI शॉट प्लान जनरेट कर रहा है...');
+
+    setTimeout(() => {
+        try {
+            // Update visual director with current scenes
+            AppState.three.visualDirector.scenes = AppState.scenes;
+            AppState.three.visualDirector.characters = AppState.three.characters3d;
+            
+            const result = autoDirectWithVisualDirector(AppState.scenes, AppState.three.characters3d, AppState.three);
+            AppState.lastShotPlan = result.shotPlan;
+            
+            displayShotPlan(result.shotPlan);
+            hideLoading();
+            showToast(`${result.totalShots} शॉट्स का प्लान जनरेट हुआ (${result.totalDuration.toFixed(1)}s)`, 'success');
+        } catch (e) {
+            hideLoading();
+            console.error('Shot plan generation failed:', e);
+            showToast('जनरेशन विफल: ' + e.message, 'error');
+        }
+    }, 100);
+}
+
+function handleApplyShotPlan() {
+    if (!AppState.lastShotPlan || AppState.lastShotPlan.length === 0) {
+        showToast('लागू करने के लिए कोई शॉट प्लान नहीं', 'warning');
+        return;
+    }
+
+    // Apply shot plan to current scene
+    const sceneIndex = AppState.three.currentScene;
+    const sceneShots = AppState.lastShotPlan.filter(s => s.sceneIndex === sceneIndex);
+    
+    if (sceneShots.length === 0) {
+        showToast('इस सीन के लिए कोई शॉट नहीं', 'warning');
+        return;
+    }
+
+    // Store shot plan in scene
+    AppState.scenes[sceneIndex].shotPlan = sceneShots;
+    AppState.scenes[sceneIndex].visualDirectorApplied = true;
+
+    // Apply first shot camera settings
+    const firstShot = sceneShots[0];
+    applyShotToCamera(firstShot);
+
+    showToast(`${sceneShots.length} शॉट्स सीन ${sceneIndex + 1} पर लागू किए गए`, 'success');
+}
+
+function applyShotToCamera(shot) {
+    const { cameraControls } = AppState.three;
+    
+    cameraControls.distance = shot.cameraDistance;
+    cameraControls.height = shot.cameraHeight;
+    cameraControls.fov = shot.cameraFOV;
+    
+    // Update UI
+    $('#camDistance').value = shot.cameraDistance;
+    $('#camDistValue').textContent = shot.cameraDistance;
+    $('#camHeight').value = shot.cameraHeight;
+    $('#camHeightValue').textContent = shot.cameraHeight;
+    $('#camFov').value = shot.cameraFOV;
+    $('#camFovValue').textContent = shot.cameraFOV;
+    
+    // Apply camera movement type
+    cameraControls.movement = shot.cameraMovement;
+    $('#camMovement').value = shot.cameraMovement;
+    
+    // Update lookAt target if character specified
+    if (shot.lookAtTarget) {
+        const charData = AppState.three.characters3d.find(c => 
+            c.sceneIndex === shot.sceneIndex && c.character3d && 
+            (AppState.scenes[shot.sceneIndex]?.characters?.[c.charIndex] === shot.lookAtTarget)
+        );
+        if (charData && charData.character3d) {
+            cameraControls.lookAt.copy(charData.character3d.group.position);
+        }
+    }
+    
+    // Rebuild scene to apply camera changes
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    if (sceneIndex !== undefined && sceneIndex !== null) {
+        rebuildSceneForPreview(parseInt(sceneIndex));
+    }
+}
+
+function displayShotPlan(shotPlan) {
+    const container = $('#shotPlanList');
+    if (!container) return;
+    
+    container.style.display = 'block';
+    
+    if (!shotPlan || shotPlan.length === 0) {
+        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">कोई शॉट प्लान नहीं</p>';
+        return;
+    }
+    
+    // Group by scene
+    const byScene = {};
+    shotPlan.forEach(shot => {
+        if (!byScene[shot.sceneIndex]) byScene[shot.sceneIndex] = [];
+        byScene[shot.sceneIndex].push(shot);
+    });
+    
+    let html = '';
+    Object.keys(byScene).sort((a, b) => a - b).forEach(sceneIdx => {
+        const shots = byScene[sceneIdx];
+        html += `<h4 style="margin: 16px 0 8px; font-size: 0.8125rem; color: var(--text-secondary);">सीन ${parseInt(sceneIdx) + 1}</h4>`;
+        
+        shots.forEach(shot => {
+            const transitionInfo = shot.transition ? ` → ${shot.transition.info.name} (${shot.transition.duration}s)` : '';
+            
+            html += `
+                <div class="vd-shot-item">
+                    <span class="vd-shot-number">${shot.shotIndex + 1}</span>
+                    <span class="vd-shot-type">${shot.typeInfo.shortName}</span>
+                    <span class="vd-shot-duration">${shot.duration.toFixed(1)}s</span>
+                    <span class="vd-shot-purpose">${shot.purpose}</span>
+                    <span class="vd-shot-movement">${shot.movementInfo.name}${transitionInfo}</span>
+                    <span class="vd-shot-characters">${shot.characters.join(', ') || '—'}</span>
+                    <span class="vd-shot-composition">${shot.composition?.rule || '—'}</span>
+                </div>
+            `;
+        });
+    });
+    
+    container.innerHTML = html;
+}
+
+function handleShowShotSuggestions() {
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    if (sceneIndex === undefined || sceneIndex === null || sceneIndex === '') {
+        showToast('पहले सीन चुनें', 'warning');
+        return;
+    }
+    
+    const scene = AppState.scenes[parseInt(sceneIndex)];
+    if (!scene) {
+        showToast('सीन नहीं मिला', 'error');
+        return;
+    }
+    
+    const suggestions = getShotSuggestions(scene);
+    displayShotSuggestions(suggestions, parseInt(sceneIndex));
+}
+
+function displayShotSuggestions(suggestions, sceneIndex) {
+    const container = $('#shotSuggestions');
+    if (!container) return;
+    
+    container.style.display = 'block';
+    
+    if (!suggestions || suggestions.length === 0) {
+        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">कोई सुझाव नहीं - शॉट प्लान पूर्ण है!</p>';
+        return;
+    }
+    
+    let html = '<h4 style="margin: 0 0 12px; font-size: 0.8125rem; color: var(--text-secondary);">शॉट सुझाव</h4>';
+    
+    suggestions.forEach((suggestion, index) => {
+        const shotType = SHOT_TYPES[suggestion.type];
+        html += `
+            <div class="vd-suggestion-item">
+                <div class="vd-suggestion-info">
+                    <span class="vd-suggestion-type">${shotType?.shortName || suggestion.type} - ${shotType?.name || ''}</span>
+                    <span class="vd-suggestion-reason">${suggestion.reason}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="vd-suggestion-priority ${suggestion.priority}">${suggestion.priority}</span>
+                    <button class="btn vd-suggestion-apply" onclick="applyShotSuggestion(${sceneIndex}, '${suggestion.type}')">लागू करें</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Global function for applying suggestion
+window.applyShotSuggestion = function(sceneIndex, shotType) {
+    if (!AppState.three.visualDirector) return;
+    
+    const scene = AppState.scenes[sceneIndex];
+    if (!scene) return;
+    
+    // Create a new shot and add to scene shot plan
+    if (!scene.shotPlan) scene.shotPlan = [];
+    
+    const newShot = AppState.three.visualDirector.createShot({
+        sceneIndex,
+        shotIndex: scene.shotPlan.length,
+        type: shotType,
+        characters: scene.characters || [],
+        duration: 3,
+        purpose: 'suggested',
+        cameraMovement: 'static',
+        composition: { rule: 'rule_of_thirds', focus: 'subject' }
+    });
+    
+    scene.shotPlan.push(newShot);
+    
+    // Refresh display
+    if (AppState.lastShotPlan) {
+        displayShotPlan(AppState.lastShotPlan);
+    }
+    
+    showToast(`"${SHOT_TYPES[shotType]?.name || shotType}" शॉट जोड़ा गया`, 'success');
+};
+
 function handleGenerateProp() {
     const category = $('#propCategory').value;
     const propType = $('#propType').value;
@@ -9086,6 +9325,9 @@ function initEventListeners() {
     
     // Prop Generator initialization
     initializePropGenerator();
+    
+    // Visual Director initialization
+    initializeVisualDirector();
     
     // Script Editor initialization
     initializeScriptEditor();

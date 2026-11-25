@@ -23,6 +23,7 @@ import { ContinuityValidator, generateFixSuggestions, CONTINUITY_CHECKS } from '
 import { PropGenerator, PROP_CATEGORIES, PROP_VARIATIONS, MATERIAL_PRESETS, PROP_CUSTOMIZATION_OPTIONS } from './propGenerator.js';
 import { VisualDirector, autoDirectWithVisualDirector, getShotSuggestions, SHOT_TYPES, CAMERA_MOVEMENTS, SCENE_SHOT_RULES, COMPOSITION_RULES, TRANSITION_TYPES } from './visualDirector.js';
 import { EffectManager, PARTICLE_TYPES, POST_PROCESSING_EFFECTS, WEATHER_PRESETS, EFFECT_SHADERS } from './effects.js';
+import { AudioManager, MusicGenerator, INSTRUMENTS, GENRE_TEMPLATES, SOUND_EFFECTS, MUSICAL_SCALES, CHORD_PROGRESSIONS } from './audio.js';
 
 // ========================================
 // Global State Management
@@ -67,6 +68,7 @@ const AppState = {
         propGenerator: null,  // Procedural prop generator
         visualDirector: null,  // AI Visual Director
         effectManager: null,  // Visual Effects Manager
+        audioManager: null,  // Enhanced Audio Manager
         currentScene: 0,
         transitionProgress: 0,
         isTransitioning: false,
@@ -5496,7 +5498,7 @@ function setBackgroundMusicVolume(volume) {
 }
 
 // ========================================
-// Audio System (Web Speech API + Web Audio)
+// Audio System (Web Speech API + Web Audio + Procedural Music)
 // ========================================
 async function initAudio() {
     AppState.audio.synth = window.speechSynthesis;
@@ -5513,7 +5515,13 @@ async function initAudio() {
     AppState.audio.synth.onvoiceschanged = loadVoices;
     
     try {
-        AppState.audio.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // Initialize new AudioManager
+        AppState.audioManager = new AudioManager();
+        await AppState.audioManager.init();
+        
+        // Also keep legacy audio context for backward compatibility
+        AppState.audio.audioContext = AppState.audioManager.ctx;
+        
         await generateSoundEffects();
     } catch (e) {
         console.warn('Web Audio API not available:', e);
@@ -5522,6 +5530,9 @@ async function initAudio() {
     document.addEventListener('click', () => {
         if (AppState.audio.audioContext?.state === 'suspended') {
             AppState.audio.audioContext.resume();
+        }
+        if (AppState.audioManager?.ctx?.state === 'suspended') {
+            AppState.audioManager.ctx.resume();
         }
     }, { once: true });
 }
@@ -9391,6 +9402,84 @@ function initEventListeners() {
         AppState.three.effects = AppState.three.effects || {};
         AppState.three.effects.temperature = parseInt(e.target.value);
         updatePostProcessing();
+    });
+    
+    // Audio Controls
+    $('#musicGenre').addEventListener('change', e => {
+        const genre = e.target.value;
+        const template = GENRE_TEMPLATES[genre];
+        if (template) {
+            $('#musicTempo').value = template.tempo;
+            $('#musicTempoValue').textContent = template.tempo;
+        }
+    });
+    
+    $('#musicTempo').addEventListener('input', e => {
+        $('#musicTempoValue').textContent = e.target.value;
+    });
+    
+    $('#playMusicBtn').addEventListener('click', () => {
+        const genre = $('#musicGenre').value;
+        const tempo = parseInt($('#musicTempo').value);
+        
+        if (AppState.audioManager) {
+            // Update genre template tempo
+            if (GENRE_TEMPLATES[genre]) {
+                GENRE_TEMPLATES[genre].tempo = tempo;
+            }
+            AppState.audioManager.playMusic(genre, 120);
+            showToast(`"${GENRE_TEMPLATES[genre]?.name || genre}" संगीत चल रहा है`, 'success');
+        }
+    });
+    
+    $('#stopMusicBtn').addEventListener('click', () => {
+        if (AppState.audioManager) {
+            AppState.audioManager.stopMusic();
+            showToast('संगीत रोका गया', 'info');
+        }
+    });
+    
+    $('#crossfadeMusicBtn').addEventListener('click', () => {
+        const genre = $('#musicGenre').value;
+        if (AppState.audioManager) {
+            AppState.audioManager.crossfadeMusic(genre, 3);
+            showToast(`"${GENRE_TEMPLATES[genre]?.name || genre}" पर क्रॉसफेड`, 'success');
+        }
+    });
+    
+    // SFX test buttons
+    $$('.sfx-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sfx = btn.dataset.sfx;
+            if (AppState.audioManager) {
+                AppState.audioManager.playSFX(sfx);
+            }
+        });
+    });
+    
+    // Volume controls
+    $('#masterVolume').addEventListener('input', e => {
+        const vol = parseFloat(e.target.value);
+        $('#masterVolValue').textContent = Math.round(vol * 100) + '%';
+        if (AppState.audioManager) AppState.audioManager.setMasterVolume(vol);
+    });
+    
+    $('#musicVolume').addEventListener('input', e => {
+        const vol = parseFloat(e.target.value);
+        $('#musicVolValue').textContent = Math.round(vol * 100) + '%';
+        if (AppState.audioManager) AppState.audioManager.setMusicVolume(vol);
+    });
+    
+    $('#sfxVolume').addEventListener('input', e => {
+        const vol = parseFloat(e.target.value);
+        $('#sfxVolValue').textContent = Math.round(vol * 100) + '%';
+        if (AppState.audioManager) AppState.audioManager.setSFXVolume(vol);
+    });
+    
+    $('#voiceVolume').addEventListener('input', e => {
+        const vol = parseFloat(e.target.value);
+        $('#voiceVolValue').textContent = Math.round(vol * 100) + '%';
+        if (AppState.audioManager) AppState.audioManager.setVoiceVolume(vol);
     });
     
     // Professional 3D Controls - Scene Edit Tab

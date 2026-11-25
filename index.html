@@ -881,6 +881,82 @@
                                         </div>
                                     </div>
                                     
+                                    <!-- Music & Sound Effects -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">संगीत और ध्वनि प्रभाव</label>
+                                        <div class="audio-controls">
+                                            <div class="audio-section">
+                                                <h4>प्रोसीजरल संगीत</h4>
+                                                <div class="setting-item">
+                                                    <label class="label">संगीत शैली</label>
+                                                    <select id="musicGenre" class="select">
+                                                        <option value="cinematic">🎬 सिनेमैटिक</option>
+                                                        <option value="happy">😊 खुशी/उत्साह</option>
+                                                        <option value="sad">😢 उदासी/भावुक</option>
+                                                        <option value="mysterious">🔮 रहस्यमय</option>
+                                                        <option value="epic">⚔️ महाकाव्य/वीरतापूर्ण</option>
+                                                        <option value="peaceful">🧘 शांत/ध्यान</option>
+                                                        <option value="indian">🇮🇳 भारतीय शैली</option>
+                                                        <option value="electronic">🎵 इलेक्ट्रॉनिक</option>
+                                                        <option value="ambient">🌌 एंबिएंट/वातावरण</option>
+                                                        <option value="horror">👻 हॉरर/तनाव</option>
+                                                        <option value="romantic">💕 रोमांटिक</option>
+                                                        <option value="comedy">😄 कॉमेडी/मजेदार</option>
+                                                    </select>
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">टेम्पो <span id="musicTempoValue">80</span> BPM</label>
+                                                    <input type="range" id="musicTempo" min="40" max="180" step="1" value="80" class="slider">
+                                                </div>
+                                                <div class="audio-buttons">
+                                                    <button class="btn btn-primary" id="playMusicBtn">संगीत चलाएं</button>
+                                                    <button class="btn btn-secondary" id="stopMusicBtn">रोकें</button>
+                                                    <button class="btn btn-secondary" id="crossfadeMusicBtn">क्रॉसफेड</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="audio-section">
+                                                <h4>ध्वनि प्रभाव टेस्ट</h4>
+                                                <div class="sfx-grid">
+                                                    <button class="btn btn-small sfx-btn" data-sfx="click">क्लिक</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="pop">पॉप</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="success">सक्सेस</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="error">एरर</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="notification">नोटिफिकेशन</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="footsteps">कदम</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="jump">जंप</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="pickup">पिकअप</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="magicSparkle">जादू</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="whooshFast">वूश</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="birdChirp">पक्षी</button>
+                                                    <button class="btn btn-small sfx-btn" data-sfx="thunder">गरज</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="audio-section">
+                                                <h4>वॉल्यूम नियंत्रण</h4>
+                                                <div class="volume-controls">
+                                                    <div class="setting-item">
+                                                        <label class="label">मास्टर <span id="masterVolValue">100%</span></label>
+                                                        <input type="range" id="masterVolume" min="0" max="1" step="0.05" value="1" class="slider">
+                                                    </div>
+                                                    <div class="setting-item">
+                                                        <label class="label">संगीत <span id="musicVolValue">70%</span></label>
+                                                        <input type="range" id="musicVolume" min="0" max="1" step="0.05" value="0.7" class="slider">
+                                                    </div>
+                                                    <div class="setting-item">
+                                                        <label class="label">SFX <span id="sfxVolValue">80%</span></label>
+                                                        <input type="range" id="sfxVolume" min="0" max="1" step="0.05" value="0.8" class="slider">
+                                                    </div>
+                                                    <div class="setting-item">
+                                                        <label class="label">आवाज़ <span id="voiceVolValue">100%</span></label>
+                                                        <input type="range" id="voiceVolume" min="0" max="1" step="0.05" value="1" class="slider">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <!-- Time of Day -->
                                     <div class="setting-item full-width">
                                         <label class="label">दिन का समय</label>

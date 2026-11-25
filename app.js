@@ -472,83 +472,751 @@ function hideLoading() {
 }
 
 // ========================================
-// Scene Generation Logic
+// Scene Generation Logic (Enhanced)
 // ========================================
+
+// Enhanced character database with roles and attributes
+const CHARACTER_DATABASE = {
+    animals: {
+        'खरगोश': { role: 'protagonist', traits: ['fast', 'curious', 'small'] },
+        'बिल्ली': { role: 'supporting', traits: ['agile', 'independent', 'cunning'] },
+        'कुत्ता': { role: 'companion', traits: ['loyal', 'brave', 'friendly'] },
+        'पक्षी': { role: 'messenger', traits: ['free', 'observant', 'swift'] },
+        'तितली': { role: 'guide', traits: ['delicate', 'colorful', 'transformative'] },
+        'हाथी': { role: 'wise_elder', traits: ['strong', 'wise', 'gentle'] },
+        'शेर': { role: 'antagonist_or_king', traits: ['powerful', 'majestic', 'authoritative'] },
+        'बंदर': { role: 'trickster', traits: ['playful', 'clever', 'mischievous'] },
+        'चूहा': { role: 'sidekick', traits: ['small', 'resourceful', 'brave'] },
+        'कछुआ': { role: 'mentor', traits: ['slow', 'patient', 'wise'] },
+        'मोर': { role: 'beauty', traits: ['proud', 'graceful', 'colorful'] },
+        'तोता': { role: 'messenger', traits: ['talkative', 'colorful', 'loyal'] },
+        'गाय': { role: 'nurturer', traits: ['gentle', 'giving', 'calm'] },
+        'भैंस': { role: 'worker', traits: ['strong', 'hardworking', 'steady'] },
+        'बकरी': { role: 'climber', traits: ['agile', 'curious', 'stubborn'] },
+        'भेड़': { role: 'follower', traits: ['gentle', 'flock-oriented', 'soft'] }
+    },
+    humans: {
+        'लड़का': { role: 'protagonist', traits: ['curious', 'brave', 'growing'] },
+        'लड़की': { role: 'protagonist', traits: ['smart', 'kind', 'determined'] },
+        'बच्चा': { role: 'protagonist', traits: ['innocent', 'curious', 'learning'] },
+        'बूढ़ा': { role: 'mentor', traits: ['wise', 'experienced', 'patient'] },
+        'बूढ़ी': { role: 'mentor', traits: ['wise', 'caring', 'magical'] },
+        'राजा': { role: 'authority', traits: ['powerful', 'responsible', 'wise'] },
+        'रानी': { role: 'authority', traits: ['graceful', 'wise', 'protective'] },
+        'परी': { role: 'magical_helper', traits: ['magical', 'kind', 'ethereal'] },
+        'दानव': { role: 'antagonist', traits: ['powerful', 'scary', 'misunderstood'] },
+        'जादूगर': { role: 'mentor', traits: ['wise', 'mysterious', 'powerful'] },
+        'सैनिक': { role: 'protector', traits: ['brave', 'disciplined', 'loyal'] },
+        'किसान': { role: 'worker', traits: ['hardworking', 'patient', 'grounded'] },
+        'डॉक्टर': { role: 'healer', traits: ['caring', 'knowledgeable', 'calm'] },
+        'शिक्षक': { role: 'mentor', traits: ['patient', 'wise', 'encouraging'] }
+    }
+};
+
+// Background database with mood and time variations
+const BACKGROUND_DATABASE = {
+    'जंगल': { 
+        keywords: ['जंगल', 'वन', 'पेड़', 'झाड़ी', 'जंगली', 'वन्य'],
+        moods: { day: 'bright_forest', night: 'dark_forest', morning: 'misty_forest', evening: 'golden_forest' },
+        props: ['tree', 'bush', 'rock', 'flower']
+    },
+    'नदी': { 
+        keywords: ['नदी', 'नहर', 'पानी', 'तालाब', 'झील', 'समुद्र', 'नदी किनारे', 'घाट'],
+        moods: { day: 'clear_river', night: 'moonlit_river', morning: 'misty_river', evening: 'sunset_river' },
+        props: ['rock', 'flower', 'tree', 'bench']
+    },
+    'पहाड़': { 
+        keywords: ['पहाड़', 'पर्वत', 'चोटी', 'पहाड़ी', 'ऊंचाई'],
+        moods: { day: 'clear_mountain', night: 'starry_mountain', morning: 'misty_mountain', evening: 'sunset_mountain' },
+        props: ['rock', 'tree', 'bush']
+    },
+    'गांव': { 
+        keywords: ['गांव', 'ग्राम', 'घर', 'झोपड़ी', 'कुटीर', 'आंगन', 'खेत'],
+        moods: { day: 'vibrant_village', night: 'peaceful_village', morning: 'busy_village', evening: 'calm_village' },
+        props: ['house', 'tree', 'bench', 'well', 'cart']
+    },
+    'शहर': { 
+        keywords: ['शहर', 'नगर', 'इमारत', 'सड़क', 'बाजार', 'दुकान', 'मॉल', 'ट्रैफिक'],
+        moods: { day: 'busy_city', night: 'neon_city', morning: 'rush_city', evening: 'lights_city' },
+        props: ['building', 'streetlight', 'car', 'bench', 'traffic_light']
+    },
+    'गार्डन': { 
+        keywords: ['बगीचा', 'गार्डन', 'फूल', 'घास', 'पौधे', 'पेड़', 'झूला', 'लॉन'],
+        moods: { day: 'colorful_garden', night: 'moonlit_garden', morning: 'dewy_garden', evening: 'golden_garden' },
+        props: ['flower', 'tree', 'bench', 'bush', 'rock']
+    },
+    'कक्षा': { 
+        keywords: ['कक्षा', 'स्कूल', 'क्लासरूम', 'बोर्ड', 'डेस्क', 'शिक्षक', 'ब्लैकबोर्ड', 'चॉक'],
+        moods: { day: 'bright_classroom', morning: 'fresh_classroom', evening: 'empty_classroom' },
+        props: ['desk', 'chair', 'chalkboard', 'book', 'globe']
+    },
+    'अंतरिक्ष': { 
+        keywords: ['अंतरिक्ष', 'तारा', 'ग्रह', 'चंद्रमा', 'रॉकेट', 'उपग्रह', 'आकाशगंगा', 'एस्ट्रोनॉट'],
+        moods: { day: 'starfield', night: 'deep_space' },
+        props: ['rocket', 'planet', 'star']
+    },
+    'पानी के नीचे': { 
+        keywords: ['पानी के नीचे', 'समुद्र', 'मछली', 'मूंगा', 'जलीय', 'डॉल्फिन', 'शार्क', 'ऑक्टोपस'],
+        moods: { day: 'shallow_reef', night: 'deep_ocean' },
+        props: ['coral', 'fish', 'rock', 'seaweed']
+    },
+    'रेगिस्तान': { 
+        keywords: ['रेगिस्तान', 'रेत', 'कैक्टस', 'धूप', 'टिब्बा', 'ओएसिस', 'ऊंट'],
+        moods: { day: 'hot_desert', night: 'cold_desert', evening: 'sunset_desert' },
+        props: ['cactus', 'rock', 'bush']
+    }
+};
+
+// Scene type templates for better structure
+const SCENE_TYPE_TEMPLATES = {
+    introduction: {
+        weight: 1.0,
+        titlePrefix: 'परिचय: ',
+        description: 'पात्रों और सेटिंग का परिचय',
+        typicalDuration: 8
+    },
+    inciting_incident: {
+        weight: 1.2,
+        titlePrefix: 'घटना: ',
+        description: 'कहानी को गति देने वाली घटना',
+        typicalDuration: 10
+    },
+    rising_action: {
+        weight: 1.1,
+        titlePrefix: 'विकास: ',
+        description: 'चुनौतियों और प्रयासों का क्रम',
+        typicalDuration: 10
+    },
+    climax: {
+        weight: 1.3,
+        titlePrefix: 'चरमोत्कर्ष: ',
+        description: 'सबसे रोमांचक और निर्णायक क्षण',
+        typicalDuration: 12
+    },
+    falling_action: {
+        weight: 1.0,
+        titlePrefix: 'समाधान: ',
+        description: 'परिणाम और समाधान की ओर',
+        typicalDuration: 8
+    },
+    resolution: {
+        weight: 1.0,
+        titlePrefix: 'अंत: ',
+        description: 'कहानी का समापन और नैतिक',
+        typicalDuration: 8
+    }
+};
+
 function generateScenesFromStory(story, settings) {
+    // Split into sentences with better handling
     const sentences = story
         .split(/[।.!?]+/)
         .map(s => s.trim())
-        .filter(s => s.length > 10);
+        .filter(s => s.length > 5);
     
     if (sentences.length === 0) {
-        return [{ 
-            id: generateId(),
-            title: 'सीन 1',
-            description: story,
-            characters: ['मुख्य पात्र'],
-            background: 'गार्डन',
-            hindiText: story,
-            duration: settings.sceneDuration
-        }];
+        return createDefaultScene(story, settings);
     }
-
-    const scenes = [];
-    const sentencesPerScene = Math.max(2, Math.ceil(sentences.length / 5));
     
-    for (let i = 0; i < sentences.length; i += sentencesPerScene) {
-        const sceneSentences = sentences.slice(i, i + sentencesPerScene);
-        const sceneText = sceneSentences.join('। ') + '।';
-        
-        const characters = extractCharacters(sceneText);
-        const background = extractBackground(sceneText);
-        
-        scenes.push({
-            id: generateId(),
-            title: `सीन ${scenes.length + 1}`,
-            description: sceneText,
-            characters: characters.length > 0 ? characters : ['पात्र'],
-            background: background || 'गार्डन',
-            hindiText: sceneText,
-            duration: settings.sceneDuration
-        });
-    }
-
-    return scenes.slice(0, 10);
+    // Analyze story structure
+    const storyAnalysis = analyzeStoryStructure(sentences);
+    
+    // Determine number of scenes (3-8 based on story length)
+    const targetSceneCount = Math.min(8, Math.max(3, Math.ceil(sentences.length / 3)));
+    
+    // Distribute sentences across scenes based on story structure
+    const scenes = distributeSentencesToScenes(sentences, storyAnalysis, targetSceneCount, settings);
+    
+    // Enhance each scene with detailed analysis
+    return scenes.map((scene, index) => enhanceScene(scene, index, storyAnalysis, settings));
 }
 
-function extractCharacters(text) {
-    const characterKeywords = [
-        'खरगोश', 'बिल्ली', 'कुत्ता', 'पक्षी', 'तितली', 'हाथी', 'शेर', 'बंदर',
-        'चूहा', 'कछुआ', 'मोर', 'तोता', 'गाय', 'भैंस', 'बकरी', 'भेड़',
-        'लड़का', 'लड़की', 'बच्चा', 'बूढ़ा', 'बूढ़ी', 'राजा', 'रानी',
-        'परी', 'दानव', 'जादूगर', 'सैनिक', 'किसान', 'डॉक्टर', 'शिक्षक'
-    ];
-    
-    const found = characterKeywords.filter(kw => text.includes(kw));
-    return found.length > 0 ? found.slice(0, 3) : ['पात्र'];
+function createDefaultScene(story, settings) {
+    return [{
+        id: generateId(),
+        title: 'सीन 1',
+        description: story,
+        characters: ['मुख्य पात्र'],
+        background: 'गार्डन',
+        hindiText: story,
+        duration: settings.sceneDuration,
+        sceneType: 'introduction',
+        mood: 'neutral',
+        timeOfDay: 'day',
+        cameraSuggestion: 'medium',
+        lightingSuggestion: 'natural'
+    }];
 }
 
-function extractBackground(text) {
-    const backgroundKeywords = {
-        'जंगल': ['जंगल', 'वन', 'पेड़', 'झाड़ी'],
-        'नदी': ['नदी', 'नहर', 'पानी', 'तालाब', 'झील', 'समुद्र'],
-        'पहाड़': ['पहाड़', 'पर्वत', 'चोटी'],
-        'गांव': ['गांव', 'ग्राम', 'घर', 'झोपड़ी'],
-        'शहर': ['शहर', 'नगर', 'इमारत', 'सड़क', 'बाजार'],
-        'गार्डन': ['बगीचा', 'गार्डन', 'फूल', 'घास', 'पौधे'],
-        'कक्षा': ['कक्षा', 'स्कूल', 'क्लासरूम', 'बोर्ड', 'डेस्क'],
-        'अंतरिक्ष': ['अंतरिक्ष', 'तारा', 'ग्रह', 'चंद्रमा', 'रॉकेट'],
-        'पानी के नीचे': ['पानी के नीचे', 'समुद्र', 'मछली', 'मूंगा'],
-        'रेगिस्तान': ['रेगिस्तान', 'रेत', 'कैक्टस', 'धूप']
+function analyzeStoryStructure(sentences) {
+    const analysis = {
+        totalSentences: sentences.length,
+        characters: new Map(),
+        locations: new Map(),
+        emotions: new Map(),
+        actions: [],
+        timeMarkers: [],
+        sceneBoundaries: []
     };
+    
+    sentences.forEach((sentence, index) => {
+        // Extract characters with context
+        const chars = extractCharactersWithContext(sentence);
+        chars.forEach(char => {
+            if (!analysis.characters.has(char.name)) {
+                analysis.characters.set(char.name, { 
+                    mentions: 0, 
+                    roles: new Set(),
+                    contexts: [],
+                    firstMention: index,
+                    lastMention: index
+                });
+            }
+            const charData = analysis.characters.get(char.name);
+            charData.mentions++;
+            charData.roles.add(char.role);
+            charData.contexts.push({ sentence: index, context: char.context });
+            charData.lastMention = index;
+        });
+        
+        // Extract locations
+        const location = extractLocationWithContext(sentence);
+        if (location) {
+            if (!analysis.locations.has(location.name)) {
+                analysis.locations.set(location.name, { mentions: 0, contexts: [] });
+            }
+            const locData = analysis.locations.get(location.name);
+            locData.mentions++;
+            locData.contexts.push({ sentence: index, context: location.context });
+        }
+        
+        // Extract emotions
+        const emotion = extractEmotion(sentence);
+        if (emotion) {
+            analysis.emotions.set(index, emotion);
+        }
+        
+        // Extract actions
+        const action = extractAction(sentence);
+        if (action) {
+            analysis.actions.push({ sentence: index, action, text: sentence });
+        }
+        
+        // Time markers
+        const timeMarker = extractTimeMarker(sentence);
+        if (timeMarker) {
+            analysis.timeMarkers.push({ sentence: index, time: timeMarker });
+        }
+    });
+    
+    // Identify potential scene boundaries (major shifts)
+    analysis.sceneBoundaries = identifySceneBoundaries(sentences, analysis);
+    
+    return analysis;
+}
 
-    for (const [bg, keywords] of Object.entries(backgroundKeywords)) {
-        if (keywords.some(kw => text.includes(kw))) {
-            return bg;
+function extractCharactersWithContext(text) {
+    const found = [];
+    const lowerText = text.toLowerCase();
+    
+    // Check animals
+    Object.entries(CHARACTER_DATABASE.animals).forEach(([name, data]) => {
+        if (lowerText.includes(name.toLowerCase())) {
+            found.push({
+                name,
+                role: data.role,
+                traits: data.traits,
+                type: 'animal',
+                context: text.substring(Math.max(0, lowerText.indexOf(name.toLowerCase()) - 20), lowerText.indexOf(name.toLowerCase()) + name.length + 20)
+            });
+        }
+    });
+    
+    // Check humans
+    Object.entries(CHARACTER_DATABASE.humans).forEach(([name, data]) => {
+        if (lowerText.includes(name.toLowerCase())) {
+            found.push({
+                name,
+                role: data.role,
+                traits: data.traits,
+                type: 'human',
+                context: text.substring(Math.max(0, lowerText.indexOf(name.toLowerCase()) - 20), lowerText.indexOf(name.toLowerCase()) + name.length + 20)
+            });
+        }
+    });
+    
+    // Pronouns that might refer to characters
+    const pronouns = ['वह', 'वे', 'उसने', 'उन्होंने', 'यह', 'ये'];
+    pronouns.forEach(p => {
+        if (lowerText.includes(p.toLowerCase())) {
+            found.push({
+                name: p,
+                role: 'pronoun',
+                type: 'pronoun',
+                context: text
+            });
+        }
+    });
+    
+    return found;
+}
+
+function extractLocationWithContext(text) {
+    const lowerText = text.toLowerCase();
+    
+    for (const [name, data] of Object.entries(BACKGROUND_DATABASE)) {
+        for (const keyword of data.keywords) {
+            if (lowerText.includes(keyword.toLowerCase())) {
+                return {
+                    name,
+                    moods: data.moods,
+                    props: data.props,
+                    context: text.substring(Math.max(0, lowerText.indexOf(keyword.toLowerCase()) - 30), lowerText.indexOf(keyword.toLowerCase()) + keyword.length + 30)
+                };
+            }
         }
     }
-    return 'गार्डन';
+    return null;
 }
+
+function extractEmotion(text) {
+    const emotionKeywords = {
+        happy: ['खुश', 'मुस्कुर', 'हंस', 'प्रसन्न', 'आनंद', 'उल्लास', 'हर्ष'],
+        sad: ['उदास', 'रो', 'दुख', 'शोक', 'विषाद', 'आंसू', 'रोना'],
+        angry: ['गुस्सा', 'क्रोध', 'नाराज', 'चिढ़', 'आक्रोश', 'गरम'],
+        scared: ['डर', 'भय', 'भीत', 'त्रस्त', 'कांप', 'घबराहट'],
+        surprised: ['आश्चर्य', 'हैरान', 'चौंक', 'विस्मय', 'अचंभा', 'वाह'],
+        confused: ['उलझन', 'समझ नहीं', 'भ्रम', 'असमंजस', 'दुविधा'],
+        determined: ['निश्चय', 'ठान', 'प्रण', 'संकल्प', 'दृढ़', 'लगे रहो'],
+        peaceful: ['शांत', 'सुकून', 'आराम', 'चैन', 'शांति']
+    };
+    
+    const lowerText = text.toLowerCase();
+    for (const [emotion, keywords] of Object.entries(emotionKeywords)) {
+        if (keywords.some(kw => lowerText.includes(kw))) {
+            return emotion;
+        }
+    }
+    return null;
+}
+
+function extractAction(text) {
+    const actionKeywords = {
+        walk: ['चल', 'घूम', 'टहल', 'जा', 'आ', 'पहुंच'],
+        run: ['दौड़', 'भाग', 'तेज भाग'],
+        sit: ['बैठ', 'sit'],
+        stand: ['खड़', 'उठ', 'stand'],
+        talk: ['बोल', 'बात', 'कह', 'सुन', 'बातचीत'],
+        give: ['दे', 'हाथ में दे', 'उपहार'],
+        take: ['ले', 'पकड़', 'ग्रहण'],
+        look: ['देख', 'नजर', 'निरीक्ष'],
+        point: ['इशार', 'उंगली दिख'],
+        wave: ['हाथ हिल', 'अभिवादन'],
+        jump: ['कूद', 'उछल'],
+        dance: ['नाच', 'डांस'],
+        sleep: ['सो', 'नींद', 'सोना'],
+        eat: ['खा', 'भोजन', 'खाना'],
+        drink: ['पी', 'पानी पी', 'प्यास'],
+        fight: ['लड़', 'युद्ध', 'झगड़'],
+        help: ['मदद', 'सहायता', 'बचाओ'],
+        find: ['ढूंढ', 'मिल', 'खोज', 'पता लग'],
+        lose: ['खो', 'गुम', 'भटक'],
+        build: ['बना', 'निर्माण', 'बनाओ'],
+        break: ['टूट', 'तोड़', 'फूट'],
+        magic: ['जादू', 'मंत्र', 'शक्ति', 'चमत्कार']
+    };
+    
+    const lowerText = text.toLowerCase();
+    for (const [action, keywords] of Object.entries(actionKeywords)) {
+        if (keywords.some(kw => lowerText.includes(kw))) {
+            return action;
+        }
+    }
+    return null;
+}
+
+function extractTimeMarker(text) {
+    const timeKeywords = {
+        morning: ['सुबह', 'प्रभात', 'भोर', 'उषा', 'मॉर्निंग'],
+        afternoon: ['दोपहर', 'दोपहर को', 'मध्याह्न'],
+        evening: ['शाम', 'संध्या', 'सायं', 'गोधूलि', 'इवनिंग'],
+        night: ['रात', 'रात्रि', 'नाइट', 'अंधेरा'],
+        day: ['दिन', 'दिन में', 'दिवस'],
+        later: ['बाद में', 'फिर', 'तब', 'तत्पश्चात'],
+        suddenly: ['अचानक', 'एकाएक', 'आकस्मिक'],
+        morning_to_evening: ['सुबह से शाम', 'पूरे दिन']
+    };
+    
+    const lowerText = text.toLowerCase();
+    for (const [time, keywords] of Object.entries(timeKeywords)) {
+        if (keywords.some(kw => lowerText.includes(kw))) {
+            return time;
+        }
+    }
+    return null;
+}
+
+function identifySceneBoundaries(sentences, analysis) {
+    const boundaries = [0]; // First scene always starts at 0
+    
+    for (let i = 1; i < sentences.length; i++) {
+        let boundaryScore = 0;
+        
+        // Major location change
+        const prevLoc = getLocationAtSentence(i - 1, analysis);
+        const currLoc = getLocationAtSentence(i, analysis);
+        if (prevLoc && currLoc && prevLoc !== currLoc) {
+            boundaryScore += 3;
+        }
+        
+        // Major character focus change
+        const prevChars = getCharactersAtSentence(i - 1, analysis);
+        const currChars = getCharactersAtSentence(i, analysis);
+        const charOverlap = prevChars.filter(c => currChars.includes(c)).length;
+        if (charOverlap === 0 && prevChars.length > 0 && currChars.length > 0) {
+            boundaryScore += 2;
+        }
+        
+        // Time jump
+        const timeMarker = analysis.timeMarkers.find(tm => tm.sentence === i);
+        if (timeMarker && ['morning', 'afternoon', 'evening', 'night', 'later'].includes(timeMarker.time)) {
+            boundaryScore += 2;
+        }
+        
+        // Emotional shift
+        const prevEmotion = analysis.emotions.get(i - 1);
+        const currEmotion = analysis.emotions.get(i);
+        if (prevEmotion && currEmotion && prevEmotion !== currEmotion) {
+            boundaryScore += 1;
+        }
+        
+        // Action type change (e.g., from dialogue to action)
+        const prevAction = analysis.actions.find(a => a.sentence === i - 1);
+        const currAction = analysis.actions.find(a => a.sentence === i);
+        if (prevAction && currAction && prevAction.action !== currAction.action) {
+            boundaryScore += 1;
+        }
+        
+        // Sentence length change (short sentences often indicate scene breaks)
+        if (sentences[i].length < 20 && sentences[i - 1].length > 50) {
+            boundaryScore += 1;
+        }
+        
+        if (boundaryScore >= 3) {
+            boundaries.push(i);
+        }
+    }
+    
+    return boundaries;
+}
+
+function getLocationAtSentence(sentenceIndex, analysis) {
+    for (const [name, data] of analysis.locations) {
+        if (data.contexts.some(c => c.sentence === sentenceIndex)) {
+            return name;
+        }
+    }
+    return null;
+}
+
+function getCharactersAtSentence(sentenceIndex, analysis) {
+    const chars = [];
+    for (const [name, data] of analysis.characters) {
+        if (data.contexts.some(c => c.sentence === sentenceIndex)) {
+            chars.push(name);
+        }
+    }
+    return chars;
+}
+
+function distributeSentencesToScenes(sentences, analysis, targetCount, settings) {
+    const boundaries = analysis.sceneBoundaries;
+    const scenes = [];
+    
+    // If we have good boundaries, use them
+    if (boundaries.length >= targetCount) {
+        for (let i = 0; i < Math.min(targetCount, boundaries.length); i++) {
+            const start = boundaries[i];
+            const end = (i + 1 < boundaries.length) ? boundaries[i + 1] : sentences.length;
+            const sceneSentences = sentences.slice(start, end);
+            
+            if (sceneSentences.length > 0) {
+                scenes.push({
+                    sentences: sceneSentences,
+                    startSentence: start,
+                    endSentence: end - 1
+                });
+            }
+        }
+    } else {
+        // Fallback: even distribution
+        const perScene = Math.ceil(sentences.length / targetCount);
+        for (let i = 0; i < sentences.length; i += perScene) {
+            const sceneSentences = sentences.slice(i, i + perScene);
+            scenes.push({
+                sentences: sceneSentences,
+                startSentence: i,
+                endSentence: Math.min(i + perScene - 1, sentences.length - 1)
+            });
+        }
+    }
+    
+    return scenes.slice(0, targetCount);
+}
+
+function enhanceScene(sceneData, index, analysis, settings) {
+    const sceneSentences = sceneData.sentences;
+    const sceneText = sceneSentences.join('। ') + '।';
+    
+    // Determine scene type based on position and content
+    const sceneType = determineSceneType(index, scenes.length, analysis, sceneData);
+    const template = SCENE_TYPE_TEMPLATES[sceneType] || SCENE_TYPE_TEMPLATES.introduction;
+    
+    // Extract characters for this scene
+    const characters = extractSceneCharacters(sceneData, analysis);
+    
+    // Determine primary location
+    const background = determineSceneBackground(sceneData, analysis);
+    
+    // Determine mood
+    const mood = determineSceneMood(sceneData, analysis);
+    
+    // Determine time of day
+    const timeOfDay = determineTimeOfDay(sceneData, analysis);
+    
+    // Generate title
+    const title = generateSceneTitle(sceneType, index, sceneData, characters, background);
+    
+    // Camera and lighting suggestions
+    const cameraSuggestion = suggestCameraShot(sceneType, characters.length);
+    const lightingSuggestion = suggestLighting(mood, timeOfDay);
+    
+    // Estimate duration based on content
+    const duration = estimateSceneDuration(sceneSentences, sceneType, settings.sceneDuration);
+    
+    return {
+        id: generateId(),
+        title,
+        description: sceneText,
+        characters: characters.length > 0 ? characters : ['पात्र'],
+        background: background || 'गार्डन',
+        hindiText: sceneText,
+        duration,
+        sceneType,
+        mood,
+        timeOfDay,
+        cameraSuggestion,
+        lightingSuggestion,
+        locationDetails: getLocationDetails(background),
+        characterDetails: getCharacterDetails(characters)
+    };
+}
+
+function determineSceneType(index, totalScenes, analysis, sceneData) {
+    const position = index / Math.max(1, totalScenes - 1);
+    
+    // Check for specific content markers
+    const text = sceneData.sentences.join(' ').toLowerCase();
+    
+    if (index === 0) return 'introduction';
+    if (index === totalScenes - 1) return 'resolution';
+    
+    // Check for climax markers
+    if (text.includes('चरम') || text.includes('निर्णय') || text.includes('लड़ाई') || text.includes('अंतिम') || 
+        text.includes('सबसे बड़ी') || text.includes('मुश्किल') || text.includes('चुनौती')) {
+        return 'climax';
+    }
+    
+    // Check for inciting incident (early, problem introduction)
+    if (index === 1 && (text.includes('समस्या') || text.includes('मुश्किल') || text.includes('खो') || 
+        text.includes('गुम') || text.includes('जरूरत') || text.includes('चाहिए'))) {
+        return 'inciting_incident';
+    }
+    
+    // Check for resolution markers (late, solving)
+    if (index >= totalScenes - 2 && (text.includes('हल') || text.includes('समाधान') || text.includes('मिला') || 
+        text.includes('पाया') || text.includes('जीत') || text.includes('सफल') || text.includes('खुश'))) {
+        return 'falling_action';
+    }
+    
+    // Default to rising action for middle scenes
+    return 'rising_action';
+}
+
+function extractSceneCharacters(sceneData, analysis) {
+    const chars = new Set();
+    sceneData.sentences.forEach((sentence, localIndex) => {
+        const globalIndex = sceneData.startSentence + localIndex;
+        const found = extractCharactersWithContext(sentence);
+        found.forEach(c => {
+            if (c.type !== 'pronoun') chars.add(c.name);
+        });
+    });
+    return Array.from(chars).slice(0, 4); // Limit to 4 characters
+}
+
+function determineSceneBackground(sceneData, analysis) {
+    const locationCounts = new Map();
+    
+    sceneData.sentences.forEach((sentence, localIndex) => {
+        const globalIndex = sceneData.startSentence + localIndex;
+        const location = getLocationAtSentence(globalIndex, analysis);
+        if (location) {
+            locationCounts.set(location, (locationCounts.get(location) || 0) + 1);
+        }
+    });
+    
+    // Also check sentence content directly
+    sceneData.sentences.forEach(sentence => {
+        const loc = extractLocationWithContext(sentence);
+        if (loc) {
+            locationCounts.set(loc.name, (locationCounts.get(loc.name) || 0) + 1);
+        }
+    });
+    
+    // Return most mentioned location
+    let maxCount = 0;
+    let bestLocation = null;
+    for (const [loc, count] of locationCounts) {
+        if (count > maxCount) {
+            maxCount = count;
+            bestLocation = loc;
+        }
+    }
+    
+    return bestLocation || 'गार्डन';
+}
+
+function determineSceneMood(sceneData, analysis) {
+    const emotions = [];
+    sceneData.sentences.forEach((sentence, localIndex) => {
+        const globalIndex = sceneData.startSentence + localIndex;
+        const emotion = analysis.emotions.get(globalIndex);
+        if (emotion) emotions.push(emotion);
+    });
+    
+    // Also check sentence content
+    sceneData.sentences.forEach(sentence => {
+        const emotion = extractEmotion(sentence);
+        if (emotion) emotions.push(emotion);
+    });
+    
+    if (emotions.length === 0) return 'neutral';
+    
+    // Count emotions
+    const counts = {};
+    emotions.forEach(e => counts[e] = (counts[e] || 0) + 1);
+    
+    // Return dominant emotion
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function determineTimeOfDay(sceneData, analysis) {
+    const timeMarkers = [];
+    sceneData.sentences.forEach((sentence, localIndex) => {
+        const globalIndex = sceneData.startSentence + localIndex;
+        const marker = analysis.timeMarkers.find(tm => tm.sentence === globalIndex);
+        if (marker) timeMarkers.push(marker.time);
+    });
+    
+    // Also check sentence content
+    sceneData.sentences.forEach(sentence => {
+        const time = extractTimeMarker(sentence);
+        if (time) timeMarkers.push(time);
+    });
+    
+    if (timeMarkers.length === 0) return 'day';
+    
+    // Return most common
+    const counts = {};
+    timeMarkers.forEach(t => counts[t] = (counts[t] || 0) + 1);
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function generateSceneTitle(sceneType, index, sceneData, characters, background) {
+    const template = SCENE_TYPE_TEMPLATES[sceneType] || SCENE_TYPE_TEMPLATES.introduction;
+    let title = template.titlePrefix;
+    
+    if (characters.length > 0) {
+        title += characters[0];
+        if (characters.length > 1) {
+            title += ` और ${characters.slice(1).join(', ')}`;
+        }
+    }
+    
+    if (background && background !== 'गार्डन') {
+        title += ` ${background} में`;
+    }
+    
+    // Fallback to numbered title if generated title is too generic
+    if (title.length < 5) {
+        title = `सीन ${index + 1}`;
+    }
+    
+    return title;
+}
+
+function suggestCameraShot(sceneType, characterCount) {
+    const suggestions = {
+        introduction: characterCount > 1 ? 'wide' : 'medium',
+        inciting_incident: 'closeup',
+        rising_action: characterCount > 1 ? 'medium' : 'closeup',
+        climax: 'closeup',
+        falling_action: 'medium',
+        resolution: 'wide'
+    };
+    return suggestions[sceneType] || 'medium';
+}
+
+function suggestLighting(mood, timeOfDay) {
+    if (timeOfDay === 'night') return 'moonlight';
+    if (timeOfDay === 'evening') return 'golden_hour';
+    if (timeOfDay === 'morning') return 'soft_morning';
+    
+    const moodLighting = {
+        happy: 'bright_cheerful',
+        sad: 'soft_melancholic',
+        angry: 'dramatic_contrast',
+        scared: 'dark_shadows',
+        surprised: 'bright_sudden',
+        peaceful: 'soft_natural',
+        determined: 'strong_directional',
+        neutral: 'natural'
+    };
+    return moodLighting[mood] || 'natural';
+}
+
+function getLocationDetails(location) {
+    if (!location || !BACKGROUND_DATABASE[location]) return null;
+    return BACKGROUND_DATABASE[location];
+}
+
+function getCharacterDetails(characters) {
+    return characters.map(name => {
+        if (CHARACTER_DATABASE.animals[name]) {
+            return { name, type: 'animal', ...CHARACTER_DATABASE.animals[name] };
+        }
+        if (CHARACTER_DATABASE.humans[name]) {
+            return { name, type: 'human', ...CHARACTER_DATABASE.humans[name] };
+        }
+        return { name, type: 'custom' };
+    });
+}
+
+function estimateSceneDuration(sentences, sceneType, baseDuration) {
+    const template = SCENE_TYPE_TEMPLATES[sceneType] || SCENE_TYPE_TEMPLATES.introduction;
+    let duration = template.typicalDuration;
+    
+    // Adjust based on sentence count and length
+    const totalWords = sentences.join(' ').split(/\s+/).length;
+    const wordFactor = Math.min(2, Math.max(0.5, totalWords / 50));
+    
+    duration = Math.round(duration * wordFactor);
+    return Math.max(5, Math.min(30, duration));
+}
+
+// Export for potential reuse
+export { CHARACTER_DATABASE, BACKGROUND_DATABASE, SCENE_TYPE_TEMPLATES, analyzeStoryStructure };
 
 // ========================================
 // Three.js 3D Professional Renderer

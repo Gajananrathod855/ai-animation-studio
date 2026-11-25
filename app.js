@@ -383,6 +383,181 @@ const BackgroundTemplates = {
             { type: 'cactus', template: 'cactus', count: 3, depth: -1 },
             { type: 'sand', color: '#f4e4bc', depth: 0 }
         ]
+    },
+    // NEW: Expanded backgrounds
+    city: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'skyscrapers', template: 'building', count: 5, depth: -5, scale: 2 },
+            { type: 'buildings-mid', template: 'building', count: 8, depth: -2, scale: 1.5 },
+            { type: 'street', color: '#444444', depth: 0 },
+            { type: 'streetlights', template: 'streetlight', count: 6, depth: 0.5 },
+            { type: 'cars', template: 'car', count: 4, depth: 0.3 },
+            { type: 'sidewalk', color: '#cccccc', depth: 0.1 }
+        ]
+    },
+    mountain: {
+        layers: [
+            { type: 'sky', color: '#b0d4f3', depth: -15 },
+            { type: 'peaks-back', color: '#8aa3b8', depth: -8, count: 4 },
+            { type: 'peaks-mid', color: '#6b8a9e', depth: -4, count: 3 },
+            { type: 'peaks-front', color: '#4a6a7e', depth: -1, count: 2 },
+            { type: 'pine-trees', template: 'pineTree', count: 6, depth: 0 },
+            { type: 'rocks', color: '#808080', depth: 0.5, count: 8 },
+            { type: 'snow-caps', color: '#ffffff', depth: -3, count: 3 }
+        ]
+    },
+    beach: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'sun', template: 'sun', depth: -8, position: [5, 5] },
+            { type: 'ocean', color: '#0077be', depth: -2 },
+            { type: 'waves', color: '#ffffff', depth: -0.5, count: 5 },
+            { type: 'sand', color: '#f5deb3', depth: 0 },
+            { type: 'palm-trees', template: 'tree', count: 4, depth: 0.5, scale: 1.5 },
+            { type: 'shells', template: 'flower', count: 6, depth: 0.3, color: '#fff8dc' }
+        ]
+    },
+    park: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'trees-back', template: 'tree', count: 6, depth: -3, scale: 1.3 },
+            { type: 'grass', color: '#7cfc00', depth: 0 },
+            { type: 'path', color: '#d2b48c', depth: 0.1 },
+            { type: 'benches', template: 'bench', count: 3, depth: 0.5 },
+            { type: 'fountain', template: 'circle', count: 1, depth: 0.5, color: '#4a90d9', size: 2 },
+            { type: 'flowers', template: 'flower', count: 10, depth: 0.3 },
+            { type: 'lamps', template: 'streetlight', count: 4, depth: 1 }
+        ]
+    },
+    farm: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'barn', template: 'building', count: 1, depth: -3, scale: 2 },
+            { type: 'fields', color: '#daa520', depth: -1, count: 4 },
+            { type: 'crops', template: 'bush', count: 12, depth: 0, colors: ['#228b22', '#daa520', '#ff6347'] },
+            { type: 'tractor', template: 'car', count: 1, depth: 0.5, scale: 1.2 },
+            { type: 'fence', color: '#8b4513', depth: 0.2, count: 20 },
+            { type: 'animals', template: 'cow', count: 3, depth: 0.5 }
+        ]
+    },
+    hospital: {
+        layers: [
+            { type: 'sky', color: '#e8f5e9', depth: -10 },
+            { type: 'building-main', template: 'building', count: 1, depth: -3, scale: 1.5 },
+            { type: 'parking', color: '#cccccc', depth: 0 },
+            { type: 'ambulance', template: 'car', count: 1, depth: 0.5, color: '#ffffff' },
+            { type: 'cross', template: 'circle', count: 1, depth: -2, color: '#ff0000', size: 1 },
+            { type: 'trees', template: 'tree', count: 4, depth: 1 }
+        ]
+    },
+    school_building: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -10 },
+            { type: 'building-main', template: 'building', count: 1, depth: -4, scale: 1.8 },
+            { type: 'playground', color: '#ffd700', depth: 0 },
+            { type: 'flag', template: 'flag', count: 1, depth: -2, color: '#ff6347' },
+            { type: 'buses', template: 'car', count: 2, depth: 0.3, color: '#ffcc00' },
+            { type: 'trees', template: 'tree', count: 5, depth: 1 }
+        ]
+    },
+    marketplace: {
+        layers: [
+            { type: 'sky', color: '#ffe4b5', depth: -10 },
+            { type: 'stalls', template: 'building', count: 6, depth: -2, scale: 1.2 },
+            { type: 'ground', color: '#d2b48c', depth: 0 },
+            { type: 'crowd', template: 'circle', count: 15, depth: 0.3, color: '#8b4513', size: 0.5 },
+            { type: 'goods', template: 'box', count: 20, depth: 0.5, colors: ['#ff6347', '#ffd700', '#32cd32', '#ff69b4'] },
+            { type: 'canopy', color: '#ffa500', depth: -1 }
+        ]
+    },
+    temple: {
+        layers: [
+            { type: 'sky', color: '#fff8dc', depth: -10 },
+            { type: 'structure-main', template: 'building', count: 1, depth: -4, scale: 1.5 },
+            { type: 'steps', color: '#d4c4a8', depth: 0, count: 10 },
+            { type: 'pillars', template: 'cylinder', count: 8, depth: -1, color: '#f5f5dc' },
+            { type: 'bells', template: 'circle', count: 4, depth: -3, color: '#ffd700', size: 0.5 },
+            { type: 'offerings', template: 'flower', count: 10, depth: 0.5, color: '#ff69b4' }
+        ]
+    },
+    railway: {
+        layers: [
+            { type: 'sky', color: '#b0c4de', depth: -10 },
+            { type: 'tracks', color: '#333333', depth: 0, count: 2 },
+            { type: 'platform', color: '#808080', depth: 0.1 },
+            { type: 'train', template: 'car', count: 5, depth: 0.3, scale: 3, color: '#4169e1' },
+            { type: 'station', template: 'building', count: 1, depth: -2, scale: 1.5 },
+            { type: 'signals', template: 'trafficLight', count: 2, depth: 1 }
+        ]
+    },
+    airport: {
+        layers: [
+            { type: 'sky', color: '#87ceeb', depth: -15 },
+            { type: 'terminal', template: 'building', count: 1, depth: -5, scale: 2 },
+            { type: 'runway', color: '#444444', depth: 0, count: 2 },
+            { type: 'planes', template: 'car', count: 3, depth: -2, scale: 2, color: '#ffffff' },
+            { type: 'control-tower', template: 'streetlight', count: 1, depth: -3, scale: 3 },
+            { type: 'hangars', template: 'building', count: 2, depth: -1, scale: 1.5 }
+        ]
+    },
+    sunset: {
+        layers: [
+            { type: 'sky-gradient', colors: ['#ff6b35', '#f7931e', '#ffcc70', '#a8d0e6'], depth: -10 },
+            { type: 'sun', template: 'sun', depth: -8, position: [0, 1] },
+            { type: 'silhouettes', color: '#1a1a2e', depth: -3, count: 5 },
+            { type: 'birds', template: 'bird', count: 8, depth: -5 },
+            { type: 'ground', color: '#2d1b3d', depth: 0 }
+        ]
+    },
+    night: {
+        layers: [
+            { type: 'sky', color: '#0d0d2b', depth: -10 },
+            { type: 'moon', template: 'circle', depth: -8, color: '#f5f5dc', size: 2, position: [5, 4] },
+            { type: 'stars', color: '#ffffff', depth: -9, count: 200 },
+            { type: 'city-lights', color: '#ffd700', depth: -3, count: 30 },
+            { type: 'streetlights', template: 'streetlight', count: 8, depth: 0.5 },
+            { type: 'ground', color: '#1a1a2e', depth: 0 }
+        ]
+    },
+    rainy: {
+        layers: [
+            { type: 'sky', color: '#4a4a6a', depth: -10 },
+            { type: 'clouds-dark', color: '#2d2d44', depth: -6, count: 8 },
+            { type: 'rain', template: 'line', count: 100, depth: 0, color: 'rgba(173,216,230,0.6)' },
+            { type: 'puddles', template: 'circle', count: 20, depth: 0.1, color: 'rgba(173,216,230,0.3)' },
+            { type: 'ground-wet', color: '#2d2d44', depth: 0 },
+            { type: 'umbrellas', template: 'circle', count: 5, depth: 0.5, colors: ['#ff0000', '#0000ff', '#ffff00', '#ff69b4'] }
+        ]
+    },
+    snowy: {
+        layers: [
+            { type: 'sky', color: '#e8f0fe', depth: -10 },
+            { type: 'snowfall', template: 'circle', count: 150, depth: 0, color: '#ffffff', size: 0.1 },
+            { type: 'ground-snow', color: '#ffffff', depth: 0 },
+            { type: 'trees-snow', template: 'pineTree', count: 6, depth: 0.5, snow: true },
+            { type: 'snowman', template: 'circle', count: 2, depth: 0.5, color: '#ffffff', sizes: [0.8, 0.5, 0.3] },
+            { type: 'footprints', template: 'oval', count: 10, depth: 0.1, color: '#d0d0e0' }
+        ]
+    },
+    autumn: {
+        layers: [
+            { type: 'sky', color: '#ffe4b5', depth: -10 },
+            { type: 'trees-autumn', template: 'tree', count: 8, depth: -2, colors: ['#ff8c00', '#ff4500', '#ffd700', '#8b4513'] },
+            { type: 'leaves-falling', template: 'leaf', count: 50, depth: 0, colors: ['#ff8c00', '#ff4500', '#ffd700', '#a0522d'] },
+            { type: 'ground-leaves', color: '#a0522d', depth: 0 },
+            { type: 'pumpkins', template: 'circle', count: 4, depth: 0.3, color: '#ff7518', size: 0.5 }
+        ]
+    },
+    spring: {
+        layers: [
+            { type: 'sky', color: '#e0ffff', depth: -10 },
+            { type: 'cherry-blossoms', template: 'flower', count: 20, depth: -1, color: '#ffb7c5' },
+            { type: 'grass-green', color: '#7cfc00', depth: 0 },
+            { type: 'flowers', template: 'flower', count: 15, depth: 0.3, colors: ['#ff69b4', '#ffd700', '#9370db', '#ff6347'] },
+            { type: 'butterflies', template: 'butterfly', count: 8, depth: 0.5 },
+            { type: 'birds', template: 'bird', count: 6, depth: -3 }
+        ]
     }
 };
 
@@ -1697,6 +1872,1897 @@ function createRock(x, z) {
     rock.castShadow = true;
     rock.receiveShadow = true;
     scene.add(rock);
+}
+
+// ========================================
+// Environment & Background Generator Functions
+// ========================================
+
+function applyEnvironmentPreset(preset) {
+    const template = BackgroundTemplates[preset];
+    if (!template) return;
+    
+    // Set background type to scene3d
+    AppState.three.background.type = 'scene3d';
+    $('#backgroundType').value = 'scene3d';
+    
+    // Apply template layers as 3D background
+    createEnvironmentFromTemplate(template, preset);
+    
+    // Update scene data
+    const sceneIndex = AppState.three.currentScene;
+    if (AppState.scenes[sceneIndex]) {
+        AppState.scenes[sceneIndex].background = preset;
+    }
+    
+    showToast(`वातावरण प्रीसेट "${preset}" लागू किया गया`, 'success');
+}
+
+function createEnvironmentFromTemplate(template, presetName) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    // Clear existing 3D background objects
+    if (AppState.three.envObjects) {
+        AppState.three.envObjects.forEach(obj => {
+            scene.remove(obj);
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => m.dispose());
+                } else {
+                    obj.material.dispose();
+                }
+            }
+        });
+    }
+    AppState.three.envObjects = [];
+    
+    // Create sky based on template
+    const skyLayer = template.layers.find(l => l.type === 'sky' || l.type === 'space-bg' || l.type === 'water-bg');
+    if (skyLayer) {
+        createSkyFromLayer(skyLayer);
+    }
+    
+    // Create ground
+    const groundLayer = template.layers.find(l => l.type === 'ground' || l.type === 'grass' || l.type === 'water' || l.type === 'sand' || l.type === 'wall');
+    if (groundLayer) {
+        createGroundFromLayer(groundLayer);
+    }
+    
+    // Create layer objects
+    template.layers.forEach(layer => {
+        if (layer.template) {
+            createLayerObjects(layer);
+        } else if (layer.type === 'mountain' || layer.type === 'mountains' || layer.type === 'dunes' || layer.type === 'peaks-back' || layer.type === 'peaks-mid' || layer.type === 'peaks-front') {
+            createMountains(layer);
+        } else if (layer.type === 'trees' || layer.type === 'forest' || layer.type === 'trees-back' || layer.type === 'trees-mid' || layer.type === 'pine-trees' || layer.type === 'palm-trees' || layer.type === 'cherry-blossoms') {
+            createTrees(layer);
+        } else if (layer.type === 'bushes' || layer.type === 'crops') {
+            createBushes(layer);
+        } else if (layer.type === 'rocks') {
+            createRocks(layer);
+        } else if (layer.type === 'flowers' || layer.type === 'shells' || layer.type === 'leaves-falling') {
+            createFlowers(layer);
+        } else if (layer.type === 'clouds' || layer.type === 'clouds-dark') {
+            createClouds(layer);
+        } else if (layer.type === 'stars' || layer.type === 'city-lights') {
+            createStars(layer);
+        } else if (layer.type === 'waves') {
+            createWaves(layer);
+        } else if (layer.type === 'rain' || layer.type === 'snowfall') {
+            createPrecipitation(layer);
+        } else if (layer.type === 'puddles') {
+            createPuddles(layer);
+        } else if (layer.type === 'sun' || layer.type === 'moon') {
+            createCelestialBody(layer);
+        } else if (layer.type === 'snow-caps') {
+            createSnowCaps(layer);
+        } else if (layer.type === 'buildings' || layer.type === 'houses' || layer.type === 'skyscrapers' || layer.type === 'buildings-mid' || layer.type === 'stalls' || layer.type === 'building-main' || layer.type === 'terminal' || layer.type === 'hangars' || layer.type === 'station' || layer.type === 'structure-main') {
+            createBuildings(layer);
+        } else if (layer.type === 'streetlights' || layer.type === 'lamps') {
+            createStreetlights(layer);
+        } else if (layer.type === 'cars' || layer.type === 'tractor' || layer.type === 'ambulance' || layer.type === 'buses' || layer.type === 'train' || layer.type === 'planes') {
+            createVehicles(layer);
+        } else if (layer.type === 'fence') {
+            createFence(layer);
+        } else if (layer.type === 'animals') {
+            createAnimals(layer);
+        } else if (layer.type === 'cross') {
+            createCross(layer);
+        } else if (layer.type === 'flag') {
+            createFlag(layer);
+        } else if (layer.type === 'canopy') {
+            createCanopy(layer);
+        } else if (layer.type === 'goods') {
+            createGoods(layer);
+        } else if (layer.type === 'bells') {
+            createBells(layer);
+        } else if (layer.type === 'offerings') {
+            createOfferings(layer);
+        } else if (layer.type === 'signals') {
+            createSignals(layer);
+        } else if (layer.type === 'control-tower') {
+            createControlTower(layer);
+        } else if (layer.type === 'silhouettes') {
+            createSilhouettes(layer);
+        } else if (layer.type === 'birds') {
+            createBirds(layer);
+        } else if (layer.type === 'umbrellas') {
+            createUmbrellas(layer);
+        } else if (layer.type === 'snowman') {
+            createSnowman(layer);
+        } else if (layer.type === 'footprints') {
+            createFootprints(layer);
+        } else if (layer.type === 'pumpkins') {
+            createPumpkins(layer);
+        } else if (layer.type === 'butterflies') {
+            createButterflies(layer);
+        } else if (layer.type === 'reeds') {
+            createReeds(layer);
+        } else if (layer.type === 'corals' || layer.type === 'fish' || layer.type === 'bubbles') {
+            createUnderwater(layer);
+        } else if (layer.type === 'cactus') {
+            createCactus(layer);
+        } else if (layer.type === 'desks' || layer.type === 'charts' || layer.type === 'board') {
+            createClassroom(layer);
+        } else if (layer.type === 'planet1' || layer.type === 'planet2' || layer.type === 'rocket') {
+            createSpace(layer);
+        } else if (layer.type === 'path' || layer.type === 'road' || layer.type === 'tracks' || layer.type === 'runway' || layer.type === 'steps') {
+            createPath(layer);
+        } else if (layer.type === 'playground') {
+            createPlayground(layer);
+        } else if (layer.type === 'parking') {
+            createParking(layer);
+        } else if (layer.type === 'crowd') {
+            createCrowd(layer);
+        } else if (layer.type === 'pillars') {
+            createPillars(layer);
+        }
+    });
+    
+    // Setup fog if needed
+    if (template.fogDensity) {
+        scene.fog = new THREE.FogExp2(template.fogColor || 0x888888, template.fogDensity);
+    }
+}
+
+function createSkyFromLayer(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    if (AppState.three.skySphere) {
+        scene.remove(AppState.three.skySphere);
+        AppState.three.skySphere.geometry.dispose();
+        AppState.three.skySphere.material.dispose();
+    }
+    
+    const skyGeo = new THREE.SphereGeometry(500, 32, 32);
+    skyGeo.scale(-1, 1, 1);
+    
+    const skyColor = parseInt(layer.color.replace('#', '0x'));
+    
+    const skyMat = new THREE.ShaderMaterial({
+        uniforms: {
+            topColor: { value: new THREE.Color(skyColor) },
+            bottomColor: { value: new THREE.Color(skyColor).offsetHSL(0, 0, 0.3) },
+            offset: { value: 0.5 },
+            exponent: { value: 0.6 }
+        },
+        vertexShader: `
+            varying vec3 vWorldPosition;
+            void main() {
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPosition.xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 topColor;
+            uniform vec3 bottomColor;
+            uniform float offset;
+            uniform float exponent;
+            varying vec3 vWorldPosition;
+            void main() {
+                float h = normalize(vWorldPosition + offset).y;
+                gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+            }
+        `,
+        side: THREE.BackSide,
+        depthWrite: false
+    });
+    
+    const skySphere = new THREE.Mesh(skyGeo, skyMat);
+    skySphere.renderOrder = -100;
+    scene.add(skySphere);
+    AppState.three.skySphere = skySphere;
+    AppState.three.envObjects.push(skySphere);
+}
+
+function createGroundFromLayer(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    // Remove old ground
+    if (AppState.three.groundPlane) {
+        scene.remove(AppState.three.groundPlane);
+        AppState.three.groundPlane.geometry.dispose();
+        AppState.three.groundPlane.material.dispose();
+    }
+    
+    const groundColor = parseInt(layer.color.replace('#', '0x'));
+    const geo = new THREE.PlaneGeometry(200, 200);
+    const mat = new THREE.MeshStandardMaterial({
+        color: groundColor,
+        side: THREE.DoubleSide,
+        roughness: 0.9,
+        metalness: 0,
+        polygonOffset: true,
+        polygonOffsetFactor: -100,
+        polygonOffsetUnits: -10
+    });
+    
+    const ground = new THREE.Mesh(geo, mat);
+    ground.position.set(0, -5, 0);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+    AppState.three.groundPlane = ground;
+    AppState.three.envObjects.push(ground);
+}
+
+function createLayerObjects(layer) {
+    // Generic layer object creation - handled by specific functions above
+    return;
+}
+
+function createMountains(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 4;
+    const color = parseInt(layer.color.replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const mountainShape = new THREE.Shape();
+        const width = 20 + Math.random() * 15;
+        const height = 15 + Math.random() * 10;
+        const x = -80 + i * (160 / count) + (Math.random() - 0.5) * 20;
+        
+        mountainShape.moveTo(-width/2, 0);
+        mountainShape.lineTo(0, height);
+        mountainShape.lineTo(width/2, 0);
+        mountainShape.lineTo(-width/2, 0);
+        
+        const mountainGeo = new THREE.ExtrudeGeometry(mountainShape, {
+            depth: 20 + Math.random() * 10,
+            bevelEnabled: true,
+            bevelSegments: 2,
+            bevelSize: 1,
+            bevelThickness: 1
+        });
+        
+        const mountainMat = new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: 0.9,
+            metalness: 0,
+            flatShading: true
+        });
+        
+        const mountain = new THREE.Mesh(mountainGeo, mountainMat);
+        mountain.position.set(x, -5, -30 + (layer.depth || 0) * 10);
+        mountain.rotation.x = -Math.PI / 2;
+        mountain.receiveShadow = true;
+        mountain.castShadow = true;
+        scene.add(mountain);
+        AppState.three.envObjects.push(mountain);
+    }
+}
+
+function createTrees(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 10;
+    const scale = layer.scale || 1;
+    const template = layer.template || 'tree';
+    
+    for (let i = 0; i < count; i++) {
+        const x = (Math.random() - 0.5) * 150;
+        const z = -10 + (layer.depth || 0) * 20 + (Math.random() - 0.5) * 40;
+        
+        const tree = createTreeInstance(template, scale);
+        if (tree) {
+            tree.position.set(x, -5, z);
+            tree.castShadow = true;
+            scene.add(tree);
+            AppState.three.envObjects.push(tree);
+        }
+    }
+}
+
+function createTreeInstance(template, scale) {
+    const THREE = AppState.three.THREE;
+    const treeGroup = new THREE.Group();
+    
+    const trunkHeight = 3 * scale;
+    const trunkGeo = new THREE.CylinderGeometry(0.2 * scale, 0.4 * scale, trunkHeight, 8);
+    const trunkMat = new THREE.MeshStandardMaterial({ 
+        color: 0x4a2c1a, 
+        roughness: 0.9,
+        flatShading: AppState.settings?.videoStyle === 'paper-cutout'
+    });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.y = trunkHeight / 2;
+    trunk.castShadow = true;
+    treeGroup.add(trunk);
+    
+    let leavesColor = 0x2e7d32;
+    if (template === 'pineTree') {
+        leavesColor = 0x006400;
+        for (let i = 0; i < 4; i++) {
+            const leaves = new THREE.Mesh(
+                new THREE.ConeGeometry(1.2 * scale - i * 0.2 * scale, 1.5 * scale, 8),
+                new THREE.MeshStandardMaterial({ color: leavesColor, roughness: 0.95, flatShading: true })
+            );
+            leaves.position.y = trunkHeight + 0.5 + i * 1.2 * scale;
+            leaves.castShadow = true;
+            treeGroup.add(leaves);
+        }
+    } else {
+        const layers = 3;
+        for (let i = 0; i < layers; i++) {
+            const leaves = new THREE.Mesh(
+                new THREE.ConeGeometry(1.5 * scale - i * 0.3 * scale, 2 * scale, 8),
+                new THREE.MeshStandardMaterial({ color: leavesColor, roughness: 0.95, flatShading: true })
+            );
+            leaves.position.y = trunkHeight + 0.5 + i * 1.5 * scale;
+            leaves.castShadow = true;
+            treeGroup.add(leaves);
+        }
+    }
+    
+    return treeGroup;
+}
+
+function createBushes(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 8;
+    const colors = layer.colors || ['#228b22'];
+    
+    for (let i = 0; i < count; i++) {
+        const bush = new THREE.Group();
+        const bushColor = parseInt(colors[Math.floor(Math.random() * colors.length)].replace('#', '0x'));
+        const mat = new THREE.MeshStandardMaterial({ color: bushColor, roughness: 0.9, flatShading: true });
+        
+        for (let j = 0; j < 5; j++) {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(0.8, 8, 8),
+                mat
+            );
+            sphere.position.set(
+                (Math.random() - 0.5) * 1.5,
+                0.5 + Math.random() * 0.5,
+                (Math.random() - 0.5) * 1.5
+            );
+            sphere.scale.set(1, 0.6, 1);
+            sphere.castShadow = true;
+            bush.add(sphere);
+        }
+        
+        bush.position.set(
+            (Math.random() - 0.5) * 100,
+            -4.5,
+            -10 + (layer.depth || 0) * 10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(bush);
+        AppState.three.envObjects.push(bush);
+    }
+}
+
+function createRocks(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 6;
+    
+    for (let i = 0; i < count; i++) {
+        const rockGeo = new THREE.DodecahedronGeometry(Math.random() * 1.5 + 0.5);
+        const rockMat = new THREE.MeshStandardMaterial({ 
+            color: 0x757575, 
+            roughness: 0.9,
+            flatShading: true
+        });
+        const rock = new THREE.Mesh(rockGeo, rockMat);
+        rock.position.set(
+            (Math.random() - 0.5) * 80,
+            rockGeo.parameters.radius - 5,
+            (Math.random() - 0.5) * 40
+        );
+        rock.rotation.set(Math.random(), Math.random(), Math.random());
+        rock.castShadow = true;
+        rock.receiveShadow = true;
+        scene.add(rock);
+        AppState.three.envObjects.push(rock);
+    }
+}
+
+function createFlowers(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 10;
+    const colors = layer.color || layer.colors || ['#ff69b4'];
+    
+    for (let i = 0; i < count; i++) {
+        const flowerColor = parseInt(colors[Math.floor(Math.random() * colors.length)].replace('#', '0x'));
+        const flower = new THREE.Group();
+        
+        // Stem
+        const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8),
+            new THREE.MeshStandardMaterial({ color: 0x228b22, roughness: 0.9 })
+        );
+        stem.position.y = 0.2;
+        flower.add(stem);
+        
+        // Petals
+        const petalMat = new THREE.MeshStandardMaterial({ color: flowerColor, roughness: 0.8 });
+        for (let j = 0; j < 6; j++) {
+            const petal = new THREE.Mesh(
+                new THREE.ConeGeometry(0.08, 0.15, 4),
+                petalMat
+            );
+            petal.position.set(0, 0.45, 0);
+            petal.rotation.y = j * Math.PI / 3;
+            petal.rotation.x = -Math.PI / 4;
+            flower.add(petal);
+        }
+        
+        // Center
+        const center = new THREE.Mesh(
+            new THREE.SphereGeometry(0.05, 8, 8),
+            new THREE.MeshStandardMaterial({ color: 0xffd700 })
+        );
+        center.position.y = 0.45;
+        flower.add(center);
+        
+        flower.position.set(
+            (Math.random() - 0.5) * 100,
+            -4.5,
+            -10 + (layer.depth || 0) * 10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(flower);
+        AppState.three.envObjects.push(flower);
+    }
+}
+
+function createClouds(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const color = parseInt((layer.color || '#ffffff').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const cloud = new THREE.Group();
+        const cloudMat = new THREE.MeshStandardMaterial({ 
+            color: color, 
+            roughness: 1,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const parts = 5 + Math.floor(Math.random() * 3);
+        for (let j = 0; j < parts; j++) {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(2 + Math.random() * 3, 8, 8),
+                cloudMat
+            );
+            sphere.position.set(
+                (Math.random() - 0.5) * 8,
+                (Math.random() - 0.5) * 2,
+                (Math.random() - 0.5) * 8
+            );
+            sphere.scale.set(1, 0.5, 1);
+            cloud.add(sphere);
+        }
+        
+        cloud.position.set(
+            (Math.random() - 0.5) * 200,
+            30 + Math.random() * 20,
+            (Math.random() - 0.5) * 200
+        );
+        scene.add(cloud);
+        AppState.three.envObjects.push(cloud);
+    }
+}
+
+function createStars(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 100;
+    const color = parseInt((layer.color || '#ffffff').replace('#', '0x'));
+    
+    if (layer.type === 'stars') {
+        const starsGeo = new THREE.BufferGeometry();
+        const positions = [];
+        const colors = [];
+        const sizes = [];
+        
+        for (let i = 0; i < count; i++) {
+            const radius = 400 + Math.random() * 100;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            
+            positions.push(
+                radius * Math.sin(phi) * Math.cos(theta),
+                radius * Math.sin(phi) * Math.sin(theta),
+                radius * Math.cos(phi)
+            );
+            
+            const starColor = Math.random() > 0.5 ? color : 0xfff0e0;
+            colors.push(
+                (starColor >> 16 & 255) / 255,
+                (starColor >> 8 & 255) / 255,
+                (starColor & 255) / 255
+            );
+            
+            sizes.push(Math.random() * 2 + 0.5);
+        }
+        
+        starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        starsGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        starsGeo.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+        
+        const starsMat = new THREE.PointsMaterial({
+            size: 2,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            sizeAttenuation: true
+        });
+        
+        const stars = new THREE.Points(starsGeo, starsMat);
+        stars.renderOrder = -100;
+        scene.add(stars);
+        AppState.three.envObjects.push(stars);
+    } else if (layer.type === 'city-lights') {
+        for (let i = 0; i < count; i++) {
+            const light = new THREE.Mesh(
+                new THREE.SphereGeometry(0.2, 8, 8),
+                new THREE.MeshBasicMaterial({ color: color })
+            );
+            light.position.set(
+                (Math.random() - 0.5) * 100,
+                -3 + Math.random() * 20,
+                (Math.random() - 0.5) * 100
+            );
+            scene.add(light);
+            AppState.three.envObjects.push(light);
+        }
+    }
+}
+
+function createWaves(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const color = parseInt((layer.color || '#ffffff').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const wave = new THREE.Mesh(
+            new THREE.BoxGeometry(200, 0.2, 10),
+            new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.5 })
+        );
+        wave.position.set(0, -4.5 + i * 0.3, -20 + i * 5);
+        wave.rotation.x = -0.1;
+        scene.add(wave);
+        AppState.three.envObjects.push(wave);
+    }
+}
+
+function createPrecipitation(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 100;
+    const color = parseInt((layer.color || '#add8e6').replace('#', '0x'));
+    const isSnow = layer.type === 'snowfall';
+    
+    const geo = new THREE.BufferGeometry();
+    const positions = [];
+    const velocities = [];
+    
+    for (let i = 0; i < count; i++) {
+        positions.push(
+            (Math.random() - 0.5) * 200,
+            Math.random() * 50,
+            (Math.random() - 0.5) * 200
+        );
+        velocities.push(
+            (Math.random() - 0.5) * 0.5,
+            - (isSnow ? 0.5 + Math.random() * 1 : 2 + Math.random() * 3),
+            (Math.random() - 0.5) * 0.5
+        );
+    }
+    
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    
+    const mat = new THREE.PointsMaterial({
+        size: isSnow ? 0.3 : 0.1,
+        color: color,
+        transparent: true,
+        opacity: 0.7,
+        sizeAttenuation: true
+    });
+    
+    const precipitation = new THREE.Points(geo, mat);
+    precipitation.userData = { velocities, isSnow };
+    scene.add(precipitation);
+    AppState.three.envObjects.push(precipitation);
+    AppState.three.precipitation = precipitation;
+}
+
+function createPuddles(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 20;
+    const color = parseInt((layer.color || '#add8e6').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const puddle = new THREE.Mesh(
+            new THREE.CircleGeometry(0.5 + Math.random() * 1.5, 16),
+            new THREE.MeshStandardMaterial({ 
+                color: color,
+                roughness: 0.1,
+                metalness: 0.9,
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        puddle.rotation.x = -Math.PI / 2;
+        puddle.position.set(
+            (Math.random() - 0.5) * 80,
+            -4.49,
+            (Math.random() - 0.5) * 80
+        );
+        scene.add(puddle);
+        AppState.three.envObjects.push(puddle);
+    }
+}
+
+function createCelestialBody(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ffffff').replace('#', '0x'));
+    const size = layer.size || 2;
+    const position = layer.position || [0, 5];
+    
+    const body = new THREE.Mesh(
+        new THREE.SphereGeometry(size, 32, 32),
+        new THREE.MeshBasicMaterial({ color: color })
+    );
+    body.position.set(position[0] * 10, position[1] * 10, -100);
+    body.renderOrder = -99;
+    scene.add(body);
+    AppState.three.envObjects.push(body);
+    
+    if (layer.type === 'sun') {
+        // Add lens flare effect
+        const flare = new THREE.Mesh(
+            new THREE.SphereGeometry(size * 1.5, 16, 16),
+            new THREE.MeshBasicMaterial({ 
+                color: 0xffff00, 
+                transparent: true, 
+                opacity: 0.3 
+            })
+        );
+        flare.position.copy(body.position);
+        scene.add(flare);
+        AppState.three.envObjects.push(flare);
+    }
+}
+
+function createSnowCaps(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    
+    for (let i = 0; i < count; i++) {
+        const cap = new THREE.Mesh(
+            new THREE.ConeGeometry(5, 8, 8),
+            new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
+        );
+        cap.position.set(
+            (Math.random() - 0.5) * 50,
+            5,
+            -30 + (Math.random() - 0.5) * 20
+        );
+        cap.rotation.x = -Math.PI / 2;
+        scene.add(cap);
+        AppState.three.envObjects.push(cap);
+    }
+}
+
+function createBuildings(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    const scale = layer.scale || 1;
+    const color = layer.color ? parseInt(layer.color.replace('#', '0x')) : 0x888888;
+    
+    for (let i = 0; i < count; i++) {
+        const width = (4 + Math.random() * 4) * scale;
+        const height = (8 + Math.random() * 12) * scale;
+        const depth = (4 + Math.random() * 4) * scale;
+        const x = (Math.random() - 0.5) * 100;
+        const z = -20 + (layer.depth || 0) * 20 + (Math.random() - 0.5) * 40;
+        
+        const building = new THREE.Mesh(
+            new THREE.BoxGeometry(width, height, depth),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.8, flatShading: true })
+        );
+        building.position.set(x, height / 2 - 5, z);
+        building.castShadow = true;
+        building.receiveShadow = true;
+        scene.add(building);
+        AppState.three.envObjects.push(building);
+        
+        // Add windows
+        const windowMat = new THREE.MeshBasicMaterial({ color: 0xffffcc, transparent: true, opacity: 0.8 });
+        for (let wy = 0; wy < height / 3; wy++) {
+            for (let wx = 0; wx < width / 2; wx++) {
+                const window = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.8, 1.2, 0.1),
+                    windowMat
+                );
+                window.position.set(
+                    x - width/2 + 1 + wx * 2,
+                    -5 + 2 + wy * 3,
+                    z + depth/2 + 0.1
+                );
+                scene.add(window);
+                AppState.three.envObjects.push(window);
+            }
+        }
+    }
+}
+
+function createStreetlights(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 6;
+    
+    for (let i = 0; i < count; i++) {
+        const light = createStreetlight();
+        light.position.set(
+            (Math.random() - 0.5) * 100,
+            -5,
+            -10 + (layer.depth || 0) * 10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(light);
+        AppState.three.envObjects.push(light);
+    }
+}
+
+function createVehicles(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    const color = layer.color ? parseInt(layer.color.replace('#', '0x')) : 0x4169e1;
+    const template = layer.template || 'car';
+    const scale = layer.scale || 1;
+    
+    for (let i = 0; i < count; i++) {
+        let vehicle;
+        if (template === 'car') {
+            vehicle = createCar(color);
+        } else if (template === 'train') {
+            vehicle = createTrain(color);
+        } else if (template === 'plane') {
+            vehicle = createPlane(color);
+        }
+        
+        if (vehicle) {
+            vehicle.scale.setScalar(scale);
+            vehicle.position.set(
+                (Math.random() - 0.5) * 100,
+                -4.5,
+                -10 + (layer.depth || 0) * 10 + (Math.random() - 0.5) * 30
+            );
+            scene.add(vehicle);
+            AppState.three.envObjects.push(vehicle);
+        }
+    }
+}
+
+function createCar(color) {
+    const THREE = AppState.three.THREE;
+    const car = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, flatShading: true });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+    
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), bodyMat);
+    body.position.y = 0.5;
+    body.castShadow = true;
+    car.add(body);
+    
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.7, 0.9), bodyMat);
+    roof.position.set(0, 1.2, 0);
+    roof.castShadow = true;
+    car.add(roof);
+    
+    for (const [x, z] of [[-0.7, -0.5], [0.7, -0.5], [-0.7, 0.5], [0.7, 0.5]]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.1, 12), wheelMat);
+        wheel.position.set(x, 0.3, z);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.castShadow = true;
+        car.add(wheel);
+    }
+    
+    return car;
+}
+
+function createTrain(color) {
+    const THREE = AppState.three.THREE;
+    const train = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, flatShading: true });
+    
+    for (let i = 0; i < 5; i++) {
+        const car = new THREE.Mesh(new THREE.BoxGeometry(4, 2, 1.5), mat);
+        car.position.set(i * 4.5, 1, 0);
+        car.castShadow = true;
+        train.add(car);
+        
+        for (const [x, z] of [[-1.5, -0.7], [1.5, -0.7], [-1.5, 0.7], [1.5, 0.7]]) {
+            const wheel = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.4, 0.4, 0.15, 12),
+                new THREE.MeshStandardMaterial({ color: 0x111111 })
+            );
+            wheel.position.set(i * 4.5 + x, 0.15, z);
+            wheel.rotation.z = Math.PI / 2;
+            train.add(wheel);
+        }
+    }
+    
+    return train;
+}
+
+function createPlane(color) {
+    const THREE = AppState.three.THREE;
+    const plane = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.4 });
+    
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 8, 16), mat);
+    plane.add(body);
+    
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(10, 0.2, 1.5), mat);
+    wing.position.y = 0.5;
+    plane.add(wing);
+    
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(2, 1.5, 0.2), mat);
+    tail.position.set(0, 1, -4);
+    plane.add(tail);
+    
+    return plane;
+}
+
+function createFence(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 20;
+    const color = parseInt((layer.color || '#8b4513').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const post = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 1.5, 0.1),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        post.position.set(
+            -40 + i * 4,
+            -4.25,
+            10
+        );
+        post.castShadow = true;
+        scene.add(post);
+        AppState.three.envObjects.push(post);
+    }
+}
+
+function createAnimals(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    const template = layer.template || 'cow';
+    
+    for (let i = 0; i < count; i++) {
+        const animal = createAnimalInstance(template);
+        if (animal) {
+            animal.position.set(
+                (Math.random() - 0.5) * 50,
+                -5,
+                -10 + (Math.random() - 0.5) * 30
+            );
+            animal.castShadow = true;
+            scene.add(animal);
+            AppState.three.envObjects.push(animal);
+        }
+    }
+}
+
+function createAnimalInstance(template) {
+    const THREE = AppState.three.THREE;
+    if (template === 'cow') {
+        const cow = new THREE.Group();
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+        const spotMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.9 });
+        
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.7), bodyMat);
+        body.position.y = 0.5;
+        body.castShadow = true;
+        cow.add(body);
+        
+        for (let i = 0; i < 5; i++) {
+            const spot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.1), spotMat);
+            spot.position.set(
+                (Math.random() - 0.5) * 1,
+                0.5 + (Math.random() - 0.5) * 0.4,
+                0.35 + (Math.random() - 0.5) * 0.4
+            );
+            cow.add(spot);
+        }
+        
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.35, 0.4), bodyMat);
+        head.position.set(0.8, 0.55, 0);
+        head.castShadow = true;
+        cow.add(head);
+        
+        for (const [x, z] of [[-0.4, -0.25], [0.2, -0.25], [-0.4, 0.25], [0.2, 0.25]]) {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8), bodyMat);
+            leg.position.set(x, 0.25, z);
+            leg.castShadow = true;
+            cow.add(leg);
+        }
+        
+        return cow;
+    }
+    return null;
+}
+
+function createCross(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ff0000').replace('#', '0x'));
+    const size = layer.size || 1;
+    
+    const cross = new THREE.Group();
+    const mat = new THREE.MeshBasicMaterial({ color: color });
+    
+    const vertical = new THREE.Mesh(new THREE.BoxGeometry(0.2, size * 2, 0.2), mat);
+    cross.add(vertical);
+    
+    const horizontal = new THREE.Mesh(new THREE.BoxGeometry(size, 0.2, 0.2), mat);
+    horizontal.position.y = size * 0.3;
+    cross.add(horizontal);
+    
+    cross.position.set(0, -5 + size, -15);
+    scene.add(cross);
+    AppState.three.envObjects.push(cross);
+}
+
+function createFlag(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ff6347').replace('#', '0x'));
+    
+    const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 6, 8),
+        new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+    );
+    pole.position.y = -2;
+    pole.castShadow = true;
+    scene.add(pole);
+    
+    const flag = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 1.2, 0.05),
+        new THREE.MeshStandardMaterial({ color: color, side: THREE.DoubleSide })
+    );
+    flag.position.set(1, 1, 0);
+    scene.add(flag);
+    
+    AppState.three.envObjects.push(pole, flag);
+}
+
+function createCanopy(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ffa500').replace('#', '0x'));
+    
+    const canopy = new THREE.Mesh(
+        new THREE.BoxGeometry(50, 0.3, 30),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+    );
+    canopy.position.set(0, 3, -5);
+    canopy.castShadow = true;
+    scene.add(canopy);
+    AppState.three.envObjects.push(canopy);
+}
+
+function createGoods(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 20;
+    const colors = layer.colors || ['#ff6347', '#ffd700', '#32cd32', '#ff69b4'];
+    
+    for (let i = 0; i < count; i++) {
+        const color = parseInt(colors[Math.floor(Math.random() * colors.length)].replace('#', '0x'));
+        const box = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5 + Math.random() * 0.5, 0.4 + Math.random() * 0.4, 0.5 + Math.random() * 0.5),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+        );
+        box.position.set(
+            (Math.random() - 0.5) * 30,
+            -4.5 + 0.3,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        box.castShadow = true;
+        scene.add(box);
+        AppState.three.envObjects.push(box);
+    }
+}
+
+function createBells(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 4;
+    const color = parseInt((layer.color || '#ffd700').replace('#', '0x'));
+    const size = layer.size || 0.5;
+    
+    for (let i = 0; i < count; i++) {
+        const bell = new THREE.Mesh(
+            new THREE.ConeGeometry(size, size * 1.5, 8),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.3 })
+        );
+        bell.position.set(
+            (Math.random() - 0.5) * 20,
+            -2 + Math.random() * 4,
+            -15
+        );
+        bell.rotation.x = Math.PI;
+        scene.add(bell);
+        AppState.three.envObjects.push(bell);
+    }
+}
+
+function createOfferings(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 10;
+    const color = parseInt((layer.color || '#ff69b4').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const offering = new THREE.Group();
+        
+        const base = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 0.1, 12),
+            new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+        );
+        offering.add(base);
+        
+        const flowers = new THREE.Mesh(
+            new THREE.SphereGeometry(0.25, 8, 8),
+            new THREE.MeshStandardMaterial({ color: color })
+        );
+        flowers.position.y = 0.15;
+        offering.add(flowers);
+        
+        offering.position.set(
+            (Math.random() - 0.5) * 10,
+            -4.5,
+            -12 + (Math.random() - 0.5) * 5
+        );
+        scene.add(offering);
+        AppState.three.envObjects.push(offering);
+    }
+}
+
+function createSignals(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 2;
+    
+    for (let i = 0; i < count; i++) {
+        const signal = createTrafficLight();
+        signal.position.set(
+            (Math.random() - 0.5) * 20,
+            -5,
+            -15 + i * 30
+        );
+        scene.add(signal);
+        AppState.three.envObjects.push(signal);
+    }
+}
+
+function createTrafficLight() {
+    const THREE = AppState.three.THREE;
+    const signal = new THREE.Group();
+    
+    const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.1, 4, 8),
+        new THREE.MeshStandardMaterial({ color: 0x808080 })
+    );
+    pole.position.y = 2;
+    pole.castShadow = true;
+    signal.add(pole);
+    
+    const box = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 1, 0.2),
+        new THREE.MeshStandardMaterial({ color: 0x111111 })
+    );
+    box.position.set(0, 3, 0.2);
+    box.castShadow = true;
+    signal.add(box);
+    
+    const colors = [0xff0000, 0xffff00, 0x00ff00];
+    colors.forEach((color, i) => {
+        const light = new THREE.Mesh(
+            new THREE.SphereGeometry(0.15, 8, 8),
+            new THREE.MeshBasicMaterial({ color: color })
+        );
+        light.position.set(0, 3 - i * 0.4, 0.35);
+        signal.add(light);
+    });
+    
+    return signal;
+}
+
+function createControlTower(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const scale = layer.scale || 1;
+    
+    const tower = new THREE.Group();
+    
+    const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(3 * scale, 4 * scale, 10 * scale, 12),
+        new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.7 })
+    );
+    base.position.y = 5 * scale - 5;
+    base.castShadow = true;
+    tower.add(base);
+    
+    const cabin = new THREE.Mesh(
+        new THREE.CylinderGeometry(4 * scale, 3 * scale, 4 * scale, 16),
+        new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5 })
+    );
+    cabin.position.y = 13 * scale - 5;
+    tower.add(cabin);
+    
+    const windows = new THREE.Mesh(
+        new THREE.BoxGeometry(7 * scale, 3 * scale, 0.2),
+        new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.8 })
+    );
+    windows.position.set(0, 13 * scale - 5, 4.5 * scale);
+    tower.add(windows);
+    
+    tower.position.set(0, 0, -30);
+    scene.add(tower);
+    AppState.three.envObjects.push(tower);
+}
+
+function createSilhouettes(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const color = parseInt((layer.color || '#1a1a2e').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const silhouette = new THREE.Mesh(
+            new THREE.ConeGeometry(2, 8, 8),
+            new THREE.MeshBasicMaterial({ color: color })
+        );
+        silhouette.position.set(
+            (Math.random() - 0.5) * 80,
+            -1,
+            -20 + (Math.random() - 0.5) * 40
+        );
+        silhouette.rotation.x = -Math.PI / 2;
+        scene.add(silhouette);
+        AppState.three.envObjects.push(silhouette);
+    }
+}
+
+function createBirds(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 8;
+    
+    for (let i = 0; i < count; i++) {
+        const bird = new THREE.Group();
+        const body = new THREE.Mesh(
+            new THREE.SphereGeometry(0.15, 8, 8),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        body.scale.set(1.5, 1, 1);
+        bird.add(body);
+        
+        const wing1 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.02, 0.15),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        wing1.position.set(0.1, 0, -0.1);
+        wing1.rotation.x = Math.PI / 6;
+        bird.add(wing1);
+        
+        const wing2 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.02, 0.15),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        wing2.position.set(0.1, 0, 0.1);
+        wing2.rotation.x = -Math.PI / 6;
+        bird.add(wing2);
+        
+        bird.position.set(
+            (Math.random() - 0.5) * 100,
+            20 + Math.random() * 20,
+            (Math.random() - 0.5) * 100
+        );
+        bird.userData = { 
+            velocity: new THREE.Vector3(
+                (Math.random() - 0.5) * 0.1,
+                (Math.random() - 0.5) * 0.05,
+                (Math.random() - 0.5) * 0.1
+            )
+        };
+        scene.add(bird);
+        AppState.three.envObjects.push(bird);
+    }
+}
+
+function createUmbrellas(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const colors = layer.colors || ['#ff0000', '#0000ff', '#ffff00', '#ff69b4'];
+    
+    for (let i = 0; i < count; i++) {
+        const color = parseInt(colors[Math.floor(Math.random() * colors.length)].replace('#', '0x'));
+        const umbrella = new THREE.Group();
+        
+        const pole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 1, 8),
+            new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        pole.position.y = 0.5;
+        umbrella.add(pole);
+        
+        const canopy = new THREE.Mesh(
+            new THREE.ConeGeometry(0.8, 0.2, 8),
+            new THREE.MeshStandardMaterial({ color: color, side: THREE.DoubleSide })
+        );
+        canopy.position.y = 1.1;
+        umbrella.add(canopy);
+        
+        umbrella.position.set(
+            (Math.random() - 0.5) * 50,
+            -5,
+            -10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(umbrella);
+        AppState.three.envObjects.push(umbrella);
+    }
+}
+
+function createSnowman(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 2;
+    const sizes = layer.sizes || [0.8, 0.5, 0.3];
+    
+    for (let i = 0; i < count; i++) {
+        const snowman = new THREE.Group();
+        let yPos = 0;
+        
+        sizes.forEach((size, idx) => {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(size, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 })
+            );
+            sphere.position.y = yPos + size;
+            sphere.castShadow = true;
+            snowman.add(sphere);
+            yPos += size * 1.8;
+        });
+        
+        // Hat
+        const hat = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.4, 0.4, 12),
+            new THREE.MeshStandardMaterial({ color: 0x000000 })
+        );
+        hat.position.y = yPos + 0.2;
+        snowman.add(hat);
+        
+        snowman.position.set(
+            (Math.random() - 0.5) * 40,
+            -4.5,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        scene.add(snowman);
+        AppState.three.envObjects.push(snowman);
+    }
+}
+
+function createFootprints(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 10;
+    const color = parseInt((layer.color || '#d0d0e0').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const footprint = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.02, 0.5),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        footprint.rotation.x = -Math.PI / 2;
+        footprint.position.set(
+            (Math.random() - 0.5) * 50,
+            -4.49,
+            (Math.random() - 0.5) * 50
+        );
+        footprint.rotation.y = Math.random() * Math.PI;
+        scene.add(footprint);
+        AppState.three.envObjects.push(footprint);
+    }
+}
+
+function createPumpkins(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 4;
+    const color = parseInt((layer.color || '#ff7518').replace('#', '0x'));
+    const size = layer.size || 0.5;
+    
+    for (let i = 0; i < count; i++) {
+        const pumpkin = new THREE.Mesh(
+            new THREE.SphereGeometry(size, 16, 16),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+        );
+        pumpkin.scale.set(1, 0.8, 1);
+        pumpkin.position.set(
+            (Math.random() - 0.5) * 30,
+            -4.5 + size,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        pumpkin.castShadow = true;
+        scene.add(pumpkin);
+        AppState.three.envObjects.push(pumpkin);
+        
+        // Stem
+        const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.05, 0.05, 0.15, 8),
+            new THREE.MeshStandardMaterial({ color: 0x228b22 })
+        );
+        stem.position.copy(pumpkin.position);
+        stem.position.y += size + 0.075;
+        scene.add(stem);
+        AppState.three.envObjects.push(stem);
+    }
+}
+
+function createButterflies(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 8;
+    
+    for (let i = 0; i < count; i++) {
+        const butterfly = new THREE.Group();
+        
+        const body = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 0.2, 8),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        butterfly.add(body);
+        
+        const wing1 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.01, 0.2),
+            new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide })
+        );
+        wing1.position.set(0.1, 0, -0.1);
+        butterfly.add(wing1);
+        
+        const wing2 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.01, 0.2),
+            new THREE.MeshBasicMaterial({ color: 0xffd700, side: THREE.DoubleSide })
+        );
+        wing2.position.set(0.1, 0, 0.1);
+        butterfly.add(wing2);
+        
+        butterfly.position.set(
+            (Math.random() - 0.5) * 50,
+            1 + Math.random() * 2,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        butterfly.userData = { 
+            velocity: new THREE.Vector3(
+                (Math.random() - 0.5) * 0.05,
+                (Math.random() - 0.5) * 0.02,
+                (Math.random() - 0.5) * 0.05
+            )
+        };
+        scene.add(butterfly);
+        AppState.three.envObjects.push(butterfly);
+    }
+}
+
+function createReeds(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 5;
+    const color = parseInt((layer.color || '#228b22').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const reed = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.03, 0.01, 1.5, 8),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        reed.position.set(
+            (Math.random() - 0.5) * 20,
+            -4.25,
+            -3 + (Math.random() - 0.5) * 2
+        );
+        reed.castShadow = true;
+        scene.add(reed);
+        AppState.three.envObjects.push(reed);
+    }
+}
+
+function createUnderwater(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    if (layer.type === 'corals') {
+        const colors = layer.color || ['#ff6b6b', '#ffd700', '#ff69b4'];
+        colors.forEach((c, idx) => {
+            const coral = new THREE.Group();
+            const coralColor = parseInt(c.replace('#', '0x'));
+            
+            for (let j = 0; j < 5; j++) {
+                const branch = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.2, 0.05, 1, 8),
+                    new THREE.MeshStandardMaterial({ color: coralColor, roughness: 0.9 })
+                );
+                branch.position.set(
+                    (Math.random() - 0.5) * 2,
+                    0.5 + j * 0.2,
+                    (Math.random() - 0.5) * 2
+                );
+                coral.add(branch);
+            }
+            
+            coral.position.set(
+                (Math.random() - 0.5) * 50,
+                -8,
+                (Math.random() - 0.5) * 50
+            );
+            scene.add(coral);
+            AppState.three.envObjects.push(coral);
+        });
+    } else if (layer.type === 'fish') {
+        for (let i = 0; i < 10; i++) {
+            const fish = new THREE.Group();
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(0.5, 0.2, 0.15),
+                new THREE.MeshStandardMaterial({ color: 0xff9900 })
+            );
+            body.scale.set(1, 0.8, 1);
+            fish.add(body);
+            
+            const tail = new THREE.Mesh(
+                new THREE.ConeGeometry(0.15, 0.2, 4),
+                new THREE.MeshStandardMaterial({ color: 0xff9900 })
+            );
+            tail.position.set(-0.35, 0, 0);
+            tail.rotation.z = -Math.PI / 2;
+            fish.add(tail);
+            
+            fish.position.set(
+                (Math.random() - 0.5) * 100,
+                -6 + Math.random() * 4,
+                (Math.random() - 0.5) * 100
+            );
+            fish.userData = { 
+                velocity: new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.1,
+                    0,
+                    (Math.random() - 0.5) * 0.1
+                )
+            };
+            scene.add(fish);
+            AppState.three.envObjects.push(fish);
+        }
+    } else if (layer.type === 'bubbles') {
+        const count = layer.count || 15;
+        const color = parseInt((layer.color || 'rgba(255,255,255,0.5)').replace('rgba(', '').replace(')', '').split(',')[0]);
+        
+        const geo = new THREE.BufferGeometry();
+        const positions = [];
+        
+        for (let i = 0; i < count; i++) {
+            positions.push(
+                (Math.random() - 0.5) * 100,
+                Math.random() * 20,
+                (Math.random() - 0.5) * 100
+            );
+        }
+        
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        
+        const mat = new THREE.PointsMaterial({
+            size: layer.size || 0.2,
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.5,
+            sizeAttenuation: true
+        });
+        
+        const bubbles = new THREE.Points(geo, mat);
+        bubbles.userData = { velocities: Array(count).fill().map(() => new THREE.Vector3(0, 0.5, 0)) };
+        scene.add(bubbles);
+        AppState.three.envObjects.push(bubbles);
+    }
+}
+
+function createCactus(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 3;
+    
+    for (let i = 0; i < count; i++) {
+        const cactus = new THREE.Group();
+        
+        const trunk = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.25, 3, 8),
+            new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.9 })
+        );
+        trunk.position.y = 1.5;
+        trunk.castShadow = true;
+        cactus.add(trunk);
+        
+        // Arms
+        for (let j = 0; j < 2; j++) {
+            const arm = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.15, 0.1, 1.5, 8),
+                new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.9 })
+            );
+            arm.position.set(
+                j === 0 ? -0.4 : 0.4,
+                1.5 + Math.random() * 1,
+                0
+            );
+            arm.rotation.z = j === 0 ? -Math.PI / 4 : Math.PI / 4;
+            arm.castShadow = true;
+            cactus.add(arm);
+        }
+        
+        cactus.position.set(
+            (Math.random() - 0.5) * 60,
+            -4.5,
+            -10 + (Math.random() - 0.5) * 30
+        );
+        scene.add(cactus);
+        AppState.three.envObjects.push(cactus);
+    }
+}
+
+function createClassroom(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    if (layer.type === 'desks') {
+        const count = layer.count || 6;
+        const color = parseInt((layer.color || '#8b4513').replace('#', '0x'));
+        
+        for (let i = 0; i < count; i++) {
+            const desk = new THREE.Mesh(
+                new THREE.BoxGeometry(1, 0.8, 0.6),
+                new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+            );
+            desk.position.set(
+                -4 + (i % 3) * 4,
+                -4.6,
+                -8 + Math.floor(i / 3) * 3
+            );
+            desk.castShadow = true;
+            scene.add(desk);
+            AppState.three.envObjects.push(desk);
+            
+            // Chair
+            const chair = new THREE.Mesh(
+                new THREE.BoxGeometry(0.5, 0.9, 0.5),
+                new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+            );
+            chair.position.set(
+                -4 + (i % 3) * 4,
+                -4.55,
+                -9 + Math.floor(i / 3) * 3
+            );
+            chair.castShadow = true;
+            scene.add(chair);
+            AppState.three.envObjects.push(chair);
+        }
+    } else if (layer.type === 'board') {
+        const board = new THREE.Mesh(
+            new THREE.BoxGeometry(4, 2, 0.1),
+            new THREE.MeshStandardMaterial({ color: 0x1b4d3e, roughness: 0.9 })
+        );
+        board.position.set(0, 0.5, -10.1);
+        scene.add(board);
+        AppState.three.envObjects.push(board);
+    }
+}
+
+function createSpace(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ff6b6b').replace('#', '0x'));
+    const size = layer.size || 3;
+    const position = layer.position || [0, 0];
+    
+    if (layer.type === 'planet1' || layer.type === 'planet2') {
+        const planet = new THREE.Mesh(
+            new THREE.SphereGeometry(size, 32, 32),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.7 })
+        );
+        planet.position.set(position[0], position[1], -50);
+        scene.add(planet);
+        AppState.three.envObjects.push(planet);
+    } else if (layer.type === 'rocket') {
+        const rocket = createRocket();
+        rocket.position.set(position[0], position[1], -30);
+        scene.add(rocket);
+        AppState.three.envObjects.push(rocket);
+    }
+}
+
+function createRocket() {
+    const THREE = AppState.three.THREE;
+    const rocket = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+    
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 5, 12), mat);
+    rocket.add(body);
+    
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.5, 12), mat);
+    nose.position.y = 3.25;
+    rocket.add(nose);
+    
+    for (let i = 0; i < 3; i++) {
+        const fin = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 0.1, 1.5),
+            mat
+        );
+        fin.position.set(
+            Math.cos(i * 2 * Math.PI / 3) * 0.6,
+            -2,
+            Math.sin(i * 2 * Math.PI / 3) * 0.6
+        );
+        fin.rotation.y = i * 2 * Math.PI / 3;
+        rocket.add(fin);
+    }
+    
+    return rocket;
+}
+
+function createPath(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#d2b48c').replace('#', '0x'));
+    const count = layer.count || 1;
+    
+    for (let i = 0; i < count; i++) {
+        const path = new THREE.Mesh(
+            new THREE.BoxGeometry(200, 0.1, 4),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        path.position.set(0, -4.9, -5 + i * 10);
+        path.receiveShadow = true;
+        scene.add(path);
+        AppState.three.envObjects.push(path);
+    }
+}
+
+function createPlayground(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#ffd700').replace('#', '0x'));
+    
+    const ground = new THREE.Mesh(
+        new THREE.BoxGeometry(30, 0.1, 20),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+    );
+    ground.position.set(0, -4.9, -5);
+    ground.receiveShadow = true;
+    scene.add(ground);
+    AppState.three.envObjects.push(ground);
+}
+
+function createParking(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const color = parseInt((layer.color || '#cccccc').replace('#', '0x'));
+    
+    const lot = new THREE.Mesh(
+        new THREE.BoxGeometry(40, 0.1, 30),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+    );
+    lot.position.set(0, -4.9, -10);
+    lot.receiveShadow = true;
+    scene.add(lot);
+    AppState.three.envObjects.push(lot);
+    
+    // Parking lines
+    for (let i = 0; i < 10; i++) {
+        const line = new THREE.Mesh(
+            new THREE.BoxGeometry(20, 0.02, 0.1),
+            new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        line.position.set(0, -4.88, -25 + i * 5);
+        scene.add(line);
+        AppState.three.envObjects.push(line);
+    }
+}
+
+function createCrowd(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 15;
+    const color = parseInt((layer.color || '#8b4513').replace('#', '0x'));
+    const size = layer.size || 0.5;
+    
+    for (let i = 0; i < count; i++) {
+        const person = new THREE.Mesh(
+            new THREE.CylinderGeometry(size, size * 0.5, 1.5, 8),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 })
+        );
+        person.position.set(
+            (Math.random() - 0.5) * 30,
+            -4.25,
+            -10 + (Math.random() - 0.5) * 20
+        );
+        person.castShadow = true;
+        scene.add(person);
+        AppState.three.envObjects.push(person);
+    }
+}
+
+function createPillars(layer) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const count = layer.count || 8;
+    const color = parseInt((layer.color || '#f5f5dc').replace('#', '0x'));
+    
+    for (let i = 0; i < count; i++) {
+        const pillar = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.5, 0.5, 8, 12),
+            new THREE.MeshStandardMaterial({ color: color, roughness: 0.7 })
+        );
+        pillar.position.set(
+            -15 + i * 4,
+            -1,
+            -15
+        );
+        pillar.castShadow = true;
+        scene.add(pillar);
+        AppState.three.envObjects.push(pillar);
+    }
+}
+
+function applyWeatherPreset(weather) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    const intensity = AppState.three.background.weatherIntensity || 0.5;
+    
+    // Clear existing weather
+    if (AppState.three.precipitation) {
+        scene.remove(AppState.three.precipitation);
+        AppState.three.precipitation.geometry.dispose();
+        AppState.three.precipitation.material.dispose();
+        AppState.three.precipitation = null;
+    }
+    
+    // Clear puddles
+    AppState.three.envObjects = AppState.three.envObjects.filter(obj => {
+        if (obj.userData?.isPuddle) {
+            scene.remove(obj);
+            return false;
+        }
+        return true;
+    });
+    
+    switch (weather) {
+        case 'rain':
+            createPrecipitation({ type: 'rain', count: Math.floor(200 * intensity) });
+            // Add puddles
+            createPuddles({ count: Math.floor(30 * intensity) });
+            break;
+        case 'storm':
+            createPrecipitation({ type: 'rain', count: Math.floor(400 * intensity) });
+            createPuddles({ count: Math.floor(50 * intensity) });
+            // Darker sky
+            if (AppState.three.skySphere) {
+                AppState.three.skySphere.material.uniforms.topColor.value.setHex(0x37474f);
+                AppState.three.skySphere.material.uniforms.bottomColor.value.setHex(0x455a64);
+            }
+            break;
+        case 'snow':
+            createPrecipitation({ type: 'snowfall', count: Math.floor(150 * intensity) });
+            break;
+        case 'fog':
+        case 'mist':
+            scene.fog = new THREE.FogExp2(0x8888aa, weather === 'fog' ? 0.02 * intensity : 0.01 * intensity);
+            break;
+        case 'clear':
+        default:
+            scene.fog = null;
+            break;
+    }
+    
+    showToast(`मौसम "${weather}" लागू किया गया`, 'success');
+}
+
+function applyTimeOfDayPreset(timeOfDay) {
+    const { scene } = AppState.three;
+    const THREE = AppState.three.THREE;
+    
+    const timeSettings = {
+        dawn: { skyTop: 0xff6b35, skyBottom: 0xffcc70, sunY: 5, exposure: 0.8, fog: 0.01 },
+        morning: { skyTop: 0x87ceeb, skyBottom: 0xe0f7fa, sunY: 20, exposure: 1.0, fog: 0 },
+        noon: { skyTop: 0x4da6ff, skyBottom: 0x87ceeb, sunY: 40, exposure: 1.2, fog: 0 },
+        afternoon: { skyTop: 0x64b5f6, skyBottom: 0xb3e5fc, sunY: 30, exposure: 1.1, fog: 0 },
+        goldenHour: { skyTop: 0xff7043, skyBottom: 0xffcc80, sunY: 10, exposure: 1.3, fog: 0.005 },
+        sunset: { skyTop: 0xff6b35, skyBottom: 0xffcc70, sunY: 5, exposure: 1.0, fog: 0.01 },
+        dusk: { skyTop: 0x4a148c, skyBottom: 0x7b1fa2, sunY: 0, exposure: 0.7, fog: 0.01 },
+        night: { skyTop: 0x0d0d2b, skyBottom: 0x1a1a3e, sunY: -10, exposure: 0.5, fog: 0.02 }
+    };
+    
+    const settings = timeSettings[timeOfDay] || timeSettings.noon;
+    
+    // Update sky
+    if (AppState.three.skySphere) {
+        AppState.three.skySphere.material.uniforms.topColor.value.setHex(settings.skyTop);
+        AppState.three.skySphere.material.uniforms.bottomColor.value.setHex(settings.skyBottom);
+    }
+    
+    // Update sun position
+    if (AppState.three.sunLight) {
+        const angle = THREE.MathUtils.degToRad(90 - settings.sunY);
+        AppState.three.sunLight.position.set(
+            Math.sin(angle) * 100,
+            Math.cos(angle) * 100,
+            50
+        );
+        AppState.three.sunLight.intensity = settings.exposure;
+    }
+    
+    // Update exposure
+    if (AppState.three.renderer) {
+        AppState.three.renderer.toneMappingExposure = settings.exposure;
+    }
+    
+    // Update fog
+    if (settings.fog > 0) {
+        scene.fog = new THREE.FogExp2(0xaaaacc, settings.fog);
+    } else {
+        scene.fog = null;
+    }
+    
+    // Add stars for night
+    if (timeOfDay === 'night' && !AppState.three.stars) {
+        addStars();
+    } else if (timeOfDay !== 'night' && AppState.three.stars) {
+        scene.remove(AppState.three.stars);
+        AppState.three.stars.geometry.dispose();
+        AppState.three.stars.material.dispose();
+        AppState.three.stars = null;
+    }
+    
+    showToast(`दिन का समय "${timeOfDay}" लागू किया गया`, 'success');
 }
 
 function onThreeResize() {
@@ -6651,6 +8717,32 @@ function initEventListeners() {
         AppState.three.background.groundRoughness = parseFloat(e.target.value);
         $('#groundRoughValue').textContent = e.target.value;
         if (AppState.three.groundPlane) AppState.three.groundPlane.material.roughness = AppState.three.background.groundRoughness;
+    });
+    
+    // 3D Environment Preset
+    $('#environmentPreset3D').addEventListener('change', e => {
+        const preset = e.target.value;
+        if (preset) {
+            applyEnvironmentPreset(preset);
+        }
+    });
+    
+    // Weather Preset
+    $('#weatherPreset').addEventListener('change', e => {
+        AppState.three.background.weather = e.target.value;
+        applyWeatherPreset(e.target.value);
+    });
+    
+    $('#weatherIntensity').addEventListener('input', e => {
+        AppState.three.background.weatherIntensity = parseFloat(e.target.value);
+        $('#weatherIntensityValue').textContent = Math.round(e.target.value * 100) + '%';
+        applyWeatherPreset(AppState.three.background.weather);
+    });
+    
+    // Time of Day Preset
+    $('#timeOfDayPreset').addEventListener('change', e => {
+        AppState.three.background.timeOfDay = e.target.value;
+        applyTimeOfDayPreset(e.target.value);
     });
     
     // Professional 3D Controls - Scene Edit Tab

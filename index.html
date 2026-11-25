@@ -752,6 +752,82 @@
                                             <option value="scene3d">3D सीन</option>
                                         </select>
                                     </div>
+                                    
+                                    <!-- 3D Scene Background Generator -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">3D वातावरण प्रीसेट</label>
+                                        <select id="environmentPreset3D" class="select">
+                                            <option value="">कोई नहीं (कस्टम)</option>
+                                            <optgroup label="प्राकृतिक">
+                                                <option value="forest">जंगल</option>
+                                                <option value="garden">बगीचा</option>
+                                                <option value="river">नदी</option>
+                                                <option value="mountain">पहाड़</option>
+                                                <option value="beach">समुद्र तट</option>
+                                                <option value="desert">रेगिस्तान</option>
+                                                <option value="underwater">पानी के नीचे</option>
+                                            </optgroup>
+                                            <optgroup label="शहरी">
+                                                <option value="city">शहर</option>
+                                                <option value="village">गांव</option>
+                                                <option value="park">पार्क</option>
+                                                <option value="marketplace">बाजार</option>
+                                                <option value="railway">रेलवे स्टेशन</option>
+                                                <option value="airport">हवाई अड्डा</option>
+                                            </optgroup>
+                                            <optgroup label="भवन">
+                                                <option value="classroom">कक्षा</option>
+                                                <option value="school_building">स्कूल भवन</option>
+                                                <option value="hospital">हॉस्पिटल</option>
+                                                <option value="temple">मंदिर</option>
+                                            </optgroup>
+                                            <optgroup label="मौसमी">
+                                                <option value="spring">वसंत</option>
+                                                <option value="autumn">पतझड़</option>
+                                                <option value="snowy">बर्फीला</option>
+                                                <option value="rainy">बारिश</option>
+                                            </optgroup>
+                                            <optgroup label="विशेष">
+                                                <option value="space">अंतरिक्ष</option>
+                                                <option value="farm">फार्म</option>
+                                                <option value="sunset">सूर्यास्त</option>
+                                                <option value="night">रात</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Weather & Atmosphere -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">मौसम और वातावरण</label>
+                                        <div class="weather-controls">
+                                            <select id="weatherPreset" class="select">
+                                                <option value="clear">साफ</option>
+                                                <option value="cloudy">बादल</option>
+                                                <option value="rain">बारिश</option>
+                                                <option value="storm">तूफान</option>
+                                                <option value="snow">बर्फ</option>
+                                                <option value="fog">कोहरा</option>
+                                                <option value="mist">धुंध</option>
+                                            </select>
+                                            <input type="range" id="weatherIntensity" min="0" max="1" step="0.1" value="0.5" class="slider" style="flex: 1;">
+                                            <span id="weatherIntensityValue">50%</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Time of Day -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">दिन का समय</label>
+                                        <select id="timeOfDayPreset" class="select">
+                                            <option value="dawn">भोर (सुबह 5-6)</option>
+                                            <option value="morning">सुबह (7-10)</option>
+                                            <option value="noon">दोपहर (11-14)</option>
+                                            <option value="afternoon">दोपहर बाद (15-17)</option>
+                                            <option value="goldenHour">गोल्डन आवर (18-19)</option>
+                                            <option value="sunset">सूर्यास्त (20-21)</option>
+                                            <option value="dusk">संध्या (22-23)</option>
+                                            <option value="night">रात (0-4)</option>
+                                        </select>
+                                    </div>
                                     <div class="setting-item">
                                         <label class="label" for="bgColor1">रंग 1</label>
                                         <input type="color" id="bgColor1" class="color-input" value="#87ceeb">

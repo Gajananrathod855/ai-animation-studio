@@ -3448,7 +3448,7 @@ function initEventListeners() {
     
     // Professional 3D Controls - Scene Edit Tab
     $('#sceneSelector').addEventListener('change', e => loadSceneControls(parseInt(e.target.value)));
-    $('#sceneDuration').addEventListener('input', e => { 
+    $('#sceneDurationPerScene').addEventListener('input', e => { 
         AppState.settings.sceneDuration = parseInt(e.target.value);
         $('#sceneDurValue').textContent = e.target.value;
     });

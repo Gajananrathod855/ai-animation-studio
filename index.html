@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4a90d9">
+    <meta name="description" content="3D पेपर एनिमेशन वीडियो क्रिएटर - अपनी कहानियों को रंगीन 3D पेपर कटआउट एनिमेशन में बदलें">
+    <title>3D पेपर एनिमेशन वीडियो क्रिएटर</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                <h1 class="app-title">पेपर एनिमेशन</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" id="themeToggle" aria-label="थीम बदलें">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Progress Steps -->
+        <nav class="progress-nav" id="progressNav">
+            <div class="progress-step active" data-step="1">
+                <span class="step-number">1</span>
+                <span class="step-label">कहानी</span>
+            </div>
+            <div class="progress-step" data-step="2">
+                <span class="step-number">2</span>
+                <span class="step-label">सीन</span>
+            </div>
+            <div class="progress-step" data-step="3">
+                <span class="step-number">3</span>
+                <span class="step-label">एनिमेशन</span>
+            </div>
+            <div class="progress-step" data-step="4">
+                <span class="step-number">4</span>
+                <span class="step-label">वीडियो</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Step 1: Story Input -->
+            <section class="step-panel active" id="step1" data-step="1">
+                <div class="panel-header">
+                    <h2>अपनी कहानी लिखें</h2>
+                    <p class="panel-subtitle">कहानी या शैक्षिक विषय दर्ज करें, हम इसे सीन में बाँट देंगे</p>
+                </div>
+                
+                <div class="input-section">
+                    <label class="label" for="storyInput">कहानी / विषय</label>
+                    <textarea 
+                        id="storyInput" 
+                        class="textarea" 
+                        placeholder="उदाहरण: एक छोटा खरगोश जंगल में रहता था। उसे गाजर बहुत पसंद थी। एक दिन वह गाजर ढूंढते हुए एक नदी के पास पहुँचा..."
+                        rows="8"
+                    ></textarea>
+                    <div class="input-hints">
+                        <span class="hint">💡 कम से कम ५० अक्षर लिखें</span>
+                        <span class="hint">🎓 शैक्षिक विषय के लिए: "पानी का चक्र समझाएं"</span>
+                    </div>
+                </div>
+
+                <div class="options-section">
+                    <h3>वीडियो सेटिंग्स</h3>
+                    <div class="options-grid">
+                        <div class="option-group">
+                            <label class="label" for="videoStyle">स्टाइल</label>
+                            <select id="videoStyle" class="select">
+                                <option value="paper-cutout">पेपर कटआउट (डिफ़ॉल्ट)</option>
+                                <option value="origami">ऑरिगेमी</option>
+                                <option value="pop-up">पॉप-अप बुक</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label class="label" for="colorTheme">रंग थीम</label>
+                            <select id="colorTheme" class="select">
+                                <option value="vibrant">जीवंत रंगीन</option>
+                                <option value="pastel">पेस्टल</option>
+                                <option value="monochrome">मोनोक्रोम</option>
+                                <option value="earthy">पृथ्वी टोन</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label class="label" for="aspectRatio">आस्पेक्ट रेश्यो</label>
+                            <select id="aspectRatio" class="select">
+                                <option value="16:9">16:9 (यूट्यूब)</option>
+                                <option value="9:16">9:16 (रील्स/शॉर्ट्स)</option>
+                                <option value="1:1">1:1 (इंस्टाग्राम)</option>
+                                <option value="4:3">4:3 (क्लासिक)</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label class="label" for="sceneDuration">प्रति सीन अवधि (सेकंड)</label>
+                            <input type="number" id="sceneDuration" class="input" value="8" min="3" max="30">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-lg" id="generateScenesBtn" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 18 2 12 8 6"/>
+                        </svg>
+                        सीन बनाएं और आगे बढ़ें
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 2: Scene Editor -->
+            <section class="step-panel" id="step2" data-step="2">
+                <div class="panel-header">
+                    <h2>सीन संपादित करें</h2>
+                    <p class="panel-subtitle">प्रत्येक सीन की कहानी, पात्र और पृष्ठभूमि एडजस्ट करें</p>
+                </div>
+
+                <div class="scene-list" id="sceneList"></div>
+
+                <div class="scene-editor" id="sceneEditor" style="display: none;">
+                    <div class="editor-header">
+                        <h3 id="editingSceneTitle">सीन संपादित करें</h3>
+                        <button class="btn btn-ghost" id="closeEditorBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            बंद करें
+                        </button>
+                    </div>
+                    <div class="editor-content">
+                        <div class="editor-section">
+                            <label class="label">सीन विवरण</label>
+                            <textarea id="sceneDescription" class="textarea" rows="4" placeholder="इस सीन में क्या होता है..."></textarea>
+                        </div>
+                        <div class="editor-section">
+                            <label class="label">पात्र (कॉमा से अलग करें)</label>
+                            <input type="text" id="sceneCharacters" class="input" placeholder="खरगोश, गाजर, तितली">
+                        </div>
+                        <div class="editor-section">
+                            <label class="label">पृष्ठभूमि</label>
+                            <input type="text" id="sceneBackground" class="input" placeholder="जंगल, नदी, पेड़">
+                        </div>
+                        <div class="editor-section">
+                            <label class="label">हिंदी टेक्स्ट / सबटाइटल</label>
+                            <textarea id="sceneHindiText" class="textarea" rows="3" placeholder="हिंदी में संवाद या कथन..."></textarea>
+                        </div>
+                        <div class="editor-actions">
+                            <button class="btn btn-secondary" id="regenerateSceneBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                                    <polyline points="23 4 23 10 17 10"/>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                </svg>
+                                AI से पुनः बनाएं
+                            </button>
+                            <button class="btn btn-primary" id="saveSceneBtn">सेव करें</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="backToStoryBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        वापस
+                    </button>
+                    <button class="btn btn-primary btn-lg" id="generateAnimationBtn" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 18 2 12 8 6"/>
+                        </svg>
+                        एनिमेशन बनाएं
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 3: Animation Preview -->
+            <section class="step-panel" id="step3" data-step="3">
+                <div class="panel-header">
+                    <h2>एनिमेशन पूर्वावलोकन</h2>
+                    <p class="panel-subtitle">अपनी एनिमेशन देखें और सेटिंग्स एडजस्ट करें</p>
+                </div>
+
+                <div class="preview-container">
+                    <div class="canvas-wrapper">
+                        <canvas id="previewCanvas"></canvas>
+                        <div class="canvas-overlay" id="canvasOverlay">
+                            <div class="overlay-content">
+                                <svg class="overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <polygon points="5 3 19 12 5 21 5 3"/>
+                                </svg>
+                                <p>प्ले बटन दबाएं</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preview-controls">
+                        <div class="control-group">
+                            <button class="btn-icon-large" id="playPauseBtn" aria-label="प्ले/पॉज">
+                                <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                            </button>
+                            <button class="btn-icon-large" id="stopBtn" aria-label="रोकें">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="12" height="16"/></svg>
+                            </button>
+                            <button class="btn-icon-large" id="restartBtn" aria-label="शुरू से">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2v4l4 4"/><path d="M2 12a10 10 0 0 1 10-10"/></svg>
+                            </button>
+                        </div>
+                        <div class="timeline-container">
+                            <div class="timeline" id="timeline">
+                                <div class="timeline-progress" id="timelineProgress"></div>
+                                <div class="timeline-handle" id="timelineHandle"></div>
+                            </div>
+                            <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
+                        </div>
+                        <div class="control-group">
+                            <button class="btn-icon-large" id="muteBtn" aria-label="म्यूट/अनम्यूट">
+                                <svg class="icon-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 11 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                                <svg class="icon-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a7 7 0 0 0 12 0v-3"/></svg>
+                            </button>
+                            <div class="volume-slider-container">
+                                <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.7" class="volume-slider">
+                            </div>
+                        </div>
+                        <button class="btn-icon-large" id="fullscreenBtn" aria-label="फुलस्क्रीन">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="animation-settings">
+                    <h3>एनिमेशन सेटिंग्स</h3>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label class="label" for="animationSpeed">गति</label>
+                            <input type="range" id="animationSpeed" min="0.5" max="2" step="0.1" value="1" class="slider">
+                            <span id="speedValue">1x</span>
+                        </div>
+                        <div class="setting-item">
+                            <label class="label" for="cameraMovement">कैमरा मूवमेंट</label>
+                            <select id="cameraMovement" class="select">
+                                <option value="gentle">धीमा पैन/ज़ूम</option>
+                                <option value="dynamic">डायनामिक</option>
+                                <option value="static">स्थिर</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label class="label" for="transitionType">ट्रांजिशन</label>
+                            <select id="transitionType" class="select">
+                                <option value="paper-flip">पेपर फ्लिप</option>
+                                <option value="slide">स्लाइड</option>
+                                <option value="fade">फेड</option>
+                                <option value="zoom">ज़ूम</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label class="label" for="paperThickness">पेपर मोटाई</label>
+                            <input type="range" id="paperThickness" min="1" max="10" step="1" value="3" class="slider">
+                            <span id="thicknessValue">3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="backToScenesBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        वापस
+                    </button>
+                    <button class="btn btn-primary btn-lg" id="exportVideoBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        वीडियो एक्सपोर्ट करें
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 4: Video Export -->
+            <section class="step-panel" id="step4" data-step="4">
+                <div class="panel-header">
+                    <h2>वीडियो एक्सपोर्ट</h2>
+                    <p class="panel-subtitle">अपना वीडियो रेंडर करें और डाउनलोड करें</p>
+                </div>
+
+                <div class="export-options">
+                    <div class="option-card">
+                        <h4>रिज़ॉल्यूशन</h4>
+                        <div class="radio-group" id="resolutionOptions">
+                            <label class="radio-label"><input type="radio" name="resolution" value="720p" checked> 720p (1280×720) - तेज़</label>
+                            <label class="radio-label"><input type="radio" name="resolution" value="1080p"> 1080p (1920×1080) - HD</label>
+                            <label class="radio-label"><input type="radio" name="resolution" value="4k"> 4K (3840×2160) - धीमा</label>
+                        </div>
+                    </div>
+                    <div class="option-card">
+                        <h4>फ्रेम रेट</h4>
+                        <div class="radio-group">
+                            <label class="radio-label"><input type="radio" name="framerate" value="30" checked> 30 FPS</label>
+                            <label class="radio-label"><input type="radio" name="framerate" value="60"> 60 FPS</label>
+                        </div>
+                    </div>
+                    <div class="option-card">
+                        <h4>फॉर्मेट</h4>
+                        <div class="radio-group">
+                            <label class="radio-label"><input type="radio" name="format" value="webm" checked> WebM (VP9)</label>
+                            <label class="radio-label"><input type="radio" name="format" value="mp4"> MP4 (H.264) - ब्राउज़र सपोर्ट पर निर्भर</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-progress" id="exportProgress" style="display: none;">
+                    <div class="progress-ring-container">
+                        <svg class="progress-ring" width="120" height="120">
+                            <circle class="progress-ring-bg" cx="60" cy="60" r="54" fill="none" stroke-width="8"/>
+                            <circle class="progress-ring-fg" cx="60" cy="60" r="54" fill="none" stroke-width="8" stroke-dasharray="339" stroke-dashoffset="339"/>
+                        </svg>
+                        <div class="progress-text">
+                            <span id="progressPercent">0%</span>
+                            <p id="progressStatus">तैयार हो रहा है...</p>
+                        </div>
+                    </div>
+                    <div class="progress-details">
+                        <div class="detail-row"><span>फ्रेम:</span> <span id="framesRendered">0</span> / <span id="totalFrames">0</span></div>
+                        <div class="detail-row"><span>समय बचा:</span> <span id="timeRemaining">--:--</span></div>
+                    </div>
+                </div>
+
+                <div class="export-result" id="exportResult" style="display: none;">
+                    <div class="result-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></div>
+                    </div>
+                    <h3>वीडियो तैयार है!</h3>
+                    <p>आपका एनिमेशन वीडियो बनकर तैयार है</p>
+                    <video id="exportedVideo" controls style="max-width: 100%; border-radius: 12px; margin: 16px 0;"></video>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary btn-lg" id="downloadVideoBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            डाउनलोड करें
+                        </button>
+                        <button class="btn btn-secondary" id="shareVideoBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                                <circle cx="18" cy="5" r="3"/>
+                                <circle cx="6" cy="12" r="3"/>
+                                <circle cx="18" cy="19" r="3"/>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                            </svg>
+                            शेयर करें
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-buttons" id="exportActions">
+                    <button class="btn btn-secondary" id="backToPreviewBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        वापस
+                    </button>
+                    <button class="btn btn-primary btn-lg" id="startExportBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <rect x="2" y="2" width="20" height="20" rx="2"/>
+                            <path d="M6 12l4 4 8-8"/>
+                        </svg>
+                        रेंडर शुरू करें
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation for Mobile -->
+        <nav class="bottom-nav" id="bottomNav">
+            <button class="nav-item active" data-step="1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span>कहानी</span>
+            </button>
+            <button class="nav-item" data-step="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                <span>सीन</span>
+            </button>
+            <button class="nav-item" data-step="3">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M8 10l4 4 8-8"/></svg>
+                <span>एनिमेशन</span>
+            </button>
+            <button class="nav-item" data-step="4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>
+                <span>एक्सपोर्ट</span>
+            </button>
+        </nav>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Loading Modal -->
+        <div class="modal-overlay" id="loadingModal" style="display: none;">
+            <div class="modal loading-modal">
+                <div class="spinner"></div>
+                <p id="loadingText">प्रोसेसिंग...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js and libraries -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <script type="module" src="app.js"></script>
+</body>
+</html>

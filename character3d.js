@@ -137,6 +137,17 @@ export class Character3D {
         // Look-at target
         this.lookAtTarget = new THREE.Vector3(0, 1.6, -5);
         
+        // Interaction state
+        this.isWalking = false;
+        this.walkTarget = null;
+        this.walkSpeed = 1.0;
+        this.walkStopDistance = 0.5;
+        this.walkFaceTarget = true;
+        this.walkOnComplete = null;
+        this.walkOnProgress = null;
+        this.heldObject = null;
+        this.holdHand = 'right';
+        
         // Initialize
         this.createCharacter();
         this.createAnimations();
@@ -1825,6 +1836,215 @@ export class Character3D {
         }
     }
     
+    // ========================================
+    // Interaction System
+    // ========================================
+    
+    // Walk to a target position
+    walkTo(targetPosition, options = {}) {
+        const { 
+            onComplete, 
+            onProgress, 
+            speed = 1.0, 
+            stopDistance = 0.5,
+            faceTarget = true 
+        } = options;
+        
+        this.walkTarget = targetPosition.clone();
+        this.walkSpeed = speed;
+        this.walkStopDistance = stopDistance;
+        this.walkFaceTarget = faceTarget;
+        this.walkOnComplete = onComplete;
+        this.walkOnProgress = onProgress;
+        this.isWalking = true;
+        
+        // Start walk animation
+        this.playAnimation('walk');
+    }
+    
+    // Stop walking
+    stopWalking() {
+        this.isWalking = false;
+        this.walkTarget = null;
+        this.playAnimation('idle');
+    }
+    
+    // Update walking logic (call in update loop)
+    updateWalking(delta) {
+        if (!this.isWalking || !this.walkTarget) return;
+        
+        const currentPos = this.group.position.clone();
+        const targetPos = this.walkTarget.clone();
+        targetPos.y = currentPos.y; // Keep same height
+        
+        const distance = currentPos.distanceTo(targetPos);
+        
+        if (distance <= this.walkStopDistance) {
+            // Reached target
+            this.stopWalking();
+            if (this.walkOnComplete) this.walkOnComplete();
+            return;
+        }
+        
+        // Calculate direction
+        const direction = new THREE.Vector3().subVectors(targetPos, currentPos).normalize();
+        
+        // Move character
+        const moveSpeed = this.walkSpeed * 2 * delta; // 2 units per second at speed 1
+        this.group.position.add(direction.clone().multiplyScalar(moveSpeed));
+        
+        // Rotate to face movement direction
+        const targetRotation = Math.atan2(direction.x, direction.z);
+        this.group.rotation.y = THREE.MathUtils.lerp(this.group.rotation.y, targetRotation, 0.1);
+        
+        // Face target if enabled
+        if (this.walkFaceTarget) {
+            this.lookAt(this.walkTarget);
+        }
+        
+        if (this.walkOnProgress) this.walkOnProgress(distance);
+    }
+    
+    // Hold an object in hand
+    holdObject(object, hand = 'right') {
+        if (this.heldObject) {
+            this.releaseObject();
+        }
+        
+        this.heldObject = object;
+        this.holdHand = hand;
+        
+        // Attach to hand
+        const handBone = hand === 'right' ? this.parts.rightHand : this.parts.leftHand;
+        if (handBone && object) {
+            // Store original parent
+            object.userData.originalParent = object.parent;
+            object.userData.originalPosition = object.position.clone();
+            object.userData.originalRotation = object.rotation.clone();
+            object.userData.originalScale = object.scale.clone();
+            
+            // Position relative to hand
+            handBone.attach(object);
+            object.position.set(0, 0, 0);
+            object.rotation.set(0, 0, 0);
+            
+            // Play hold animation
+            this.playAnimation('point'); // Use point as hold pose
+        }
+    }
+    
+    // Release held object
+    releaseObject() {
+        if (!this.heldObject) return;
+        
+        const object = this.heldObject;
+        const originalParent = object.userData.originalParent || this.group.parent || AppState.three?.scene;
+        
+        if (originalParent) {
+            // Get world transform
+            const worldPos = new THREE.Vector3();
+            const worldQuat = new THREE.Quaternion();
+            const worldScale = new THREE.Vector3();
+            object.matrixWorld.decompose(worldPos, worldQuat, worldScale);
+            
+            // Detach from hand and reattach to original parent
+            this.group.remove(object);
+            originalParent.add(object);
+            object.position.copy(worldPos);
+            object.quaternion.copy(worldQuat);
+            object.scale.copy(worldScale);
+        }
+        
+        this.heldObject = null;
+        this.holdHand = null;
+    }
+    
+    // Give object to another character
+    giveObject(targetCharacter, object) {
+        if (!this.heldObject || this.heldObject !== object) return false;
+        
+        // Release from this character
+        this.releaseObject();
+        
+        // Target character holds it
+        targetCharacter.holdObject(object, 'left');
+        
+        // Play give/receive animations
+        this.playAnimation('point');
+        targetCharacter.playAnimation('wave'); // Receive gesture
+        
+        return true;
+    }
+    
+    // Interact with another character
+    interactWith(otherCharacter, interactionType) {
+        const interactions = {
+            'wave': () => {
+                this.playAnimation('wave');
+                otherCharacter.lookAt(this.group.position);
+            },
+            'talk': () => {
+                this.playAnimation('talk');
+                otherCharacter.playAnimation('idle');
+                otherCharacter.lookAt(this.group.position);
+            },
+            'hug': () => {
+                this.playAnimation('wave'); // Approximate
+                otherCharacter.playAnimation('wave');
+                this.lookAt(otherCharacter.group.position);
+                otherCharacter.lookAt(this.group.position);
+            },
+            'highfive': () => {
+                this.playAnimation('point');
+                otherCharacter.playAnimation('point');
+            },
+            'handover': (object) => {
+                this.giveObject(otherCharacter, object);
+            }
+        };
+        
+        if (interactions[interactionType]) {
+            if (interactionType === 'handover') {
+                // Need object parameter
+                return interactions[interactionType];
+            }
+            interactions[interactionType]();
+            return true;
+        }
+        return false;
+    }
+    
+    // Sit on an object (chair, bench, etc.)
+    sitOn(object) {
+        if (!object || !object.userData.sitPosition) return false;
+        
+        const sitPos = object.userData.sitPosition;
+        const sitRot = object.userData.sitRotation || new THREE.Euler(0, 0, 0);
+        
+        // Walk to sit position first
+        this.walkTo(sitPos, {
+            onComplete: () => {
+                // Position character at sit position
+                this.group.position.copy(sitPos);
+                this.group.rotation.copy(sitRot);
+                this.playAnimation('sit');
+            },
+            stopDistance: 0.2
+        });
+        
+        return true;
+    }
+    
+    // Stand up from sitting
+    standUp() {
+        this.playAnimation('idle');
+    }
+    
+    // Update interaction logic (call in update loop)
+    updateInteractions(delta) {
+        this.updateWalking(delta);
+    }
+    
     update(delta) {
         if (this.mixer) {
             this.mixer.update(delta);
@@ -1837,6 +2057,9 @@ export class Character3D {
         if (this.lookAtTarget) {
             this.lookAt(this.lookAtTarget);
         }
+        
+        // Update interactions (walking, holding, etc.)
+        this.updateInteractions(delta);
         
         // Update paper-cutout outlines
         this.updateOutlines();

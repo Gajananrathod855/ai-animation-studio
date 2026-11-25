@@ -3518,6 +3518,306 @@ function startDragKeyframe(e, trackName, index) {
     document.addEventListener('mouseup', onMouseUp);
 }
 
+// ========================================
+// Character Interactions
+// ========================================
+
+function initializeInteractions() {
+    // Populate character dropdowns
+    updateInteractionCharacterDropdowns();
+    
+    // Populate target object dropdown
+    updateInteractionTargetObjects();
+    
+    // Event listeners
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    const typeSelect = $('#interactionType');
+    const targetSelect = $('#interactionTargetObject');
+    const applyBtn = $('#applyInteraction');
+    const previewBtn = $('#previewInteraction');
+    const stopBtn = $('#stopInteraction');
+    
+    if (char1Select) char1Select.addEventListener('change', updateInteractionChar2Options);
+    if (char2Select) char2Select.addEventListener('change', updateInteractionTargetObjects);
+    if (typeSelect) typeSelect.addEventListener('change', updateInteractionTargetObjects);
+    
+    if (applyBtn) applyBtn.addEventListener('click', applyInteraction);
+    if (previewBtn) previewBtn.addEventListener('click', previewInteraction);
+    if (stopBtn) stopBtn.addEventListener('click', stopInteraction);
+    
+    // Scene selector change should update dropdowns
+    const sceneSelector = $('#sceneSelector');
+    if (sceneSelector) {
+        sceneSelector.addEventListener('change', () => {
+            updateInteractionCharacterDropdowns();
+            updateInteractionTargetObjects();
+        });
+    }
+}
+
+function updateInteractionCharacterDropdowns() {
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    
+    if (!char1Select || !char2Select) return;
+    
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    const scene = AppState.scenes[sceneIndex];
+    
+    const buildOptions = (select, excludeValue = null) => {
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">पात्र चुनें</option>';
+        
+        if (scene && scene.characters3d) {
+            scene.characters3d.forEach((char, i) => {
+                if (excludeValue && `${sceneIndex}_${i}` === excludeValue) return;
+                const option = document.createElement('option');
+                option.value = `${sceneIndex}_${i}`;
+                option.textContent = `${scene.characters[i] || `पात्र ${i+1}`} (3D)`;
+                select.appendChild(option);
+            });
+        }
+        
+        if (currentValue && !excludeValue) select.value = currentValue;
+    };
+    
+    buildOptions(char1Select);
+    buildOptions(char2Select, char1Select.value);
+}
+
+function updateInteractionChar2Options() {
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    if (char1Select && char2Select) {
+        updateInteractionCharacterDropdowns();
+    }
+}
+
+function updateInteractionTargetObjects() {
+    const targetSelect = $('#interactionTargetObject');
+    const typeSelect = $('#interactionType');
+    
+    if (!targetSelect || !typeSelect) return;
+    
+    const type = typeSelect.value;
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    const scene = AppState.scenes[sceneIndex];
+    
+    targetSelect.innerHTML = '<option value="">कोई नहीं</option>';
+    
+    // Add assets in scene
+    if (AppState.three.assetManager) {
+        const assets = AppState.three.assetManager.getAllAssets();
+        assets.forEach(asset => {
+            const option = document.createElement('option');
+            option.value = asset.instanceId;
+            option.textContent = `${asset.assetName} (${asset.assetId})`;
+            targetSelect.appendChild(option);
+        });
+    }
+    
+    // Add sit-able objects
+    if (type === 'sit') {
+        const sitAssets = ['chair', 'bench', 'sofa', 'bed'];
+        sitAssets.forEach(assetId => {
+            const assetDef = assetLibrary.getAsset(assetId);
+            if (assetDef) {
+                const option = document.createElement('option');
+                option.value = `preset_${assetId}`;
+                option.textContent = assetDef.name;
+                targetSelect.appendChild(option);
+            }
+        });
+    }
+    
+    // Show/hide target object based on interaction type
+    const targetContainer = targetSelect.closest('.setting-item');
+    if (targetContainer) {
+        targetContainer.style.display = ['give', 'sit'].includes(type) ? 'block' : 'none';
+    }
+}
+
+function applyInteraction() {
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    const typeSelect = $('#interactionType');
+    const targetSelect = $('#interactionTargetObject');
+    
+    if (!char1Select || !char2Select || !typeSelect) return;
+    
+    const char1Key = char1Select.value;
+    const char2Key = char2Select.value;
+    const type = typeSelect.value;
+    const targetId = targetSelect.value;
+    
+    if (!char1Key || !char2Key) {
+        showToast('दोनों पात्र चुनें', 'warning');
+        return;
+    }
+    
+    const char1 = getCharacter3DByKey(char1Key);
+    const char2 = getCharacter3DByKey(char2Key);
+    
+    if (!char1 || !char2) {
+        showToast('पात्र नहीं मिला', 'error');
+        return;
+    }
+    
+    // Apply interaction
+    switch (type) {
+        case 'look':
+            char1.lookAt(char2.group.position);
+            char2.lookAt(char1.group.position);
+            showToast('पात्र एक-दूसरे को देख रहे हैं', 'success');
+            break;
+            
+        case 'wave':
+            char1.playAnimation('wave');
+            char2.playAnimation('wave');
+            char1.lookAt(char2.group.position);
+            char2.lookAt(char1.group.position);
+            showToast('हाथ हिला रहे हैं', 'success');
+            break;
+            
+        case 'talk':
+            char1.playAnimation('talk');
+            char2.playAnimation('idle');
+            char1.lookAt(char2.group.position);
+            char2.lookAt(char1.group.position);
+            showToast('बातचीत शुरू', 'success');
+            break;
+            
+        case 'hug':
+            char1.playAnimation('wave');
+            char2.playAnimation('wave');
+            // Move closer
+            const midPoint = new THREE.Vector3().addVectors(char1.group.position, char2.group.position).multiplyScalar(0.5);
+            char1.walkTo(midPoint.clone().add(new THREE.Vector3(-0.5, 0, 0)));
+            char2.walkTo(midPoint.clone().add(new THREE.Vector3(0.5, 0, 0)));
+            showToast('गले लग रहे हैं', 'success');
+            break;
+            
+        case 'highfive':
+            char1.playAnimation('point');
+            char2.playAnimation('point');
+            char1.lookAt(char2.group.position);
+            char2.lookAt(char1.group.position);
+            showToast('हाई-फाइव!', 'success');
+            break;
+            
+        case 'walk_to':
+            char1.walkTo(char2.group.position.clone(), {
+                onComplete: () => {
+                    char1.lookAt(char2.group.position);
+                    char1.playAnimation('wave');
+                }
+            });
+            showToast('पात्र 1 चल रहा है', 'success');
+            break;
+            
+        case 'give':
+            if (!targetId) {
+                showToast('देने के लिए वस्तु चुनें', 'warning');
+                return;
+            }
+            const object = getObjectByInstanceId(targetId);
+            if (object) {
+                char1.holdObject(object, 'right');
+                setTimeout(() => {
+                    char1.giveObject(char2, object);
+                }, 1000);
+                showToast('वस्तु दी जा रही है', 'success');
+            }
+            break;
+            
+        case 'sit':
+            if (!targetId) {
+                showToast('बैठने के लिए वस्तु चुनें', 'warning');
+                return;
+            }
+            const sitObject = getObjectByInstanceId(targetId) || createSitObject(targetId);
+            if (sitObject) {
+                // Add sit position data
+                sitObject.userData.sitPosition = sitObject.position.clone().add(new THREE.Vector3(0, 0.5, 0.5));
+                sitObject.userData.sitRotation = new THREE.Euler(0, Math.PI, 0);
+                char1.sitOn(sitObject);
+                showToast('पात्र बैठ रहा है', 'success');
+            }
+            break;
+    }
+}
+
+function previewInteraction() {
+    // Same as apply but with preview mode
+    applyInteraction();
+}
+
+function stopInteraction() {
+    const char1Select = $('#interactionChar1');
+    const char2Select = $('#interactionChar2');
+    
+    if (!char1Select || !char2Select) return;
+    
+    const char1Key = char1Select.value;
+    const char2Key = char2Select.value;
+    
+    const char1 = getCharacter3DByKey(char1Key);
+    const char2 = getCharacter3DByKey(char2Key);
+    
+    if (char1) {
+        char1.stopWalking();
+        char1.playAnimation('idle');
+        char1.releaseObject();
+    }
+    if (char2) {
+        char2.stopWalking();
+        char2.playAnimation('idle');
+        char2.releaseObject();
+    }
+    
+    showToast('इंटरैक्शन रोकी गई', 'info');
+}
+
+function getCharacter3DByKey(key) {
+    const parts = key.split('_');
+    if (parts.length >= 2) {
+        const sceneIndex = parseInt(parts[0]);
+        const charIndex = parseInt(parts[1]);
+        const charData = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+        return charData?.character3d;
+    }
+    return null;
+}
+
+function getObjectByInstanceId(instanceId) {
+    if (!AppState.three.assetManager) return null;
+    const asset = AppState.three.assetManager.getAsset(instanceId);
+    return asset?.asset;
+}
+
+function createSitObject(presetId) {
+    // Create a temporary sit object from preset
+    if (presetId.startsWith('preset_')) {
+        const assetId = presetId.replace('preset_', '');
+        const assetGroup = assetLibrary.buildAsset(assetId, {
+            position: new THREE.Vector3(0, 0, 2)
+        });
+        if (assetGroup && AppState.three.scene) {
+            AppState.three.scene.add(assetGroup);
+            // Add to asset manager
+            if (AppState.three.assetManager) {
+                const instanceId = AppState.three.assetManager.addAsset(assetId, {
+                    position: new THREE.Vector3(0, 0, 2)
+                });
+                return AppState.three.assetManager.getAsset(instanceId)?.asset;
+            }
+        }
+        return assetGroup;
+    }
+    return null;
+}
+
 function updateKeyLightPosition() {
     const { keyLight, lighting } = AppState.three;
     const THREE = AppState.three.THREE;
@@ -4273,6 +4573,9 @@ function initEventListeners() {
     
     // Keyframe Animation Editor initialization
     initializeKeyframeEditor();
+    
+    // Character Interactions initialization
+    initializeInteractions();
     
     $('#closeEditorBtn').addEventListener('click', closeSceneEditor);
     $('#saveSceneBtn').addEventListener('click', saveSceneEdit);

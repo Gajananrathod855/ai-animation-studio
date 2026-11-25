@@ -395,6 +395,7 @@
                             <button class="pro-tab-btn" data-pro-tab="lighting">लाइटिंग</button>
                             <button class="pro-tab-btn" data-pro-tab="background">पृष्ठभूमि</button>
                             <button class="pro-tab-btn" data-pro-tab="assets">एसेट लाइब्रेरी</button>
+                            <button class="pro-tab-btn" data-pro-tab="interactions">इंटरैक्शन</button>
                             <button class="pro-tab-btn" data-pro-tab="scene">सीन एडिट</button>
                         </div>
                         
@@ -697,6 +698,52 @@
                                                 <button class="btn btn-primary" id="addAssetToScene">सीन में जोड़ें</button>
                                                 <button class="btn btn-danger" id="removeAssetFromScene" style="display: none;">हटाएं</button>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Interactions Tab -->
+                            <div class="pro-tab-panel" id="pro-tab-interactions">
+                                <div class="settings-grid">
+                                    <div class="setting-item full-width">
+                                        <label class="label">पात्र 1</label>
+                                        <select id="interactionChar1" class="select"></select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">पात्र 2</label>
+                                        <select id="interactionChar2" class="select"></select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">इंटरैक्शन प्रकार</label>
+                                        <select id="interactionType" class="select">
+                                            <option value="look">एक-दूसरे को देखें</option>
+                                            <option value="wave">हाथ हिलाएं</option>
+                                            <option value="talk">बातचीत</option>
+                                            <option value="hug">गले लगें</option>
+                                            <option value="highfive">हाई-फाइव</option>
+                                            <option value="walk_to">पात्र 1, पात्र 2 की ओर चले</option>
+                                            <option value="give">वस्तु दें</option>
+                                            <option value="sit">बैठें</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">लक्ष्य वस्तु (वस्तु देने/बैठने के लिए)</label>
+                                        <select id="interactionTargetObject" class="select">
+                                            <option value="">कोई नहीं</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <div class="interaction-preview">
+                                            <button class="btn btn-primary" id="applyInteraction">इंटरैक्शन लागू करें</button>
+                                            <button class="btn btn-secondary" id="previewInteraction">पूर्वावलोकन</button>
+                                            <button class="btn btn-danger" id="stopInteraction">रोकें</button>
+                                        </div>
+                                    </div>
+                                    <div class="setting-item full-width">
+                                        <label class="label">वॉक पाथ प्रीव्यू</label>
+                                        <div id="walkPathPreview" class="walk-path-preview" style="display: none;">
+                                            <canvas id="walkPathCanvas" width="400" height="200"></canvas>
                                         </div>
                                     </div>
                                 </div>

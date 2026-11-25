@@ -1932,6 +1932,30 @@ body {
 }
 
 /* ========================================
+   Character Interactions
+   ======================================== */
+.interaction-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.walk-path-preview {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-top: 8px;
+}
+
+#walkPathCanvas {
+    width: 100%;
+    height: auto;
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+}
+
+/* ========================================
    Utility Classes
    ======================================== */
 .hidden { display: none !important; }

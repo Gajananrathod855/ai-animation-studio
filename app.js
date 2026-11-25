@@ -2235,7 +2235,7 @@ async function createPaperCutout(templateName, colors, depth = 0, scale = 1) {
 }
 
 // ========================================
-// Scene Building
+// Scene Building (Enhanced)
 // ========================================
 async function buildScene(sceneIndex) {
     const sceneData = AppState.scenes[sceneIndex];
@@ -2246,26 +2246,599 @@ async function buildScene(sceneIndex) {
     
     clearSceneObjects(sceneIndex);
     
-    const background = await buildBackground(sceneData.background, colors, sceneIndex);
+    // Apply automatic camera settings from scene data
+    if (sceneData.cameraSuggestion) {
+        applyCameraSuggestion(sceneData.cameraSuggestion, sceneData.characters?.length || 1);
+    }
+    
+    // Apply automatic lighting settings from scene data
+    if (sceneData.lightingSuggestion) {
+        applyLightingSuggestion(sceneData.lightingSuggestion, sceneData.timeOfDay, sceneData.mood);
+    }
+    
+    // Build background with enhanced settings
+    const background = await buildBackgroundEnhanced(sceneData, colors, sceneIndex);
     if (background) {
         AppState.three.backgrounds[sceneIndex] = background;
         AppState.three.scene.add(background.group);
     }
     
+    // Build characters with enhanced positioning and animation
     for (let i = 0; i < sceneData.characters.length; i++) {
-        await buildCharacter(sceneData.characters[i], colors, sceneIndex, i);
+        await buildCharacterEnhanced(sceneData, colors, sceneIndex, i);
     }
     
     // Load assets for this scene
     if (sceneData.assets && AppState.three.assetManager) {
-        // Clear existing assets first
         AppState.three.assetManager.clear();
-        // Load saved assets
         AppState.three.assetManager.fromJSON(sceneData.assets);
     }
     
-    console.log(`Scene ${sceneIndex + 1} built`);
+    // Auto-place environment props based on location
+    if (sceneData.locationDetails) {
+        autoPlaceEnvironmentProps(sceneData.locationDetails, sceneIndex);
+    }
+    
+    // Apply time of day effects
+    if (sceneData.timeOfDay) {
+        applyTimeOfDayEffects(sceneData.timeOfDay, sceneData.mood);
+    }
+    
+    console.log(`Scene ${sceneIndex + 1} built with enhanced generation`);
 }
+
+function applyCameraSuggestion(suggestion, characterCount) {
+    const cameraControls = AppState.three.cameraControls;
+    if (!cameraControls) return;
+    
+    const suggestions = {
+        closeup: { distance: 5, height: 1.6, fov: 30, angle: 0 },
+        medium: { distance: 10, height: 1.2, fov: 45, angle: 0 },
+        wide: { distance: 20, height: 3, fov: 60, angle: 0 },
+        over_shoulder: { distance: 8, height: 1.5, fov: 40, angle: 30 },
+        two_shot: { distance: 12, height: 1.2, fov: 50, angle: 0 }
+    };
+    
+    if (suggestions[suggestion]) {
+        Object.assign(cameraControls, suggestions[suggestion]);
+    }
+    
+    // For two-shot, adjust look-at to center between characters
+    if (suggestion === 'two_shot' && characterCount >= 2) {
+        cameraControls.lookAt.set(0, 1.6, 0);
+    }
+}
+
+function applyLightingSuggestion(suggestion, timeOfDay, mood) {
+    const lighting = AppState.three.lighting;
+    if (!lighting) return;
+    
+    const suggestions = {
+        bright_cheerful: { ambientIntensity: 0.8, keyIntensity: 1.2, fillIntensity: 0.6, exposure: 1.3, keyColor: 0xffffee },
+        soft_melancholic: { ambientIntensity: 0.4, keyIntensity: 0.6, fillIntensity: 0.3, exposure: 0.9, keyColor: 0xddddff },
+        dramatic_contrast: { ambientIntensity: 0.2, keyIntensity: 2.0, fillIntensity: 0.1, rimIntensity: 0.5, exposure: 1.2, keyColor: 0xffccaa },
+        dark_shadows: { ambientIntensity: 0.1, keyIntensity: 0.8, fillIntensity: 0.05, exposure: 0.7, keyColor: 0x8888cc },
+        bright_sudden: { ambientIntensity: 0.5, keyIntensity: 1.5, fillIntensity: 0.3, exposure: 1.4, keyColor: 0xffffaa },
+        soft_natural: { ambientIntensity: 0.6, keyIntensity: 1.0, fillIntensity: 0.5, exposure: 1.1, keyColor: 0xffeedd },
+        strong_directional: { ambientIntensity: 0.3, keyIntensity: 1.5, fillIntensity: 0.2, rimIntensity: 0.4, exposure: 1.2, keyColor: 0xffddaa },
+        moonlight: { ambientIntensity: 0.15, keyIntensity: 0.5, fillIntensity: 0.1, exposure: 0.8, keyColor: 0xaaaaff, ambientColor: 0x444466 },
+        golden_hour: { ambientIntensity: 0.4, keyIntensity: 1.0, fillIntensity: 0.3, exposure: 1.1, keyColor: 0xffcc66, ambientColor: 0xffaa44 },
+        soft_morning: { ambientIntensity: 0.5, keyIntensity: 0.8, fillIntensity: 0.4, exposure: 1.0, keyColor: 0xfff0dd, ambientColor: 0xffddaa },
+        natural: { ambientIntensity: 0.6, keyIntensity: 1.0, fillIntensity: 0.5, exposure: 1.2, keyColor: 0xffffff }
+    };
+    
+    // Time of day overrides
+    if (timeOfDay === 'night') {
+        Object.assign(lighting, suggestions.moonlight);
+    } else if (timeOfDay === 'evening') {
+        Object.assign(lighting, suggestions.golden_hour);
+    } else if (timeOfDay === 'morning') {
+        Object.assign(lighting, suggestions.soft_morning);
+    } else if (suggestions[suggestion]) {
+        Object.assign(lighting, suggestions[suggestion]);
+    }
+}
+
+async function buildBackgroundEnhanced(sceneData, colors, sceneIndex) {
+    const THREE = await import('three');
+    
+    // Use location details for enhanced background
+    const locationDetails = sceneData.locationDetails;
+    const bgName = sceneData.background;
+    const template = BackgroundTemplates[bgName] || BackgroundTemplates.garden;
+    
+    const bgGroup = new THREE.Group();
+    bgGroup.userData = { type: 'background', name: bgName, sceneIndex, layers: [] };
+    
+    // Base ground plane with location-appropriate color
+    let groundColor = parseInt(colors.background[0].replace('#', '0x'));
+    if (locationDetails) {
+        // Use location-specific ground color
+        const locationGroundColors = {
+            'जंगल': 0x2d5a2d,
+            'नदी': 0x3d85c6,
+            'पहाड़': 0x6b5b4a,
+            'गांव': 0x8b7355,
+            'शहर': 0x555555,
+            'गार्डन': 0x4caf50,
+            'कक्षा': 0xd0d0d0,
+            'अंतरिक्ष': 0x0a0a2a,
+            'पानी के नीचे': 0x1a3a5c,
+            'रेगिस्तान': 0xe8c48a
+        };
+        groundColor = locationGroundColors[sceneData.background] || groundColor;
+    }
+    
+    const baseGeometry = new THREE.PlaneGeometry(40, 30);
+    const baseMaterial = new THREE.MeshStandardMaterial({
+        color: groundColor,
+        side: THREE.DoubleSide,
+        roughness: 0.9,
+        metalness: 0,
+        polygonOffset: true,
+        polygonOffsetFactor: -100,
+        polygonOffsetUnits: -10
+    });
+    const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
+    baseMesh.position.z = -5;
+    baseMesh.receiveShadow = true;
+    bgGroup.add(baseMesh);
+    
+    // Build template layers with enhancements
+    for (let layerIndex = 0; layerIndex < template.layers.length; layerIndex++) {
+        const layer = template.layers[layerIndex];
+        
+        // Enhance layer colors based on time of day and mood
+        let layerColor = parseInt(layer.color.replace('#', '0x'));
+        if (sceneData.timeOfDay) {
+            layerColor = adjustColorForTimeOfDay(layerColor, sceneData.timeOfDay, sceneData.mood);
+        }
+        
+        if (layer.type === 'sky') {
+            baseMesh.material.color.set(layerColor);
+        } else if (layer.type === 'ground' || layer.type === 'grass' || layer.type === 'water' || layer.type === 'sand' || layer.type === 'wall') {
+            const geo = new THREE.PlaneGeometry(40, layer.type === 'water' ? 12 : 8);
+            const mat = new THREE.MeshStandardMaterial({
+                color: layerColor,
+                side: THREE.DoubleSide,
+                roughness: 0.9,
+                metalness: layer.type === 'water' ? 0.3 : 0,
+                transparent: layer.type === 'water',
+                opacity: layer.type === 'water' ? 0.7 : 1,
+                polygonOffset: true,
+                polygonOffsetFactor: -50 + layerIndex,
+                polygonOffsetUnits: -5
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(0, layer.type === 'water' ? -3 : -5, layer.depth || layerIndex * 0.5);
+            mesh.rotation.x = layer.type === 'ground' || layer.type === 'grass' || layer.type === 'sand' ? -Math.PI / 2 : 0;
+            mesh.receiveShadow = true;
+            bgGroup.add(mesh);
+        } else if (layer.type === 'mountain' || layer.type === 'mountains' || layer.type === 'dunes') {
+            const count = layer.count || 3;
+            for (let i = 0; i < count; i++) {
+                const mountainShape = new THREE.Shape();
+                const width = 10 + Math.random() * 8;
+                const height = 5 + Math.random() * 4;
+                const x = -20 + i * (40 / count) + (Math.random() - 0.5) * 4;
+                
+                mountainShape.moveTo(-width/2, 0);
+                mountainShape.lineTo(0, height);
+                mountainShape.lineTo(width/2, 0);
+                mountainShape.lineTo(-width/2, 0);
+                
+                const mountainGeo = new THREE.ExtrudeGeometry(mountainShape, {
+                    depth: 8 + Math.random() * 4,
+                    bevelEnabled: true,
+                    bevelSegments: 2,
+                    bevelSize: 0.5,
+                    bevelThickness: 0.5
+                });
+                
+                const mountainMat = new THREE.MeshStandardMaterial({
+                    color: layerColor,
+                    roughness: 0.9,
+                    metalness: 0
+                });
+                
+                const mountain = new THREE.Mesh(mountainGeo, mountainMat);
+                mountain.position.set(x, -5, layer.depth || layerIndex * 1.5);
+                mountain.rotation.x = -Math.PI / 2;
+                mountain.receiveShadow = true;
+                mountain.castShadow = true;
+                bgGroup.add(mountain);
+            }
+        } else if (layer.type === 'trees' || layer.type === 'forest') {
+            const count = layer.count || 8;
+            for (let i = 0; i < count; i++) {
+                const tree = createEnhancedTree(layerColor, layerIndex, sceneData);
+                tree.position.set(
+                    (Math.random() - 0.5) * 35,
+                    -5,
+                    (layer.depth || layerIndex * 1) + (Math.random() - 0.5) * 3
+                );
+                tree.castShadow = true;
+                bgGroup.add(tree);
+            }
+        }
+    }
+    
+    // Add location-specific props
+    if (locationDetails && locationDetails.props) {
+        locationDetails.props.forEach(propType => {
+            const count = 3 + Math.floor(Math.random() * 3);
+            for (let i = 0; i < count; i++) {
+                const prop = createEnvironmentProp(propType, sceneData);
+                if (prop) {
+                    prop.position.set(
+                        (Math.random() - 0.5) * 30,
+                        -4.5,
+                        (Math.random() - 0.5) * 20 - 5
+                    );
+                    prop.castShadow = true;
+                    bgGroup.add(prop);
+                }
+            }
+        });
+    }
+    
+    return { group: bgGroup, name: bgName, sceneIndex };
+}
+
+function adjustColorForTimeOfDay(baseColor, timeOfDay, mood) {
+    const color = new THREE.Color(baseColor);
+    const hsl = {};
+    color.getHSL(hsl);
+    
+    switch (timeOfDay) {
+        case 'morning':
+            hsl.l = Math.min(1, hsl.l * 1.2);
+            hsl.s = Math.min(1, hsl.s * 1.1);
+            hsl.h = (hsl.h + 0.05) % 1; // Slightly warmer
+            break;
+        case 'evening':
+            hsl.l = Math.max(0.1, hsl.l * 0.8);
+            hsl.s = Math.min(1, hsl.s * 1.3);
+            hsl.h = (hsl.h + 0.08) % 1; // Warmer/golden
+            break;
+        case 'night':
+            hsl.l = Math.max(0.05, hsl.l * 0.3);
+            hsl.s = Math.min(1, hsl.s * 0.7);
+            hsl.h = (hsl.h + 0.55) % 1; // Blue shift
+            break;
+    }
+    
+    // Mood adjustments
+    if (mood === 'sad') {
+        hsl.s *= 0.7;
+        hsl.l *= 0.9;
+    } else if (mood === 'happy') {
+        hsl.s *= 1.2;
+        hsl.l *= 1.1;
+    } else if (mood === 'scared') {
+        hsl.l *= 0.7;
+        hsl.h = (hsl.h + 0.55) % 1;
+    }
+    
+    return new THREE.Color().setHSL(hsl.h, hsl.s, hsl.l).getHex();
+}
+
+function createEnhancedTree(baseColor, layerIndex, sceneData) {
+    const THREE = AppState.three.THREE;
+    const treeGroup = new THREE.Group();
+    
+    // Tree trunk
+    const trunkHeight = 3 + Math.random() * 2;
+    const trunkGeo = new THREE.CylinderGeometry(0.2, 0.35, trunkHeight, 8);
+    const trunkMat = new THREE.MeshStandardMaterial({
+        color: 0x4a2c1a,
+        roughness: 0.9,
+        metalness: 0,
+        flatShading: AppState.settings.videoStyle === 'paper-cutout'
+    });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.y = trunkHeight / 2;
+    trunk.castShadow = true;
+    treeGroup.add(trunk);
+    
+    // Tree foliage - multiple layers for paper-cutout style
+    const foliageColor = adjustColorForTimeOfDay(baseColor, sceneData.timeOfDay, sceneData.mood);
+    const foliageMat = new THREE.MeshStandardMaterial({
+        color: foliageColor,
+        roughness: 0.95,
+        metalness: 0,
+        flatShading: AppState.settings.videoStyle === 'paper-cutout'
+    });
+    
+    const layers = 3 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < layers; i++) {
+        const scale = 1 - i * 0.2;
+        const foliageGeo = new THREE.ConeGeometry(1.2 * scale, 1.8 * scale, 8);
+        const foliage = new THREE.Mesh(foliageGeo, foliageMat);
+        foliage.position.y = trunkHeight + 0.5 + i * 1.2;
+        foliage.castShadow = true;
+        treeGroup.add(foliage);
+    }
+    
+    return treeGroup;
+}
+
+function createEnvironmentProp(propType, sceneData) {
+    // Use asset library if available
+    if (AppState.three.assetManager && assetLibrary.getAsset(propType)) {
+        const instanceId = AppState.three.assetManager.addAsset(propType, {
+            position: new THREE.Vector3(0, 0, 0)
+        });
+        return AppState.three.assetManager.getAsset(instanceId)?.asset?.clone();
+    }
+    
+    // Fallback: create simple prop
+    const THREE = AppState.three.THREE;
+    const mat = new THREE.MeshStandardMaterial({
+        color: 0x8b7355,
+        roughness: 0.9,
+        metalness: 0,
+        flatShading: AppState.settings.videoStyle === 'paper-cutout'
+    });
+    
+    const propMap = {
+        tree: () => new THREE.Mesh(new THREE.ConeGeometry(1, 2, 8), mat),
+        bush: () => new THREE.Mesh(new THREE.SphereGeometry(0.8, 8, 8), mat),
+        rock: () => new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1), mat),
+        flower: () => new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), new THREE.MeshStandardMaterial({color: 0xff69b4})),
+        bench: () => new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.5), mat),
+        well: () => new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1, 12), mat),
+        cart: () => new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 1), mat),
+        building: () => new THREE.Mesh(new THREE.BoxGeometry(4, 5, 4), mat),
+        streetlight: () => new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 4, 8), mat),
+        car: () => new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), mat),
+        traffic_light: () => new THREE.Mesh(new THREE.BoxGeometry(0.3, 1, 0.2), mat),
+        desk: () => new THREE.Mesh(new THREE.BoxGeometry(1, 0.8, 0.6), mat),
+        chair: () => new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.5), mat),
+        chalkboard: () => new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 0.1), new THREE.MeshStandardMaterial({color: 0x1b4d3e})),
+        book: () => new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.03), mat),
+        globe: () => new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshStandardMaterial({color: 0x4a90d9})),
+        rocket: () => new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 3, 12), mat),
+        planet: () => new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), new THREE.MeshStandardMaterial({color: 0xffaa00})),
+        star: () => new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshStandardMaterial({color: 0xffff00, emissive: 0xffff00})),
+        coral: () => new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1), new THREE.MeshStandardMaterial({color: 0xff6f61})),
+        fish: () => new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.15), new THREE.MeshStandardMaterial({color: 0xff9900})),
+        seaweed: () => new THREE.Mesh(new THREE.BoxGeometry(0.1, 1, 0.1), new THREE.MeshStandardMaterial({color: 0x2e8b57})),
+        cactus: () => new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 2, 8), new THREE.MeshStandardMaterial({color: 0x2e8b57}))
+    };
+    
+    const creator = propMap[propType];
+    if (creator) {
+        return creator();
+    }
+    return null;
+}
+
+function autoPlaceEnvironmentProps(locationDetails, sceneIndex) {
+    if (!locationDetails || !locationDetails.props) return;
+    
+    const propCounts = {
+        tree: { min: 3, max: 8 },
+        bush: { min: 2, max: 6 },
+        rock: { min: 1, max: 4 },
+        flower: { min: 4, max: 10 },
+        bench: { min: 0, max: 2 },
+        well: { min: 0, max: 1 },
+        cart: { min: 0, max: 1 },
+        building: { min: 0, max: 2 },
+        streetlight: { min: 0, max: 3 },
+        car: { min: 0, max: 2 },
+        traffic_light: { min: 0, max: 2 },
+        desk: { min: 2, max: 6 },
+        chair: { min: 4, max: 10 },
+        chalkboard: { min: 0, max: 1 },
+        book: { min: 3, max: 8 },
+        globe: { min: 0, max: 1 },
+        rocket: { min: 0, max: 1 },
+        planet: { min: 0, max: 3 },
+        star: { min: 10, max: 30 },
+        coral: { min: 5, max: 15 },
+        fish: { min: 5, max: 15 },
+        seaweed: { min: 8, max: 20 },
+        cactus: { min: 3, max: 8 }
+    };
+    
+    locationDetails.props.forEach(propType => {
+        const counts = propCounts[propType] || { min: 1, max: 3 };
+        const count = counts.min + Math.floor(Math.random() * (counts.max - counts.min + 1));
+        
+        for (let i = 0; i < count; i++) {
+            const prop = createEnvironmentProp(propType, AppState.scenes[sceneIndex]);
+            if (prop && AppState.three.assetManager) {
+                const instanceId = AppState.three.assetManager.addAsset(propType, {
+                    position: new THREE.Vector3(
+                        (Math.random() - 0.5) * 30,
+                        -4.5,
+                        (Math.random() - 0.5) * 20 - 5
+                    )
+                });
+            }
+        }
+        });
+    }
+
+async function buildCharacterEnhanced(sceneData, colors, sceneIndex, charIndex) {
+    // Build base character
+    await buildCharacter(sceneData.characters[charIndex], colors, sceneIndex, charIndex);
+    
+    // Get the character3d instance
+    const charData = AppState.three.characters3d.find(c => c.sceneIndex === sceneIndex && c.charIndex === charIndex);
+    if (!charData || !charData.character3d) return;
+    
+    const character3d = charData.character3d;
+    
+    // Apply character details if available
+    if (sceneData.characterDetails && sceneData.characterDetails[charIndex]) {
+        const details = sceneData.characterDetails[charIndex];
+        
+        // Set appropriate animation based on scene type and character role
+        const animation = suggestAnimationForCharacter(details, sceneData.sceneType);
+        if (animation) {
+            character3d.playAnimation(animation);
+        }
+        
+        // Set expression based on scene mood
+        if (sceneData.mood && FACIAL_EXPRESSIONS[sceneData.mood]) {
+            character3d.setExpression(sceneData.mood, 1.0);
+        }
+    }
+    
+    // Position characters based on scene type and count
+    positionCharacterInScene(character3d, charIndex, sceneData.characters.length, sceneData.sceneType);
+}
+
+function suggestAnimationForCharacter(details, sceneType) {
+    if (!details) return 'idle';
+    
+    const roleAnimations = {
+        protagonist: {
+            introduction: 'idle',
+            inciting_incident: 'surprised',
+            rising_action: 'walk',
+            climax: 'point',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        mentor: {
+            introduction: 'idle',
+            inciting_incident: 'talk',
+            rising_action: 'point',
+            climax: 'nod',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        antagonist: {
+            introduction: 'idle',
+            inciting_incident: 'angry',
+            rising_action: 'walk',
+            climax: 'angry',
+            falling_action: 'sad',
+            resolution: 'idle'
+        },
+        companion: {
+            introduction: 'wave',
+            inciting_incident: 'surprised',
+            rising_action: 'walk',
+            climax: 'point',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        magical_helper: {
+            introduction: 'wave',
+            inciting_incident: 'surprised',
+            rising_action: 'point',
+            climax: 'jump',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        protector: {
+            introduction: 'idle',
+            inciting_incident: 'point',
+            rising_action: 'walk',
+            climax: 'run',
+            falling_action: 'happy',
+            resolution: 'idle'
+        },
+        worker: {
+            introduction: 'idle',
+            inciting_incident: 'surprised',
+            rising_action: 'walk',
+            climax: 'point',
+            falling_action: 'happy',
+            resolution: 'idle'
+        },
+        healer: {
+            introduction: 'idle',
+            inciting_incident: 'sad',
+            rising_action: 'talk',
+            climax: 'point',
+            falling_action: 'happy',
+            resolution: 'wave'
+        },
+        trickster: {
+            introduction: 'wave',
+            inciting_incident: 'surprised',
+            rising_action: 'run',
+            climax: 'jump',
+            falling_action: 'happy',
+            resolution: 'wave'
+        }
+    };
+    
+    const animations = roleAnimations[details.role] || roleAnimations.protagonist;
+    return animations[sceneType] || 'idle';
+}
+
+function positionCharacterInScene(character3d, charIndex, totalChars, sceneType) {
+    const spacing = 3;
+    const startX = -(totalChars - 1) * spacing / 2;
+    
+    let x, z;
+    
+    switch (sceneType) {
+        case 'introduction':
+        case 'resolution':
+            // Line formation
+            x = startX + charIndex * spacing;
+            z = 0;
+            break;
+        case 'inciting_incident':
+            // Slight arc
+            x = startX + charIndex * spacing;
+            z = Math.sin(charIndex * 0.5) * 1.5;
+            break;
+        case 'rising_action':
+            // Scattered
+            x = startX + charIndex * spacing + (Math.random() - 0.5) * 2;
+            z = (Math.random() - 0.5) * 3;
+            break;
+        case 'climax':
+            // Converged toward center
+            x = startX + charIndex * spacing * 0.5;
+            z = 1;
+            break;
+        case 'falling_action':
+            // Line but closer
+            x = startX + charIndex * spacing * 0.7;
+            z = 0;
+            break;
+        default:
+            x = startX + charIndex * spacing;
+            z = 0;
+    }
+    
+    character3d.group.position.set(x, 0, z);
+    
+    // Face center for most scenes
+    if (sceneType !== 'rising_action') {
+        character3d.lookAt(new THREE.Vector3(0, 1.6, 0));
+    }
+}
+
+function applyTimeOfDayEffects(timeOfDay, mood) {
+    const background = AppState.three.background;
+    if (!background) return;
+    
+    // Fog for morning/evening
+    if (timeOfDay === 'morning' || timeOfDay === 'evening') {
+        background.fogDensity = 0.02;
+        background.fogColor = timeOfDay === 'morning' ? 0xe0f0ff : 0xffd0a0;
+    } else if (timeOfDay === 'night') {
+        background.fogDensity = 0.05;
+        background.fogColor = 0x1a1a3a;
+    } else {
+        background.fogDensity = 0;
+    }
+    
+    // Sky color adjustments handled in buildBackgroundEnhanced
+}
+
+function updateKeyLightPosition() {
 
 async function buildBackground(bgName, colors, sceneIndex) {
     const template = BackgroundTemplates[bgName] || BackgroundTemplates.garden;

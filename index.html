@@ -50,14 +50,18 @@
             </div>
             <div class="progress-step" data-step="2">
                 <span class="step-number">2</span>
-                <span class="step-label">सीन</span>
+                <span class="step-label">स्क्रिप्ट</span>
             </div>
             <div class="progress-step" data-step="3">
                 <span class="step-number">3</span>
-                <span class="step-label">एनिमेशन</span>
+                <span class="step-label">सीन</span>
             </div>
             <div class="progress-step" data-step="4">
                 <span class="step-number">4</span>
+                <span class="step-label">एनिमेशन</span>
+            </div>
+            <div class="progress-step" data-step="5">
+                <span class="step-number">5</span>
                 <span class="step-label">वीडियो</span>
             </div>
         </nav>
@@ -132,8 +136,141 @@
                 </div>
             </section>
 
-            <!-- Step 2: Scene Editor -->
+            <!-- Step 2: Script Editor -->
             <section class="step-panel" id="step2" data-step="2">
+                <div class="panel-header">
+                    <h2>स्क्रिप्ट और कथन योजनाकार</h2>
+                    <p class="panel-subtitle">अपनी कहानी को विस्तृत स्क्रिप्ट में बदलें - संवाद, कथन, और क्रियाएं</p>
+                </div>
+
+                <div class="script-editor">
+                    <div class="script-toolbar">
+                        <div class="toolbar-group">
+                            <button class="btn btn-secondary" id="newScriptBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                नई स्क्रिप्ट
+                            </button>
+                            <button class="btn btn-secondary" id="scriptTemplateBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6"/><path d="M9 15h6"/></svg>
+                                टेम्पलेट से
+                            </button>
+                            <button class="btn btn-secondary" id="importScriptBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>
+                                आयात करें
+                            </button>
+                            <button class="btn btn-secondary" id="exportScriptBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                निर्यात करें
+                            </button>
+                        </div>
+                        <div class="toolbar-group">
+                            <label class="label" style="margin-bottom: 4px;">भाषा</label>
+                            <select id="scriptLanguage" class="select" style="width: auto;">
+                                <option value="hi">हिंदी</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="script-main">
+                        <div class="script-scenes-panel">
+                            <div class="panel-header-inline">
+                                <h3>सीन सूची</h3>
+                                <button class="btn btn-sm btn-primary" id="addScriptSceneBtn">+ सीन जोड़ें</button>
+                            </div>
+                            <div class="script-scenes-list" id="scriptScenesList"></div>
+                        </div>
+
+                        <div class="script-editor-panel" id="scriptEditorPanel" style="display: none;">
+                            <div class="editor-header">
+                                <h3 id="editingScriptSceneTitle">सीन संपादित करें</h3>
+                                <button class="btn btn-ghost" id="closeScriptEditorBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    बंद करें
+                                </button>
+                            </div>
+                            <div class="editor-content">
+                                <div class="editor-section">
+                                    <label class="label">सीन शीर्षक</label>
+                                    <input type="text" id="scriptSceneTitle" class="input" placeholder="सीन का शीर्षक">
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">स्थान</label>
+                                    <input type="text" id="scriptSceneLocation" class="input" placeholder="जंगल, घर, स्कूल...">
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">दिन का समय</label>
+                                    <select id="scriptSceneTimeOfDay" class="select">
+                                        <option value="day">दिन</option>
+                                        <option value="night">रात</option>
+                                        <option value="morning">सुबह</option>
+                                        <option value="evening">शाम</option>
+                                    </select>
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">अवधि (सेकंड)</label>
+                                    <input type="number" id="scriptSceneDuration" class="input" value="8" min="3" max="60">
+                                </div>
+
+                                <div class="editor-section">
+                                    <label class="label">कथन (Narration)</label>
+                                    <textarea id="scriptSceneNarration" class="textarea" rows="4" placeholder="कथन या वर्णन..."></textarea>
+                                </div>
+
+                                <div class="editor-section">
+                                    <label class="label">संवाद (Dialogues)</label>
+                                    <div class="dialogues-list" id="scriptDialoguesList"></div>
+                                    <button class="btn btn-sm btn-secondary" id="addDialogueBtn">+ संवाद जोड़ें</button>
+                                </div>
+
+                                <div class="editor-section">
+                                    <label class="label">क्रियाएं (Actions)</label>
+                                    <div class="actions-list" id="scriptActionsList"></div>
+                                    <button class="btn btn-sm btn-secondary" id="addActionBtn">+ क्रिया जोड़ें</button>
+                                </div>
+
+                                <div class="editor-section">
+                                    <label class="label">कैमरा नोट्स</label>
+                                    <textarea id="scriptCameraNotes" class="textarea" rows="2" placeholder="कैमरा निर्देश..."></textarea>
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">लाइटिंग नोट्स</label>
+                                    <textarea id="scriptLightingNotes" class="textarea" rows="2" placeholder="लाइटिंग निर्देश..."></textarea>
+                                </div>
+                                <div class="editor-section">
+                                    <label class="label">ध्वनि नोट्स</label>
+                                    <textarea id="scriptSoundNotes" class="textarea" rows="2" placeholder="ध्वनि/संगीत निर्देश..."></textarea>
+                                </div>
+
+                                <div class="editor-actions">
+                                    <button class="btn btn-danger" id="deleteScriptSceneBtn">सीन हटाएं</button>
+                                    <button class="btn btn-primary" id="saveScriptSceneBtn">सेव करें</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="backToStoryFromScriptBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        वापस
+                    </button>
+                    <button class="btn btn-primary btn-lg" id="generateScenesFromScriptBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 18 2 12 8 6"/>
+                        </svg>
+                        सीन बनाएं और आगे बढ़ें
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 3: Scene Editor -->
+            <section class="step-panel" id="step3" data-step="3">
                 <div class="panel-header">
                     <h2>सीन संपादित करें</h2>
                     <p class="panel-subtitle">प्रत्येक सीन की कहानी, पात्र और पृष्ठभूमि एडजस्ट करें</p>

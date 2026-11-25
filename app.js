@@ -18,6 +18,7 @@ import { Character3D } from './character3d.js';
 import { CLOTHING_PRESETS, SKIN_TONES, HAIR_COLORS, EYE_COLORS } from './characters.js';
 import { assetLibrary, SceneAssetManager, ASSET_CATEGORIES, ALL_ASSETS } from './assets.js';
 import { DirectionParser, CharacterDirector, autoDirectScene, getDirectionSuggestions } from './direction.js';
+import { ScriptManager, SCRIPT_TEMPLATES, createScriptFromTemplate, syncScriptToAnimation, generateSubtitlesFromScript } from './script.js';
 
 // ========================================
 // Global State Management
@@ -3977,6 +3978,484 @@ function applyLightingMood(mood) {
     }
 }
 
+// ========================================
+// Script Editor
+// ========================================
+
+let scriptManager = null;
+let currentEditingScriptSceneId = null;
+
+function initializeScriptEditor() {
+    // Create script manager
+    scriptManager = new ScriptManager();
+    AppState.scriptManager = scriptManager;
+    
+    // Event listeners
+    const newScriptBtn = $('#newScriptBtn');
+    const templateBtn = $('#scriptTemplateBtn');
+    const importBtn = $('#importScriptBtn');
+    const exportBtn = $('#exportScriptBtn');
+    const addSceneBtn = $('#addScriptSceneBtn');
+    const addDialogueBtn = $('#addDialogueBtn');
+    const addActionBtn = $('#addActionBtn');
+    const saveBtn = $('#saveScriptSceneBtn');
+    const deleteBtn = $('#deleteScriptSceneBtn');
+    const closeBtn = $('#closeScriptEditorBtn');
+    const generateBtn = $('#generateScenesFromScriptBtn');
+    const languageSelect = $('#scriptLanguage');
+    const backBtn = $('#backToStoryFromScriptBtn');
+    
+    if (newScriptBtn) newScriptBtn.addEventListener('click', handleNewScript);
+    if (templateBtn) templateBtn.addEventListener('click', handleScriptTemplate);
+    if (importBtn) importBtn.addEventListener('click', handleImportScript);
+    if (exportBtn) exportBtn.addEventListener('click', handleExportScript);
+    if (addSceneBtn) addSceneBtn.addEventListener('click', handleAddScriptScene);
+    if (addDialogueBtn) addDialogueBtn.addEventListener('click', handleAddDialogue);
+    if (addActionBtn) addActionBtn.addEventListener('click', handleAddAction);
+    if (saveBtn) saveBtn.addEventListener('click', handleSaveScriptScene);
+    if (deleteBtn) deleteBtn.addEventListener('click', handleDeleteScriptScene);
+    if (closeBtn) closeBtn.addEventListener('click', handleCloseScriptEditor);
+    if (generateBtn) generateBtn.addEventListener('click', handleGenerateScenesFromScript);
+    if (languageSelect) languageSelect.addEventListener('change', (e) => {
+        if (scriptManager) scriptManager.script.language = e.target.value;
+    });
+    if (backBtn) backBtn.addEventListener('click', () => goToStep(1));
+    
+    // Load script scenes list
+    renderScriptScenesList();
+}
+
+function handleNewScript() {
+    if (scriptManager && scriptManager.script.scenes.length > 0) {
+        if (!confirm('वर्तमान स्क्रिप्ट खो जाएगी। जारी रखें?')) return;
+    }
+    scriptManager.newScript('', '');
+    currentEditingScriptSceneId = null;
+    renderScriptScenesList();
+    closeScriptEditorPanel();
+    showToast('नई स्क्रिप्ट बनाई गई', 'success');
+}
+
+function handleScriptTemplate() {
+    // Show template selection modal
+    const templates = Object.entries(SCRIPT_TEMPLATES).map(([id, t]) => `
+        <button class="btn btn-secondary template-btn" data-template="${id}" style="width: 100%; margin: 4px 0; text-align: left;">
+            <strong>${t.name}</strong><br>
+            <small>${t.description}</small>
+        </button>
+    `).join('');
+    
+    const modal = createModal('स्क्रिप्ट टेम्पलेट चुनें', templates);
+    modal.querySelectorAll('.template-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const script = createScriptFromTemplate(btn.dataset.template, '');
+            if (script) {
+                scriptManager.script = script;
+                scriptManager.updateCharactersList();
+                renderScriptScenesList();
+                closeScriptEditorPanel();
+                modal.remove();
+                showToast(`${SCRIPT_TEMPLATES[btn.dataset.template].name} टेम्पलेट लोड किया गया`, 'success');
+            }
+        });
+    });
+}
+
+function handleImportScript() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (scriptManager.importFromJSON(event.target.result)) {
+                    renderScriptScenesList();
+                    showToast('स्क्रिप्ट आयात की गई', 'success');
+                } else {
+                    showToast('आयात विफल: अमान्य फॉर्मेट', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
+
+function handleExportScript() {
+    if (!scriptManager || scriptManager.script.scenes.length === 0) {
+        showToast('निर्यात करने के लिए कोई स्क्रिप्ट नहीं', 'warning');
+        return;
+    }
+    
+    const json = scriptManager.exportAsJSON();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${scriptManager.script.title || 'script'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('स्क्रिप्ट निर्यात की गई', 'success');
+}
+
+function handleAddScriptScene() {
+    const scene = scriptManager.addScene({
+        title: `सीन ${scriptManager.script.scenes.length + 1}`,
+        duration: 8
+    });
+    renderScriptScenesList();
+    openScriptSceneEditor(scene.id);
+    showToast('सीन जोड़ा गया', 'success');
+}
+
+function handleAddDialogue() {
+    if (!currentEditingScriptSceneId) return;
+    
+    scriptManager.addDialogue(currentEditingScriptSceneId, {
+        speaker: '',
+        text: '',
+        emotion: 'neutral',
+        animation: 'talk'
+    });
+    renderDialoguesList(currentEditingScriptSceneId);
+}
+
+function handleAddAction() {
+    if (!currentEditingScriptSceneId) return;
+    
+    scriptManager.addAction(currentEditingScriptSceneId, {
+        character: '',
+        action: 'walk',
+        target: '',
+        description: ''
+    });
+    renderActionsList(currentEditingScriptSceneId);
+}
+
+function handleSaveScriptScene() {
+    if (!currentEditingScriptSceneId) return;
+    
+    const updates = {
+        title: $('#scriptSceneTitle').value,
+        location: $('#scriptSceneLocation').value,
+        timeOfDay: $('#scriptSceneTimeOfDay').value,
+        duration: parseInt($('#scriptSceneDuration').value) || 8,
+        narration: $('#scriptSceneNarration').value,
+        cameraNotes: $('#scriptCameraNotes').value,
+        lightingNotes: $('#scriptLightingNotes').value,
+        soundNotes: $('#scriptSoundNotes').value
+    };
+    
+    scriptManager.updateScene(currentEditingScriptSceneId, updates);
+    renderScriptScenesList();
+    showToast('सीन सेव किया गया', 'success');
+}
+
+function handleDeleteScriptScene() {
+    if (!currentEditingScriptSceneId) return;
+    
+    if (!confirm('इस सीन को हटाने से सभी संवाद और क्रियाएं मिट जाएंगी। जारी रखें?')) return;
+    
+    scriptManager.deleteScene(currentEditingScriptSceneId);
+    currentEditingScriptSceneId = null;
+    renderScriptScenesList();
+    closeScriptEditorPanel();
+    showToast('सीन हटाया गया', 'success');
+}
+
+function handleCloseScriptEditor() {
+    closeScriptEditorPanel();
+}
+
+function handleGenerateScenesFromScript() {
+    if (!scriptManager || scriptManager.script.scenes.length === 0) {
+        showToast('पहले स्क्रिप्ट में सीन जोड़ें', 'warning');
+        return;
+    }
+    
+    showLoading('स्क्रिप्ट से सीन बनाए जा रहे हैं...');
+    
+    setTimeout(() => {
+        // Convert script scenes to app scenes
+        const breakdown = scriptManager.generateSceneBreakdown();
+        AppState.scenes = breakdown.map((s, i) => ({
+            ...s,
+            id: s.id || generateId(),
+            characters: s.characters.length > 0 ? s.characters : ['पात्र'],
+            background: s.background || 'गार्डन'
+        }));
+        
+        // Initialize 3D character data
+        AppState.scenes.forEach((scene, sceneIndex) => {
+            scene.characters3d = scene.characters.map((_, charIndex) => ({
+                id: `char_${sceneIndex}_${charIndex}`,
+                bodyType: 'adult',
+                skinTone: 2,
+                hairStyle: 'short',
+                hairColor: 0,
+                eyeColor: 0,
+                clothing: 'casual',
+                shirtColor: null,
+                pantsColor: null,
+                shoesColor: null,
+                bodyScale: { height: 1.0, width: 1.0, depth: 1.0 },
+                headScale: 1.0,
+                limbLength: 1.0,
+                expression: 'neutral',
+                expressionIntensity: 1.0
+            }));
+        });
+        
+        // Store subtitles for later use
+        AppState.generatedSubtitles = generateSubtitlesFromScript(scriptManager.script);
+        
+        renderSceneList();
+        updateGenerateAnimationButton();
+        goToStep(3); // Go to scene editor
+        hideLoading();
+        showToast(`${AppState.scenes.length} सीन स्क्रिप्ट से बनाए गए`, 'success');
+    }, 100);
+}
+
+function renderScriptScenesList() {
+    const container = $('#scriptScenesList');
+    if (!container || !scriptManager) return;
+    
+    container.innerHTML = '';
+    
+    if (scriptManager.script.scenes.length === 0) {
+        container.innerHTML = `
+            <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+                <p>अभी तक कोई सीन नहीं</p>
+                <p style="font-size: 0.8125rem;">"सीन जोड़ें" पर क्लिक करें</p>
+            </div>
+        `;
+        return;
+    }
+    
+    scriptManager.script.scenes.forEach(scene => {
+        const item = document.createElement('div');
+        item.className = 'script-scene-item' + (currentEditingScriptSceneId === scene.id ? ' active' : '');
+        item.dataset.sceneId = scene.id;
+        item.innerHTML = `
+            <div class="script-scene-info">
+                <div class="script-scene-number">सीन ${scene.number}</div>
+                <div class="script-scene-title">${scene.title || 'बिना शीर्षक'}</div>
+                <div class="script-scene-duration">${scene.duration}s • ${scene.dialogues.length} संवाद • ${scene.actions.length} क्रियाएं</div>
+            </div>
+        `;
+        item.addEventListener('click', () => openScriptSceneEditor(scene.id));
+        container.appendChild(item);
+    });
+}
+
+function openScriptSceneEditor(sceneId) {
+    const scene = scriptManager.script.scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    
+    currentEditingScriptSceneId = sceneId;
+    
+    // Update UI
+    $$('.script-scene-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.sceneId === sceneId);
+    });
+    
+    const panel = $('#scriptEditorPanel');
+    if (panel) panel.style.display = 'block';
+    
+    $('#editingScriptSceneTitle').textContent = `सीन ${scene.number}: ${scene.title}`;
+    $('#scriptSceneTitle').value = scene.title;
+    $('#scriptSceneLocation').value = scene.location;
+    $('#scriptSceneTimeOfDay').value = scene.timeOfDay;
+    $('#scriptSceneDuration').value = scene.duration;
+    $('#scriptSceneNarration').value = scene.narration;
+    $('#scriptCameraNotes').value = scene.cameraNotes;
+    $('#scriptLightingNotes').value = scene.lightingNotes;
+    $('#scriptSoundNotes').value = scene.soundNotes;
+    
+    renderDialoguesList(sceneId);
+    renderActionsList(sceneId);
+}
+
+function closeScriptEditorPanel() {
+    currentEditingScriptSceneId = null;
+    const panel = $('#scriptEditorPanel');
+    if (panel) panel.style.display = 'none';
+    
+    $$('.script-scene-item').forEach(item => item.classList.remove('active'));
+}
+
+function renderDialoguesList(sceneId) {
+    const container = $('#scriptDialoguesList');
+    if (!container) return;
+    
+    const scene = scriptManager.script.scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    
+    if (scene.dialogues.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.8125rem; padding: 8px;">कोई संवाद नहीं</p>';
+        return;
+    }
+    
+    container.innerHTML = scene.dialogues.map((dialogue, index) => `
+        <div class="dialogue-item" data-dialogue-id="${dialogue.id}">
+            <div class="dialogue-fields">
+                <div class="dialogue-row">
+                    <select class="select" data-field="speaker">
+                        <option value="">स्पीकर चुनें</option>
+                        ${scriptManager.script.characters.map(c => `<option value="${c}" ${c === dialogue.speaker ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                    <select class="select" data-field="emotion">
+                        <option value="neutral" ${dialogue.emotion === 'neutral' ? 'selected' : ''}>तटस्थ</option>
+                        <option value="happy" ${dialogue.emotion === 'happy' ? 'selected' : ''}>खुश</option>
+                        <option value="sad" ${dialogue.emotion === 'sad' ? 'selected' : ''}>उदास</option>
+                        <option value="angry" ${dialogue.emotion === 'angry' ? 'selected' : ''}>गुस्सा</option>
+                        <option value="surprised" ${dialogue.emotion === 'surprised' ? 'selected' : ''}>आश्चर्य</option>
+                        <option value="scared" ${dialogue.emotion === 'scared' ? 'selected' : ''}>डर</option>
+                        <option value="thinking" ${dialogue.emotion === 'thinking' ? 'selected' : ''}>सोच</option>
+                    </select>
+                    <select class="select" data-field="animation">
+                        <option value="talk" ${dialogue.animation === 'talk' ? 'selected' : ''}>बात करना</option>
+                        <option value="idle" ${dialogue.animation === 'idle' ? 'selected' : ''}>इडल</option>
+                        <option value="wave" ${dialogue.animation === 'wave' ? 'selected' : ''}>हाथ हिलाना</option>
+                        <option value="point" ${dialogue.animation === 'point' ? 'selected' : ''}>इशारा करना</option>
+                    </select>
+                </div>
+                <div class="dialogue-row">
+                    <input type="text" class="input" data-field="text" placeholder="संवाद टेक्स्ट" value="${dialogue.text}">
+                    <input type="number" class="input" data-field="timing" placeholder="समय (सेकंड)" value="${dialogue.timing || 0}" step="0.5" min="0" style="width: 100px;">
+                    <input type="number" class="input" data-field="duration" placeholder="अवधि" value="${dialogue.duration || 3}" step="0.5" min="1" style="width: 80px;">
+                </div>
+            </div>
+            <div class="dialogue-actions">
+                <button class="btn btn-danger btn-sm" data-action="delete">हटाएं</button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners
+    container.querySelectorAll('.dialogue-item').forEach(item => {
+        const dialogueId = item.dataset.dialogueId;
+        const dialogue = scene.dialogues.find(d => d.id === dialogueId);
+        if (!dialogue) return;
+        
+        item.querySelectorAll('[data-field]').forEach(field => {
+            field.addEventListener('change', () => {
+                const updates = { [field.dataset.field]: field.value };
+                if (['timing', 'duration'].includes(field.dataset.field)) {
+                    updates[field.dataset.field] = parseFloat(field.value) || 0;
+                }
+                scriptManager.updateDialogue(sceneId, dialogueId, updates);
+            });
+        });
+        
+        item.querySelector('[data-action="delete"]').addEventListener('click', () => {
+            if (confirm('इस संवाद को हटाएं?')) {
+                scriptManager.deleteDialogue(sceneId, dialogueId);
+                renderDialoguesList(sceneId);
+            }
+        });
+    });
+}
+
+function renderActionsList(sceneId) {
+    const container = $('#scriptActionsList');
+    if (!container) return;
+    
+    const scene = scriptManager.script.scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    
+    const actionTypes = ['walk', 'run', 'sit', 'stand', 'wave', 'point', 'look', 'give', 'take', 'hug', 'highfive', 'nod', 'shake_head', 'jump', 'dance'];
+    
+    if (scene.actions.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.8125rem; padding: 8px;">कोई क्रिया नहीं</p>';
+        return;
+    }
+    
+    container.innerHTML = scene.actions.map((action, index) => `
+        <div class="action-item" data-action-id="${action.id}">
+            <div class="action-fields">
+                <div class="action-row">
+                    <select class="select" data-field="character">
+                        <option value="">पात्र चुनें</option>
+                        ${scriptManager.script.characters.map(c => `<option value="${c}" ${c === action.character ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                    <select class="select" data-field="action">
+                        ${actionTypes.map(a => `<option value="${a}" ${a === action.action ? 'selected' : ''}>${a}</option>`).join('')}
+                    </select>
+                    <select class="select" data-field="target">
+                        <option value="">लक्ष्य (वैकल्पिक)</option>
+                        ${scriptManager.script.characters.map(c => `<option value="${c}" ${c === action.target ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="action-row">
+                    <input type="text" class="input" data-field="description" placeholder="विवरण" value="${action.description || ''}" style="flex: 1;">
+                    <input type="number" class="input" data-field="timing" placeholder="समय" value="${action.timing || 0}" step="0.5" min="0" style="width: 100px;">
+                    <input type="number" class="input" data-field="duration" placeholder="अवधि" value="${action.duration || 2}" step="0.5" min="1" style="width: 80px;">
+                </div>
+            </div>
+            <div class="action-actions">
+                <button class="btn btn-danger btn-sm" data-action="delete">हटाएं</button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners
+    container.querySelectorAll('.action-item').forEach(item => {
+        const actionId = item.dataset.actionId;
+        const action = scene.actions.find(a => a.id === actionId);
+        if (!action) return;
+        
+        item.querySelectorAll('[data-field]').forEach(field => {
+            field.addEventListener('change', () => {
+                const updates = { [field.dataset.field]: field.value };
+                if (['timing', 'duration'].includes(field.dataset.field)) {
+                    updates[field.dataset.field] = parseFloat(field.value) || 0;
+                }
+                scriptManager.updateAction(sceneId, actionId, updates);
+            });
+        });
+        
+        item.querySelector('[data-action="delete"]').addEventListener('click', () => {
+            if (confirm('इस क्रिया को हटाएं?')) {
+                scriptManager.deleteAction(sceneId, actionId);
+                renderActionsList(sceneId);
+            }
+        });
+    });
+}
+
+function createModal(title, content) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    `;
+    modal.innerHTML = `
+        <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 24px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto;">
+            <h3 style="margin: 0 0 16px;">${title}</h3>
+            <div>${content}</div>
+            <button class="btn btn-ghost" style="margin-top: 16px; width: 100%;" onclick="this.closest('.modal-overlay').remove()">रद्द करें</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+    
+    return modal;
+}
+
 function updateKeyLightPosition() {
     const { keyLight, lighting } = AppState.three;
     const THREE = AppState.three.THREE;
@@ -4739,13 +5218,17 @@ function initEventListeners() {
     // Auto-Direction initialization
     initializeAutoDirect();
     
+    // Script Editor initialization
+    initializeScriptEditor();
+    
     $('#closeEditorBtn').addEventListener('click', closeSceneEditor);
     $('#saveSceneBtn').addEventListener('click', saveSceneEdit);
     $('#regenerateSceneBtn').addEventListener('click', regenerateScene);
     
     $('#backToStoryBtn').addEventListener('click', () => goToStep(1));
-    $('#backToScenesBtn').addEventListener('click', () => goToStep(2));
-    $('#backToPreviewBtn').addEventListener('click', () => goToStep(3));
+    $('#backToScenesBtn').addEventListener('click', () => goToStep(3));
+    $('#backToPreviewBtn').addEventListener('click', () => goToStep(4));
+    $('#backToStoryFromScriptBtn').addEventListener('click', () => goToStep(1));
     
     $('#generateAnimationBtn').addEventListener('click', handleGenerateAnimation);
     $('#playPauseBtn').addEventListener('click', togglePlayPause);
@@ -4774,7 +5257,7 @@ function initEventListeners() {
         rebuildAllScenes();
     });
     
-    $('#exportVideoBtn').addEventListener('click', () => goToStep(4));
+    $('#exportVideoBtn').addEventListener('click', () => goToStep(5));
     $('#startExportBtn').addEventListener('click', startExport);
     $('#downloadVideoBtn').addEventListener('click', downloadVideo);
     $('#shareVideoBtn').addEventListener('click', shareVideo);
@@ -4841,7 +5324,7 @@ function handleGenerateScenes() {
         
         renderSceneList();
         updateGenerateAnimationButton();
-        goToStep(2);
+        goToStep(2); // Go to script editor
         hideLoading();
         showToast(`${AppState.scenes.length} सीन बनाए गए`, 'success');
     }, 500);
@@ -5049,7 +5532,7 @@ function handleGenerateAnimation() {
     
     setTimeout(() => {
         buildAnimationTimeline();
-        goToStep(3);
+        goToStep(4); // Animation preview
         hideLoading();
         showToast('एनिमेशन तैयार! प्ले बटन दबाएं', 'success');
     }, 1000);
@@ -5185,23 +5668,31 @@ function handleKeydown(e) {
 }
 
 function goToStep(step) {
-    if (step < 1 || step > 4) return;
+    if (step < 1 || step > 5) return;
     
-    if (step === 2 && AppState.scenes.length === 0) {
+    // Step 2: Script Editor - need script
+    if (step === 2 && (!AppState.scriptManager || AppState.scriptManager.script.scenes.length === 0)) {
+        showToast('पहले स्क्रिप्ट बनाएं', 'warning');
+        return;
+    }
+    // Step 3: Scene Editor - need scenes
+    if (step === 3 && AppState.scenes.length === 0) {
         showToast('पहले सीन बनाएं', 'warning');
         return;
     }
-    if (step === 3 && !AppState.animationData) {
-        showToast('पहले एनिमेशन बनाएं', 'warning');
-        return;
-    }
+    // Step 4: Animation Preview - need animation
     if (step === 4 && !AppState.animationData) {
         showToast('पहले एनिमेशन बनाएं', 'warning');
         return;
     }
+    // Step 5: Video Export - need animation
+    if (step === 5 && !AppState.animationData) {
+        showToast('पहले एनिमेशन बनाएं', 'warning');
+        return;
+    }
     
-    // Update button state when navigating to step 2
-    if (step === 2) {
+    // Update button state when navigating to step 3 (scene editor)
+    if (step === 3) {
         updateGenerateAnimationButton();
     }
     

@@ -20,6 +20,7 @@ import { assetLibrary, SceneAssetManager, ASSET_CATEGORIES, ALL_ASSETS } from '.
 import { DirectionParser, CharacterDirector, autoDirectScene, getDirectionSuggestions } from './direction.js';
 import { ScriptManager, SCRIPT_TEMPLATES, createScriptFromTemplate, syncScriptToAnimation, generateSubtitlesFromScript } from './script.js';
 import { ContinuityValidator, generateFixSuggestions, CONTINUITY_CHECKS } from './continuity.js';
+import { PropGenerator, PROP_CATEGORIES, PROP_VARIATIONS, MATERIAL_PRESETS, PROP_CUSTOMIZATION_OPTIONS } from './propGenerator.js';
 
 // ========================================
 // Global State Management
@@ -61,6 +62,7 @@ const AppState = {
         characters3d: [],  // New 3D human characters
         backgrounds: [],
         assetManager: null,  // Asset library manager
+        propGenerator: null,  // Procedural prop generator
         currentScene: 0,
         transitionProgress: 0,
         isTransitioning: false,
@@ -1409,6 +1411,9 @@ async function initThreeJS() {
     
     // Initialize asset manager
     AppState.three.assetManager = new SceneAssetManager(AppState.three.scene);
+    
+    // Initialize prop generator
+    AppState.three.propGenerator = new PropGenerator(AppState.three);
     
     // Initialize background
     updateBackground();
@@ -7152,6 +7157,310 @@ function initializeContinuityValidation() {
     if (fixBtn) fixBtn.addEventListener('click', handleAutoFixContinuity);
 }
 
+// ========================================
+// Prop Generator
+// ========================================
+
+function initializePropGenerator() {
+    // Populate category dropdown
+    const categorySelect = $('#propCategory');
+    if (categorySelect) {
+        categorySelect.innerHTML = '<option value="">प्रॉप कैटेगरी चुनें</option>';
+        Object.entries(PROP_CATEGORIES).forEach(([key, cat]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = `${cat.icon} ${cat.name}`;
+            categorySelect.appendChild(option);
+        });
+    }
+
+    // Populate material dropdown
+    const materialSelect = $('#propMaterial');
+    if (materialSelect) {
+        materialSelect.innerHTML = '';
+        Object.entries(MATERIAL_PRESETS).forEach(([key, mat]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = mat.name;
+            materialSelect.appendChild(option);
+        });
+    }
+
+    // Category change - populate prop types
+    const propCategorySelect = $('#propCategory');
+    const propTypeSelect = $('#propType');
+    const propVariationSelect = $('#propVariation');
+
+    if (propCategorySelect) {
+        propCategorySelect.addEventListener('change', (e) => {
+            const category = e.target.value;
+            if (category && PROP_CATEGORIES[category]) {
+                propTypeSelect.disabled = false;
+                propTypeSelect.innerHTML = '<option value="">प्रॉप प्रकार चुनें</option>';
+                PROP_CATEGORIES[category].baseProps.forEach(prop => {
+                    const option = document.createElement('option');
+                    option.value = prop;
+                    option.textContent = prop.charAt(0).toUpperCase() + prop.slice(1);
+                    propTypeSelect.appendChild(option);
+                });
+                propVariationSelect.disabled = true;
+                propVariationSelect.innerHTML = '<option value="">पहले प्रॉप चुनें</option>';
+            } else {
+                propTypeSelect.disabled = true;
+                propTypeSelect.innerHTML = '<option value="">पहले कैटेगरी चुनें</option>';
+                propVariationSelect.disabled = true;
+                propVariationSelect.innerHTML = '<option value="">पहले प्रॉप चुनें</option>';
+            }
+        });
+    }
+
+    // Prop type change - populate variations
+    if (propTypeSelect) {
+        propTypeSelect.addEventListener('change', (e) => {
+            const propType = e.target.value;
+            if (propType && PROP_VARIATIONS[propType]) {
+                propVariationSelect.disabled = false;
+                propVariationSelect.innerHTML = '<option value="">डिफ़ॉल्ट</option>';
+                PROP_VARIATIONS[propType].variations.forEach(variation => {
+                    const option = document.createElement('option');
+                    option.value = variation;
+                    option.textContent = variation.charAt(0).toUpperCase() + variation.slice(1);
+                    propVariationSelect.appendChild(option);
+                });
+            } else {
+                propVariationSelect.disabled = true;
+                propVariationSelect.innerHTML = '<option value="">पहले प्रॉप चुनें</option>';
+            }
+        });
+    }
+
+    // Size slider value display
+    $('#propSize').addEventListener('input', (e) => {
+        $('#propSizeValue').textContent = parseFloat(e.target.value).toFixed(1);
+    });
+
+    // Position sliders value display
+    $('#propPosX').addEventListener('input', (e) => {
+        $('#propPosXValue').textContent = e.target.value;
+    });
+    $('#propPosY').addEventListener('input', (e) => {
+        $('#propPosYValue').textContent = e.target.value;
+    });
+    $('#propPosZ').addEventListener('input', (e) => {
+        $('#propPosZValue').textContent = e.target.value;
+    });
+
+    // Generate prop button
+    $('#generateProp').addEventListener('click', handleGenerateProp);
+
+    // Add prop to scene button
+    $('#addPropToScene').addEventListener('click', handleAddPropToScene);
+
+    // Clear generated props button
+    $('#clearGeneratedProps').addEventListener('click', handleClearGeneratedProps);
+}
+
+function handleGenerateProp() {
+    const category = $('#propCategory').value;
+    const propType = $('#propType').value;
+    const variation = $('#propVariation').value || 'default';
+    const color = $('#propColor').value;
+    const material = $('#propMaterial').value;
+    const size = parseFloat($('#propSize').value);
+
+    if (!category || !propType) {
+        showToast('कृपया कैटेगरी और प्रॉप प्रकार चुनें', 'warning');
+        return;
+    }
+
+    if (!AppState.three.propGenerator) {
+        showToast('प्रॉप जेनरेटर प्रारंभ नहीं हुआ', 'error');
+        return;
+    }
+
+    showLoading('प्रॉप जनरेट किया जा रहा है...');
+
+    setTimeout(() => {
+        try {
+            const customization = { color, material, size };
+            const prop = AppState.three.propGenerator.generateProp(propType, {
+                variation,
+                customization,
+                seed: Math.random()
+            });
+
+            if (prop) {
+                // Store generated prop
+                if (!AppState.generatedProps) AppState.generatedProps = [];
+                AppState.generatedProps.push({
+                    prop,
+                    propType,
+                    variation,
+                    customization,
+                    position: new THREE.Vector3(
+                        parseFloat($('#propPosX').value),
+                        parseFloat($('#propPosY').value),
+                        parseFloat($('#propPosZ').value)
+                    )
+                });
+
+                // Add to scene for preview
+                const { scene } = AppState.three;
+                prop.position.copy(AppState.generatedProps[AppState.generatedProps.length - 1].position);
+                scene.add(prop);
+                
+                // Track for cleanup
+                if (!AppState.three.generatedPropObjects) AppState.three.generatedPropObjects = [];
+                AppState.three.generatedPropObjects.push(prop);
+
+                updateGeneratedPropsList();
+                showToast(`"${propType}" (${variation}) प्रॉप जनरेट हुआ!`, 'success');
+            } else {
+                showToast('प्रॉप जनरेट करने में विफल', 'error');
+            }
+            hideLoading();
+        } catch (e) {
+            hideLoading();
+            console.error('Prop generation failed:', e);
+            showToast('जनरेशन विफल: ' + e.message, 'error');
+        }
+    }, 100);
+}
+
+function handleAddPropToScene() {
+    if (!AppState.generatedProps || AppState.generatedProps.length === 0) {
+        showToast('जोड़ने के लिए कोई जनरेटेड प्रॉप नहीं', 'warning');
+        return;
+    }
+
+    const sceneIndex = AppState.three.currentScene;
+    const sceneData = AppState.scenes[sceneIndex];
+    
+    if (!sceneData) {
+        showToast('सीन डेटा नहीं मिला', 'error');
+        return;
+    }
+
+    // Initialize assets array if needed
+    if (!sceneData.assets) sceneData.assets = [];
+
+    let added = 0;
+    AppState.generatedProps.forEach(genProp => {
+        if (AppState.three.assetManager) {
+            const instanceId = AppState.three.assetManager.addAsset(genProp.propType, {
+                position: genProp.position.clone(),
+                rotation: new THREE.Euler(0, 0, 0),
+                scale: new THREE.Vector3(genProp.customization.size, genProp.customization.size, genProp.customization.size),
+                customization: genProp.customization,
+                variation: genProp.variation
+            });
+            
+            if (instanceId) {
+                sceneData.assets.push({
+                    instanceId,
+                    assetId: genProp.propType,
+                    assetName: genProp.propType,
+                    variation: genProp.variation,
+                    customization: genProp.customization
+                });
+                added++;
+            }
+        }
+    });
+
+    // Clear generated props from preview (they're now in asset manager)
+    if (AppState.three.generatedPropObjects) {
+        AppState.three.generatedPropObjects.forEach(obj => {
+            AppState.three.scene.remove(obj);
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => m.dispose());
+                } else {
+                    obj.material.dispose();
+                }
+            }
+        });
+        AppState.three.generatedPropObjects = [];
+    }
+    AppState.generatedProps = [];
+    updateGeneratedPropsList();
+
+    showToast(`${added} प्रॉप(s) सीन में जोड़े गए`, 'success');
+    
+    // Rebuild scene preview
+    rebuildSceneForPreview(sceneIndex);
+}
+
+function handleClearGeneratedProps() {
+    if (AppState.three.generatedPropObjects) {
+        AppState.three.generatedPropObjects.forEach(obj => {
+            AppState.three.scene.remove(obj);
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => m.dispose());
+                } else {
+                    obj.material.dispose();
+                }
+            }
+        });
+        AppState.three.generatedPropObjects = [];
+    }
+    AppState.generatedProps = [];
+    updateGeneratedPropsList();
+    showToast('जनरेटेड प्रॉप्स हटा दिए गए', 'info');
+}
+
+function updateGeneratedPropsList() {
+    const container = $('#generatedPropsList');
+    if (!container) return;
+
+    if (!AppState.generatedProps || AppState.generatedProps.length === 0) {
+        container.innerHTML = '<p style="padding: 12px; color: var(--text-muted); text-align: center;">कोई जनरेटेड प्रॉप नहीं</p>';
+        return;
+    }
+
+    let html = '';
+    AppState.generatedProps.forEach((genProp, index) => {
+        html += `
+            <div class="generated-prop-item">
+                <div class="generated-prop-info">
+                    <span class="generated-prop-name">${genProp.propType} (${genProp.variation})</span>
+                    <span class="generated-prop-details">आकार: ${genProp.customization.size}x | रंग: ${genProp.customization.color} | सामग्री: ${genProp.customization.material}</span>
+                </div>
+                <div class="generated-prop-actions">
+                    <button class="btn" onclick="removeGeneratedProp(${index})">हटाएं</button>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Make remove function global for onclick
+window.removeGeneratedProp = function(index) {
+    if (AppState.generatedProps && AppState.generatedProps[index]) {
+        // Remove from scene
+        if (AppState.three.generatedPropObjects && AppState.three.generatedPropObjects[index]) {
+            const obj = AppState.three.generatedPropObjects[index];
+            AppState.three.scene.remove(obj);
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(m => m.dispose());
+                } else {
+                    obj.material.dispose();
+                }
+            }
+            AppState.three.generatedPropObjects.splice(index, 1);
+        }
+        AppState.generatedProps.splice(index, 1);
+        updateGeneratedPropsList();
+        showToast('प्रॉप हटा दिया गया', 'info');
+    }
+};
+
 function handleRunContinuityCheck() {
     if (!AppState.scenes || AppState.scenes.length === 0) {
         showToast('जांच के लिए कोई सीन नहीं', 'warning');
@@ -8774,6 +9083,9 @@ function initEventListeners() {
     
     // Continuity Validation initialization
     initializeContinuityValidation();
+    
+    // Prop Generator initialization
+    initializePropGenerator();
     
     // Script Editor initialization
     initializeScriptEditor();

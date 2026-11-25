@@ -990,6 +990,65 @@
                                         </div>
                                     </div>
                                     
+                                    <!-- Prop Generator Section -->
+                                    <div class="setting-item full-width">
+                                        <label class="label">प्रॉप जेनरेटर</label>
+                                        <div class="prop-generator-panel">
+                                            <div class="prop-category-selector">
+                                                <label class="label small-label">कैटेगरी</label>
+                                                <select id="propCategory" class="select">
+                                                    <option value="">प्रॉप कैटेगरी चुनें</option>
+                                                </select>
+                                            </div>
+                                            <div class="prop-type-selector">
+                                                <label class="label small-label">प्रॉप प्रकार</label>
+                                                <select id="propType" class="select" disabled>
+                                                    <option value="">पहले कैटेगरी चुनें</option>
+                                                </select>
+                                            </div>
+                                            <div class="prop-variation-selector">
+                                                <label class="label small-label">वेरिएशन</label>
+                                                <select id="propVariation" class="select" disabled>
+                                                    <option value="">पहले प्रॉप चुनें</option>
+                                                </select>
+                                            </div>
+                                            <div class="prop-customization-grid">
+                                                <div class="setting-item">
+                                                    <label class="label">रंग</label>
+                                                    <input type="color" id="propColor" class="color-input" value="#8b4513">
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">सामग्री</label>
+                                                    <select id="propMaterial" class="select"></select>
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">आकार <span id="propSizeValue">1.0</span></label>
+                                                    <input type="range" id="propSize" min="0.5" max="2" step="0.1" value="1" class="slider">
+                                                </div>
+                                            </div>
+                                            <div class="prop-position-grid">
+                                                <div class="setting-item">
+                                                    <label class="label">X स्थिति <span id="propPosXValue">0</span></label>
+                                                    <input type="range" id="propPosX" min="-20" max="20" step="1" value="0" class="slider">
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Y स्थिति <span id="propPosYValue">-4.5</span></label>
+                                                    <input type="range" id="propPosY" min="-10" max="10" step="0.5" value="-4.5" class="slider">
+                                                </div>
+                                                <div class="setting-item">
+                                                    <label class="label">Z स्थिति <span id="propPosZValue">-10</span></label>
+                                                    <input type="range" id="propPosZ" min="-30" max="10" step="1" value="-10" class="slider">
+                                                </div>
+                                            </div>
+                                            <div class="prop-actions">
+                                                <button class="btn btn-primary" id="generateProp">प्रॉप जनरेट करें</button>
+                                                <button class="btn btn-secondary" id="addPropToScene">सीन में जोड़ें</button>
+                                                <button class="btn btn-danger" id="clearGeneratedProps">जनरेटेड प्रॉप्स हटाएं</button>
+                                            </div>
+                                            <div id="generatedPropsList" class="generated-props-list"></div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="setting-item full-width">
                                         <label class="label">पात्र स्थिति</label>
                                         <div id="characterPositionControls"></div>

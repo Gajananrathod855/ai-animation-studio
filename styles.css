@@ -2154,6 +2154,104 @@ body {
 }
 
 /* ========================================
+   Prop Generator
+   ======================================== */
+.prop-generator-panel {
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.prop-category-selector,
+.prop-type-selector,
+.prop-variation-selector {
+    margin-bottom: 12px;
+}
+
+.prop-category-selector .label,
+.prop-type-selector .label,
+.prop-variation-selector .label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.small-label {
+    font-size: 0.75rem !important;
+    font-weight: 500;
+}
+
+.prop-customization-grid,
+.prop-position-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.prop-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.generated-props-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+}
+
+.generated-prop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.75rem;
+}
+
+.generated-prop-item:last-child {
+    border-bottom: none;
+}
+
+.generated-prop-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.generated-prop-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.generated-prop-details {
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+}
+
+.generated-prop-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.generated-prop-actions .btn {
+    padding: 2px 8px;
+    font-size: 0.625rem;
+}
+
+.color-input {
+    width: 50px;
+    height: 32px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+/* ========================================
    Character Interactions
    ======================================== */
 .interaction-preview {

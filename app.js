@@ -2166,12 +2166,12 @@ function toggleTheme() {
 function handleStoryInput() {
     const text = $('#storyInput').value.trim();
     AppState.story = text;
-    $('#generateScenesBtn').disabled = text.length < 50;
+    $('#generateScenesBtn').disabled = text.length === 0;
 }
 
 function handleGenerateScenes() {
-    if (!AppState.story || AppState.story.length < 50) {
-        showToast('कृपया कम से कम ५० अक्षर लिखें', 'warning');
+    if (!AppState.story || AppState.story.length === 0) {
+        showToast('कृपया कहानी या विषय लिखें', 'warning');
         return;
     }
     

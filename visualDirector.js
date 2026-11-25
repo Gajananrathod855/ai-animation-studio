@@ -1007,4 +1007,4 @@ export function getShotSuggestions(scene, currentShot = null) {
 // Export
 // ========================================
 
-export { SHOT_TYPES, CAMERA_MOVEMENTS, SCENE_SHOT_RULES, COMPOSITION_RULES, TRANSITION_TYPES };
+// All exports are already declared with 'export' keyword above

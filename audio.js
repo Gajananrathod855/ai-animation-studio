@@ -997,4 +997,4 @@ export class AudioManager {
 // Export
 // ========================================
 
-export { MUSICAL_SCALES, CHORD_PROGRESSIONS, INSTRUMENTS, GENRE_TEMPLATES, SOUND_EFFECTS };
+// All exports are already declared with 'export' keyword above

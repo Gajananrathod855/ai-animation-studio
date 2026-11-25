@@ -5790,6 +5790,17 @@ async function startExport() {
     const settings = AppState.exportSettings;
     const canvas = $('#previewCanvas');
     
+    // Check if canvas and captureStream are supported
+    if (!canvas || !canvas.captureStream) {
+        showToast('वीडियो रेंडरिंग इस ब्राउज़र में समर्थित नहीं है', 'error');
+        return;
+    }
+    
+    if (AppState.duration <= 0) {
+        showToast('एनिमेशन की अवधि सेट नहीं है', 'error');
+        return;
+    }
+    
     let width, height;
     switch (settings.resolution) {
         case '1080p': [width, height] = [1920, 1080]; break;
@@ -5817,7 +5828,17 @@ async function startExport() {
     $('#progressPercent').textContent = '0%';
     $('#progressStatus').textContent = 'रेंडर हो रहा है...';
     
-    const stream = canvas.captureStream(settings.framerate);
+    let stream;
+    try {
+        stream = canvas.captureStream(settings.framerate);
+    } catch (e) {
+        console.error('captureStream failed:', e);
+        showToast('वीडियो स्ट्रीम बनाने में विफल: ' + e.message, 'error');
+        AppState.export.isExporting = false;
+        $('#exportActions').style.display = 'block';
+        $('#exportProgress').style.display = 'none';
+        return;
+    }
     
     const mimeType = settings.format === 'mp4' ? 'video/mp4' : 'video/webm;codecs=vp9';
     let recorder;
@@ -9447,12 +9468,54 @@ function rgbToHex(color) {
 }
 
 // ========================================
+// Mobile-friendly button helper
+// ========================================
+function addMobileButtonListener(buttonId, handler) {
+    const btn = $(buttonId);
+    if (!btn) return;
+    
+    // Add click handler (works on desktop and mobile)
+    btn.addEventListener('click', handler);
+    
+    // Add touchend handler for better mobile responsiveness
+    // This helps when click events are delayed or not fired
+    let touchHandled = false;
+    btn.addEventListener('touchstart', () => {
+        touchHandled = false;
+    }, { passive: true });
+    
+    btn.addEventListener('touchend', (e) => {
+        if (!touchHandled) {
+            touchHandled = true;
+            // Only call handler if button is not disabled
+            if (!btn.disabled) {
+                e.preventDefault(); // Prevent ghost click
+                handler(e);
+            }
+        }
+    }, { passive: false });
+    
+    // Also handle touchcancel to reset state
+    btn.addEventListener('touchcancel', () => {
+        touchHandled = false;
+    }, { passive: true });
+}
+
+// ========================================
 // UI Event Handlers
 // ========================================
 function initEventListeners() {
     $('#themeToggle').addEventListener('click', toggleTheme);
     
-    $('#storyInput').addEventListener('input', debounce(handleStoryInput, 300));
+    // Mobile-friendly input handling: input, keyup, and change events
+    const storyInput = $('#storyInput');
+    if (storyInput) {
+        storyInput.addEventListener('input', debounce(handleStoryInput, 300));
+        storyInput.addEventListener('keyup', debounce(handleStoryInput, 300));
+        storyInput.addEventListener('change', handleStoryInput);
+        // Also handle paste on mobile
+        storyInput.addEventListener('paste', () => setTimeout(handleStoryInput, 50));
+    }
     
     $('#videoStyle').addEventListener('change', e => { AppState.settings.videoStyle = e.target.value; });
     $('#colorTheme').addEventListener('change', e => { 
@@ -9468,7 +9531,7 @@ function initEventListeners() {
         updateSceneDurations();
     });
     
-    $('#generateScenesBtn').addEventListener('click', handleGenerateScenes);
+    addMobileButtonListener('#generateScenesBtn', handleGenerateScenes);
     
     // 3D Character Customization
     $('#addCharacterBtn').addEventListener('click', addCharacterToScene);
@@ -9870,12 +9933,12 @@ function initEventListeners() {
     $('#saveSceneBtn').addEventListener('click', saveSceneEdit);
     $('#regenerateSceneBtn').addEventListener('click', regenerateScene);
     
-    $('#backToStoryBtn').addEventListener('click', () => goToStep(1));
-    $('#backToScenesBtn').addEventListener('click', () => goToStep(3));
-    $('#backToPreviewBtn').addEventListener('click', () => goToStep(4));
-    $('#backToStoryFromScriptBtn').addEventListener('click', () => goToStep(1));
+    addMobileButtonListener('#backToStoryBtn', () => goToStep(1));
+    addMobileButtonListener('#backToScenesBtn', () => goToStep(3));
+    addMobileButtonListener('#backToPreviewBtn', () => goToStep(4));
+    addMobileButtonListener('#backToStoryFromScriptBtn', () => goToStep(1));
     
-    $('#generateAnimationBtn').addEventListener('click', handleGenerateAnimation);
+    addMobileButtonListener('#generateAnimationBtn', handleGenerateAnimation);
     $('#playPauseBtn').addEventListener('click', togglePlayPause);
     $('#stopBtn').addEventListener('click', stopAnimation);
     $('#restartBtn').addEventListener('click', restartAnimation);
@@ -9902,21 +9965,39 @@ function initEventListeners() {
         rebuildAllScenes();
     });
     
-    $('#exportVideoBtn').addEventListener('click', () => goToStep(5));
-    $('#startExportBtn').addEventListener('click', startExport);
-    $('#downloadVideoBtn').addEventListener('click', downloadVideo);
-    $('#shareVideoBtn').addEventListener('click', shareVideo);
+    addMobileButtonListener('#exportVideoBtn', () => goToStep(5));
+    addMobileButtonListener('#startExportBtn', startExport);
+    addMobileButtonListener('#downloadVideoBtn', downloadVideo);
+    addMobileButtonListener('#shareVideoBtn', shareVideo);
     
     $$('input[name="resolution"]').forEach(r => r.addEventListener('change', e => { AppState.exportSettings.resolution = e.target.value; }));
     $$('input[name="framerate"]').forEach(r => r.addEventListener('change', e => { AppState.exportSettings.framerate = parseInt(e.target.value); }));
     $$('input[name="format"]').forEach(r => r.addEventListener('change', e => { AppState.exportSettings.format = e.target.value; }));
     
     $$('.nav-item').forEach(btn => {
-        btn.addEventListener('click', () => goToStep(parseInt(btn.dataset.step)));
+        if (btn.id) {
+            addMobileButtonListener('#' + btn.id, () => goToStep(parseInt(btn.dataset.step)));
+        } else {
+            btn.addEventListener('click', () => goToStep(parseInt(btn.dataset.step)));
+            btn.addEventListener('touchend', (e) => {
+                if (!btn.disabled) {
+                    e.preventDefault();
+                    goToStep(parseInt(btn.dataset.step));
+                }
+            }, { passive: false });
+        }
     });
     
     $$('.progress-step').forEach(step => {
-        step.addEventListener('click', () => goToStep(parseInt(step.dataset.step)));
+        if (step.id) {
+            addMobileButtonListener('#' + step.id, () => goToStep(parseInt(step.dataset.step)));
+        } else {
+            step.addEventListener('click', () => goToStep(parseInt(step.dataset.step)));
+            step.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                goToStep(parseInt(step.dataset.step));
+            }, { passive: false });
+        }
     });
     
     document.addEventListener('keydown', handleKeydown);
@@ -10424,6 +10505,10 @@ async function init() {
     initEventListeners();
     updateCanvasAspectRatio();
     
+    // Initialize button states
+    handleStoryInput();
+    updateGenerateAnimationButton();
+    
     // Initialize export manager after timeline
     setTimeout(() => {
         initializeExportManager();
@@ -10451,7 +10536,9 @@ document.addEventListener('visibilitychange', () => {
 let lastTouchEnd = 0;
 document.addEventListener('touchend', (e) => {
     const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
+    // Only prevent default on double-tap for canvas/preview area, not on buttons/inputs
+    const target = e.target.closest('button, input, textarea, select, .btn, [role="button"]');
+    if (!target && now - lastTouchEnd <= 300) {
         e.preventDefault();
     }
     lastTouchEnd = now;

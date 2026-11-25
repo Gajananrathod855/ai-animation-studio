@@ -578,4 +578,4 @@ export function generateFixSuggestions(validationResult) {
 // Export
 // ========================================
 
-export { CONTINUITY_CHECKS };
+// All exports are already declared with 'export' keyword above

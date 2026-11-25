@@ -1169,4 +1169,4 @@ export const EFFECT_SHADERS = {
 // Export
 // ========================================
 
-export { PARTICLE_TYPES, POST_PROCESSING_EFFECTS, WEATHER_PRESETS, EFFECT_SHADERS };
+// All exports are already declared with 'export' keyword above

@@ -1005,4 +1005,4 @@ export class TimelineUI {
 // Export
 // ========================================
 
-export { TRACK_TYPES, TimelineClip, TimelineTrack, MultiTrackTimeline, TimelineUI };
+// All exports are already declared with 'export' keyword above

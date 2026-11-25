@@ -387,6 +387,8 @@ body {
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn:disabled {
@@ -1526,7 +1528,10 @@ body {
     color: var(--text-muted);
     cursor: pointer;
     transition: all var(--transition-fast);
-    padding: 8px 4px;
+    padding: 10px 4px;
+    min-height: 48px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .nav-item svg {
@@ -1684,6 +1689,22 @@ body {
     
     .action-buttons .btn {
         width: 100%;
+        min-height: 48px; /* Minimum touch target */
+    }
+    
+    .btn {
+        min-height: 44px; /* Minimum touch target for all buttons */
+    }
+    
+    .btn-lg {
+        min-height: 52px;
+        font-size: 1rem;
+        padding: 14px 28px;
+    }
+    
+    .btn-icon-large {
+        min-width: 48px;
+        min-height: 48px;
     }
     
     .preview-controls {
@@ -1712,6 +1733,16 @@ body {
     .progress-step {
         min-width: 50px;
         padding: 8px 2px;
+    }
+    
+    /* Ensure inputs are large enough for touch */
+    input, textarea, select {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .textarea {
+        min-height: 120px;
     }
 }
 

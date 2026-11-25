@@ -1114,4 +1114,4 @@ export const PROP_CUSTOMIZATION_OPTIONS = {
 // Export
 // ========================================
 
-export { PROP_CATEGORIES, PROP_VARIATIONS, MATERIAL_PRESETS, PROP_CUSTOMIZATION_OPTIONS };
+// All exports are already declared with 'export' keyword above

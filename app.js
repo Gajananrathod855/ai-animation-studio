@@ -17,6 +17,7 @@
 import { Character3D } from './character3d.js';
 import { CLOTHING_PRESETS, SKIN_TONES, HAIR_COLORS, EYE_COLORS } from './characters.js';
 import { assetLibrary, SceneAssetManager, ASSET_CATEGORIES, ALL_ASSETS } from './assets.js';
+import { DirectionParser, CharacterDirector, autoDirectScene, getDirectionSuggestions } from './direction.js';
 
 // ========================================
 // Global State Management
@@ -3818,6 +3819,164 @@ function createSitObject(presetId) {
     return null;
 }
 
+// ========================================
+// Auto-Direction System
+// ========================================
+
+function initializeAutoDirect() {
+    const autoBtn = $('#autoDirectScene');
+    const suggestBtn = $('#showDirectionSuggestions');
+    
+    if (autoBtn) autoBtn.addEventListener('click', handleAutoDirectScene);
+    if (suggestBtn) suggestBtn.addEventListener('click', handleShowDirectionSuggestions);
+}
+
+function handleAutoDirectScene() {
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    
+    if (sceneIndex === undefined || sceneIndex === null || sceneIndex === '') {
+        showToast('पहले सीन चुनें', 'warning');
+        return;
+    }
+    
+    showLoading('सीन डायरेक्ट किया जा रहा है...');
+    
+    // Use setTimeout to allow loading to show
+    setTimeout(() => {
+        try {
+            const directions = autoDirectScene(parseInt(sceneIndex));
+            hideLoading();
+            showToast('सीन ऑटो-डायरेक्ट हो गया!', 'success');
+            
+            // Update UI to reflect changes
+            loadSceneControls(parseInt(sceneIndex));
+        } catch (e) {
+            hideLoading();
+            console.error('Auto-direct failed:', e);
+            showToast('ऑटो-डायरेक्ट विफल: ' + e.message, 'error');
+        }
+    }, 100);
+}
+
+function handleShowDirectionSuggestions() {
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    
+    if (sceneIndex === undefined || sceneIndex === null || sceneIndex === '') {
+        showToast('पहले सीन चुनें', 'warning');
+        return;
+    }
+    
+    const scene = AppState.scenes[sceneIndex];
+    if (!scene) return;
+    
+    const suggestions = getDirectionSuggestions(scene.description, scene.characters);
+    
+    const container = $('#directionSuggestions');
+    if (!container) return;
+    
+    container.style.display = 'block';
+    
+    if (suggestions.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">कोई सुझाव नहीं मिला</p>';
+        return;
+    }
+    
+    container.innerHTML = suggestions.map(s => `
+        <div class="direction-suggestion">
+            <span class="type-badge ${s.type}">${s.type}</span>
+            <div class="details">
+                ${s.character ? `<div class="character">${s.character}</div>` : ''}
+                <div class="action">${s.action || s.expression || s.shot || s.mood || ''}</div>
+                <div class="reason">${s.reason}</div>
+            </div>
+            <button class="btn apply-btn" onclick="applyDirectionSuggestion(${JSON.stringify(s).replace(/"/g, '"')})">लागू करें</button>
+        </div>
+    `).join('');
+}
+
+function applyDirectionSuggestion(suggestion) {
+    const sceneIndex = $('#sceneSelector')?.value || AppState.three.currentScene;
+    const scene = AppState.scenes[sceneIndex];
+    if (!scene) return;
+    
+    // Find character
+    const charData = AppState.three.characters3d.find(c => 
+        c.sceneIndex === sceneIndex && 
+        scene.characters[c.charIndex] === suggestion.character
+    );
+    
+    if (!charData || !charData.character3d) {
+        showToast('पात्र नहीं मिला', 'error');
+        return;
+    }
+    
+    const character3d = charData.character3d;
+    
+    switch (suggestion.type) {
+        case 'animation':
+            character3d.playAnimation(suggestion.action);
+            showToast(`${suggestion.character}: ${suggestion.action} एनिमेशन लागू`, 'success');
+            break;
+        case 'expression':
+            character3d.setExpression(suggestion.expression, 1.0);
+            showToast(`${suggestion.character}: ${suggestion.expression} अभिव्यक्ति लागू`, 'success');
+            break;
+        case 'interaction':
+            // Find target character
+            const targetChar = scene.characters.indexOf(suggestion.target);
+            if (targetChar >= 0) {
+                const targetData = AppState.three.characters3d.find(c => 
+                    c.sceneIndex === sceneIndex && c.charIndex === targetChar
+                );
+                if (targetData?.character3d) {
+                    character3d.interactWith(targetData.character3d, suggestion.action);
+                    showToast(`${suggestion.character} -> ${suggestion.target}: ${suggestion.action}`, 'success');
+                }
+            }
+            break;
+        case 'camera':
+            applyCameraShot(suggestion.shot);
+            showToast(`कैमरा: ${suggestion.shot}`, 'success');
+            break;
+        case 'lighting':
+            applyLightingMood(suggestion.mood);
+            showToast(`लाइटिंग: ${suggestion.mood}`, 'success');
+            break;
+    }
+}
+
+function applyCameraShot(shot) {
+    const cameraControls = AppState.three.cameraControls;
+    if (!cameraControls) return;
+    
+    const shots = {
+        closeup: { distance: 5, height: 1.6, fov: 30 },
+        medium: { distance: 10, height: 1.2, fov: 45 },
+        wide: { distance: 20, height: 3, fov: 60 },
+        over_shoulder: { distance: 8, height: 1.5, fov: 40 },
+        two_shot: { distance: 12, height: 1.2, fov: 50 }
+    };
+    
+    if (shots[shot]) {
+        Object.assign(cameraControls, shots[shot]);
+    }
+}
+
+function applyLightingMood(mood) {
+    const moods = {
+        bright: { ambientIntensity: 1.0, keyIntensity: 1.5, exposure: 1.5 },
+        dark: { ambientIntensity: 0.2, keyIntensity: 0.5, exposure: 0.8 },
+        warm: { ambientColor: 0xffcc88, keyColor: 0xffaa44, rimColor: 0xff8800 },
+        cool: { ambientColor: 0x88aacc, keyColor: 0x4488ff, rimColor: 0x0044aa },
+        dramatic: { keyIntensity: 2.0, fillIntensity: 0.1, rimIntensity: 0.5, exposure: 1.3 },
+        soft: { ambientIntensity: 0.8, keyIntensity: 0.8, fillIntensity: 0.6, shadowQuality: 'high' }
+    };
+    
+    if (moods[mood]) {
+        Object.assign(AppState.three.lighting, moods[mood]);
+    }
+}
+
 function updateKeyLightPosition() {
     const { keyLight, lighting } = AppState.three;
     const THREE = AppState.three.THREE;
@@ -4576,6 +4735,9 @@ function initEventListeners() {
     
     // Character Interactions initialization
     initializeInteractions();
+    
+    // Auto-Direction initialization
+    initializeAutoDirect();
     
     $('#closeEditorBtn').addEventListener('click', closeSceneEditor);
     $('#saveSceneBtn').addEventListener('click', saveSceneEdit);

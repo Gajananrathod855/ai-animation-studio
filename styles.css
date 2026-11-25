@@ -1932,6 +1932,84 @@ body {
 }
 
 /* ========================================
+   Auto-Direction
+   ======================================== */
+.auto-direct-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.direction-suggestions {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.direction-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    font-size: 0.8125rem;
+}
+
+.direction-suggestion:last-child {
+    margin-bottom: 0;
+}
+
+.direction-suggestion .type-badge {
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.direction-suggestion .type-badge.animation { background: var(--accent-bg); color: var(--accent-primary); }
+.direction-suggestion .type-badge.expression { background: #ffe0b2; color: #e65100; }
+.direction-suggestion .type-badge.interaction { background: #e1bee7; color: #6a1b9a; }
+.direction-suggestion .type-badge.camera { background: #bbdefb; color: #1565c0; }
+.direction-suggestion .type-badge.lighting { background: #fff9c4; color: #f57f17; }
+
+.direction-suggestion .details {
+    flex: 1;
+}
+
+.direction-suggestion .character {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.direction-suggestion .action {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.direction-suggestion .reason {
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    font-style: italic;
+}
+
+.direction-suggestion .apply-btn {
+    padding: 4px 12px;
+    font-size: 0.6875rem;
+}
+
+/* ========================================
    Character Interactions
    ======================================== */
 .interaction-preview {

@@ -23,6 +23,26 @@
                 <h1 class="app-title">Paper Animation</h1>
             </div>
             <div class="header-right">
+                <button class="btn-icon" id="projectManagerBtn" aria-label="Project Manager" title="Project Manager">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </button>
+                <button class="btn-icon" id="fileManagerBtn" aria-label="File Manager" title="File Manager">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </button>
+                <button class="btn-icon" id="renderBtn" aria-label="Render Video" title="Render Video">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="2" width="20" height="20" rx="2"></rect>
+                        <path d="M6 12l4 4 8-8"></path>
+                    </svg>
+                </button>
                 <button class="btn-icon" id="themeToggle" aria-label="Toggle Theme">
                     <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"/>
@@ -1423,6 +1443,45 @@
                 <span>Export</span>
             </button>
         </nav>
+
+        <!-- Project Manager Modal -->
+        <div class="modal-overlay" id="projectManagerModal" style="display: none;">
+            <div class="modal project-modal">
+                <div class="modal-header">
+                    <h3>प्रोजेक्ट प्रबंधन</h3>
+                    <button class="modal-close" id="closeProjectManagerBtn" aria-label="Close">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="modal-body" id="projectManagerContainer"></div>
+            </div>
+        </div>
+
+        <!-- File Manager Modal -->
+        <div class="modal-overlay" id="fileManagerModal" style="display: none;">
+            <div class="modal project-modal" style="max-width: 900px;">
+                <div class="modal-header">
+                    <h3>फाइल मैनेजर / एसेट्स</h3>
+                    <button class="modal-close" id="closeFileManagerBtn" aria-label="Close">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="modal-body" id="fileManagerContainer"></div>
+            </div>
+        </div>
+
+        <!-- Render/Export Modal -->
+        <div class="modal-overlay" id="renderModal" style="display: none;">
+            <div class="modal project-modal" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h3>वीडियो रेंडर / एक्सपोर्ट</h3>
+                    <button class="modal-close" id="closeRenderBtn" aria-label="Close">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="modal-body" id="renderContainer"></div>
+            </div>
+        </div>
 
         <!-- Toast Container -->
         <div class="toast-container" id="toastContainer"></div>

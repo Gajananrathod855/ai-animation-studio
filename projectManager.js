@@ -773,7 +773,7 @@ export class ProjectManager {
 // Project UI Functions
 // ========================================
 
-function createProjectUI(projectManager, containerId) {
+export function createProjectUI(projectManager, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 

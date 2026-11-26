@@ -7779,6 +7779,1108 @@ function addProjectButtonsToStoryStep() {
     }
 }
 
+// ========================================
+// File Manager UI
+// ========================================
+
+function createFileManagerUI(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // Build file tree data from current project state
+    const fileData = buildFileTreeData();
+    
+    container.innerHTML = `
+        <div class="file-manager">
+            <div class="file-manager-toolbar">
+                <div class="toolbar-group">
+                    <button class="btn btn-primary" id="fmNewFolder">📁 New Folder</button>
+                    <button class="btn btn-secondary" id="fmUploadFiles">📤 Upload</button>
+                    <button class="btn btn-secondary" id="fmRefresh">🔄 Refresh</button>
+                </div>
+                <div class="toolbar-group">
+                    <input type="text" id="fmSearch" class="input" placeholder="Search files..." style="width: 200px;">
+                    <select id="fmViewMode" class="select" style="width: auto;">
+                        <option value="tree">Tree View</option>
+                        <option value="grid">Grid View</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="file-manager-content">
+                <div class="file-manager-sidebar">
+                    <div class="sidebar-section">
+                        <h4>Categories</h4>
+                        <ul class="category-list" id="fmCategoryList"></ul>
+                    </div>
+                    <div class="sidebar-section">
+                        <h4>Quick Actions</h4>
+                        <div class="quick-actions">
+                            <button class="btn btn-sm btn-secondary" id="fmExportProject">📦 Export Project</button>
+                            <button class="btn btn-sm btn-secondary" id="fmImportProject">📥 Import Project</button>
+                            <button class="btn btn-sm btn-danger" id="fmClearCache">🗑️ Clear Cache</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="file-manager-main">
+                    <div class="file-path-bar" id="fmPathBar">
+                        <span class="path-item" data-path="">🏠 Root</span>
+                    </div>
+                    <div class="file-list" id="fmFileList"></div>
+                </div>
+                
+                <div class="file-manager-preview" id="fmPreviewPanel" style="display: none;">
+                    <h4>Preview</h4>
+                    <div id="fmPreviewContent"></div>
+                    <div class="preview-actions">
+                        <button class="btn btn-primary" id="fmUseFile">Use in Scene</button>
+                        <button class="btn btn-secondary" id="fmDownloadFile">Download</button>
+                        <button class="btn btn-danger" id="fmDeleteFile">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Populate categories
+    populateFileCategories(fileData);
+    
+    // Render initial file list (root)
+    renderFileList(fileData.root, '');
+    
+    // Bind events
+    bindFileManagerEvents(fileData);
+}
+
+function buildFileTreeData() {
+    const scenes = AppState.scenes || [];
+    const characters3d = AppState.three?.characters3d || [];
+    const assets = AppState.three?.assetManager?.getAllAssets?.() || [];
+    const exportedVideos = getExportedVideos();
+    
+    return {
+        root: {
+            name: 'Root',
+            path: '',
+            children: {
+                'Project Files': {
+                    name: 'Project Files',
+                    path: 'Project Files',
+                    type: 'folder',
+                    children: buildProjectFiles()
+                },
+                'Scenes': {
+                    name: 'Scenes',
+                    path: 'Scenes',
+                    type: 'folder',
+                    children: buildScenesFolder(scenes)
+                },
+                'Characters': {
+                    name: 'Characters',
+                    path: 'Characters',
+                    type: 'folder',
+                    children: buildCharactersFolder(characters3d)
+                },
+                'Backgrounds': {
+                    name: 'Backgrounds',
+                    path: 'Backgrounds',
+                    type: 'folder',
+                    children: buildBackgroundsFolder()
+                },
+                'Audio': {
+                    name: 'Audio',
+                    path: 'Audio',
+                    type: 'folder',
+                    children: buildAudioFolder()
+                },
+                'Props': {
+                    name: 'Props',
+                    path: 'Props',
+                    type: 'folder',
+                    children: buildPropsFolder(assets)
+                },
+                'Exported Videos': {
+                    name: 'Exported Videos',
+                    path: 'Exported Videos',
+                    type: 'folder',
+                    children: buildExportedVideosFolder(exportedVideos)
+                }
+            }
+        }
+    };
+}
+
+function buildProjectFiles() {
+    const files = {};
+    
+    if (AppState.story) {
+        files['story.txt'] = {
+            name: 'story.txt',
+            path: 'Project Files/story.txt',
+            type: 'file',
+            content: AppState.story,
+            size: AppState.story.length,
+            modified: Date.now()
+        };
+    }
+    
+    if (AppState.scriptManager?.script) {
+        files['script.json'] = {
+            name: 'script.json',
+            path: 'Project Files/script.json',
+            type: 'file',
+            content: AppState.scriptManager.exportAsJSON(),
+            size: JSON.stringify(AppState.scriptManager.script).length,
+            modified: Date.now()
+        };
+    }
+    
+    // Project settings file
+    files['settings.json'] = {
+        name: 'settings.json',
+        path: 'Project Files/settings.json',
+        type: 'file',
+        content: JSON.stringify(AppState.settings, null, 2),
+        size: JSON.stringify(AppState.settings).length,
+        modified: Date.now()
+    };
+    
+    // Timeline data
+    if (AppState.timeline) {
+        files['timeline.json'] = {
+            name: 'timeline.json',
+            path: 'Project Files/timeline.json',
+            type: 'file',
+            content: AppState.timeline.exportJSON(),
+            size: JSON.stringify(AppState.timeline.exportJSON()).length,
+            modified: Date.now()
+        };
+    }
+    
+    return files;
+}
+
+function buildScenesFolder(scenes) {
+    const files = {};
+    scenes.forEach((scene, index) => {
+        files[`scene_${index + 1}.json`] = {
+            name: `scene_${index + 1}.json`,
+            path: `Scenes/scene_${index + 1}.json`,
+            type: 'file',
+            content: JSON.stringify(scene, null, 2),
+            size: JSON.stringify(scene).length,
+            modified: Date.now(),
+            sceneData: scene,
+            sceneIndex: index
+        };
+    });
+    return files;
+}
+
+function buildCharactersFolder(characters3d) {
+    const files = {};
+    characters3d.forEach((sceneChars, sceneIndex) => {
+        if (sceneChars && sceneChars.length > 0) {
+            sceneChars.forEach((char, charIndex) => {
+                const key = `scene${sceneIndex}_char${charIndex}.json`;
+                files[key] = {
+                    name: `${char.name || `Character ${charIndex + 1}`}.json`,
+                    path: `Characters/${key}`,
+                    type: 'file',
+                    content: JSON.stringify({
+                        name: char.name,
+                        customization: char.customization,
+                        preset: char.preset,
+                        animation: char.currentAnimation
+                    }, null, 2),
+                    size: 500,
+                    modified: Date.now(),
+                    characterData: char,
+                    sceneIndex: sceneIndex,
+                    charIndex: charIndex
+                };
+            });
+        }
+    });
+    return files;
+}
+
+function buildBackgroundsFolder() {
+    const files = {};
+    const backgrounds = Object.keys(BackgroundTemplates);
+    backgrounds.forEach(bg => {
+        files[`${bg}.json`] = {
+            name: `${bg}.json`,
+            path: `Backgrounds/${bg}.json`,
+            type: 'file',
+            content: JSON.stringify(BackgroundTemplates[bg], null, 2),
+            size: JSON.stringify(BackgroundTemplates[bg]).length,
+            modified: Date.now(),
+            backgroundData: BackgroundTemplates[bg],
+            backgroundKey: bg
+        };
+    });
+    return files;
+}
+
+function buildAudioFolder() {
+    const files = {};
+    
+    // Music genres
+    Object.keys(GENRE_TEMPLATES).forEach(genre => {
+        files[`music_${genre}.json`] = {
+            name: `music_${genre}.json`,
+            path: `Audio/music_${genre}.json`,
+            type: 'file',
+            content: JSON.stringify(GENRE_TEMPLATES[genre], null, 2),
+            size: 300,
+            modified: Date.now(),
+            genre: genre
+        };
+    });
+    
+    // Sound effects
+    Object.keys(SOUND_EFFECTS).forEach(sfx => {
+        files[`sfx_${sfx}.json`] = {
+            name: `sfx_${sfx}.json`,
+            path: `Audio/sfx_${sfx}.json`,
+            type: 'file',
+            content: JSON.stringify({ name: sfx, ...SOUND_EFFECTS[sfx] }, null, 2),
+            size: 200,
+            modified: Date.now(),
+            sfx: sfx
+        };
+    });
+    
+    return files;
+}
+
+function buildPropsFolder(assets) {
+    const files = {};
+    assets.forEach(asset => {
+        files[`${asset.assetName}_${asset.instanceId}.json`] = {
+            name: `${asset.assetName}.json`,
+            path: `Props/${asset.assetName}_${asset.instanceId}.json`,
+            type: 'file',
+            content: JSON.stringify(asset, null, 2),
+            size: 300,
+            modified: Date.now(),
+            assetData: asset
+        };
+    });
+    return files;
+}
+
+function buildExportedVideosFolder(videos) {
+    const files = {};
+    videos.forEach((video, index) => {
+        files[`video_${index}.webm`] = {
+            name: video.name || `video_${index}.webm`,
+            path: `Exported Videos/${video.name || `video_${index}.webm`}`,
+            type: 'file',
+            content: video.blob,
+            size: video.size,
+            modified: video.timestamp,
+            videoData: video
+        };
+    });
+    return files;
+}
+
+function getExportedVideos() {
+    // Check for exported videos in localStorage or IndexedDB
+    const stored = localStorage.getItem('exportedVideos');
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch (e) {
+            return [];
+        }
+    }
+    return [];
+}
+
+function populateFileCategories(fileData) {
+    const categoryList = $('#fmCategoryList');
+    if (!categoryList) return;
+    
+    const categories = Object.keys(fileData.root.children);
+    categoryList.innerHTML = categories.map(cat => `
+        <li class="category-item" data-category="${cat}">
+            <span class="category-icon">${getCategoryIcon(cat)}</span>
+            <span class="category-name">${cat}</span>
+            <span class="category-count">${Object.keys(fileData.root.children[cat].children || {}).length}</span>
+        </li>
+    `).join('');
+    
+    // Add click handlers
+    $$('.category-item').forEach(item => {
+        item.addEventListener('click', () => {
+            $$('.category-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            const category = item.dataset.category;
+            const categoryData = fileData.root.children[category];
+            renderFileList(categoryData, category);
+            updatePathBar(category);
+        });
+    });
+}
+
+function getCategoryIcon(category) {
+    const icons = {
+        'Project Files': '📄',
+        'Scenes': '🎬',
+        'Characters': '👥',
+        'Backgrounds': '🖼️',
+        'Audio': '🎵',
+        'Props': '📦',
+        'Exported Videos': '🎥'
+    };
+    return icons[category] || '📁';
+}
+
+function renderFileList(folderData, currentPath) {
+    const fileList = $('#fmFileList');
+    if (!fileList) return;
+    
+    const files = folderData.children || {};
+    const fileEntries = Object.entries(files);
+    
+    if (fileEntries.length === 0) {
+        fileList.innerHTML = '<div class="file-empty">No files in this folder</div>';
+        return;
+    }
+    
+    fileList.innerHTML = fileEntries.map(([name, file]) => `
+        <div class="file-item ${file.type === 'folder' ? 'folder' : ''}" 
+             data-name="${name}" 
+             data-path="${file.path}"
+             data-type="${file.type}"
+             data-content="${file.content ? escapeHtml(JSON.stringify(file.content).slice(0, 500)) : ''}"
+             data-size="${file.size || 0}"
+             data-modified="${file.modified || Date.now()}"
+             data-scene-index="${file.sceneIndex !== undefined ? file.sceneIndex : ''}"
+             data-char-index="${file.charIndex !== undefined ? file.charIndex : ''}"
+             data-background-key="${file.backgroundKey || ''}"
+             data-genre="${file.genre || ''}"
+             data-sfx="${file.sfx || ''}"
+             data-asset-data="${file.assetData ? escapeHtml(JSON.stringify(file.assetData).slice(0, 500)) : ''}"
+             data-video-data="${file.videoData ? escapeHtml(JSON.stringify(file.videoData).slice(0, 500)) : ''}"
+             data-character-data="${file.characterData ? escapeHtml(JSON.stringify(file.characterData).slice(0, 500)) : ''}"
+             data-scene-data="${file.sceneData ? escapeHtml(JSON.stringify(file.sceneData).slice(0, 500)) : ''}"
+             data-background-data="${file.backgroundData ? escapeHtml(JSON.stringify(file.backgroundData).slice(0, 500)) : ''}">
+            <span class="file-icon">${file.type === 'folder' ? '📁' : getFileIcon(name)}</span>
+            <span class="file-name">${file.name || name}</span>
+            <span class="file-size">${formatFileSize(file.size || 0)}</span>
+            <span class="file-date">${formatDate(file.modified || Date.now())}</span>
+        </div>
+    `).join('');
+    
+    // Bind click events
+    $$('.file-item').forEach(item => {
+        item.addEventListener('click', () => {
+            $$('.file-item').forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
+            
+            const type = item.dataset.type;
+            if (type === 'folder') {
+                // Navigate into folder
+                navigateToFolder(item.dataset.path);
+            } else {
+                // Show file preview
+                showFilePreview(item);
+            }
+        });
+        
+        // Double click to open/use
+        item.addEventListener('dblclick', () => {
+            const type = item.dataset.type;
+            if (type === 'file') {
+                useFileInScene(item);
+            }
+        });
+    });
+}
+
+function navigateToFolder(path) {
+    // Find the folder data by path
+    const fileData = buildFileTreeData();
+    const parts = path.split('/');
+    let current = fileData.root;
+    
+    for (const part of parts) {
+        if (part && current.children && current.children[part]) {
+            current = current.children[part];
+        }
+    }
+    
+    renderFileList(current, path);
+    updatePathBar(path);
+}
+
+function updatePathBar(path) {
+    const pathBar = $('#fmPathBar');
+    if (!pathBar) return;
+    
+    const parts = path.split('/').filter(p => p);
+    let html = '<span class="path-item" data-path="">🏠 Root</span>';
+    
+    let currentPath = '';
+    parts.forEach((part, index) => {
+        currentPath += (index > 0 ? '/' : '') + part;
+        html += ` <span class="path-separator">/</span> <span class="path-item" data-path="${currentPath}">${getCategoryIcon(part)} ${part}</span>`;
+    });
+    
+    pathBar.innerHTML = html;
+    
+    // Bind path click events
+    $$('.path-item').forEach(item => {
+        item.addEventListener('click', () => {
+            navigateToFolder(item.dataset.path);
+        });
+    });
+}
+
+function showFilePreview(item) {
+    const previewPanel = $('#fmPreviewPanel');
+    const previewContent = $('#fmPreviewContent');
+    if (!previewPanel || !previewContent) return;
+    
+    const name = item.dataset.name;
+    const path = item.dataset.path;
+    const type = item.dataset.type;
+    const size = item.dataset.size;
+    const modified = item.dataset.modified;
+    
+    let previewHtml = `
+        <div class="preview-header">
+            <span class="preview-icon">${getFileIcon(name)}</span>
+            <span class="preview-name">${name}</span>
+        </div>
+        <div class="preview-meta">
+            <span>Path: ${path}</span>
+            <span>Size: ${formatFileSize(size)}</span>
+            <span>Modified: ${formatDate(modified)}</span>
+        </div>
+    `;
+    
+    // Add content preview based on file type
+    if (name.endsWith('.json') && item.dataset.content) {
+        try {
+            const content = JSON.parse(decodeURIComponent(item.dataset.content));
+            previewHtml += `<div class="preview-content"><pre>${escapeHtml(JSON.stringify(content, null, 2).slice(0, 2000))}</pre></div>`;
+        } catch (e) {
+            previewHtml += `<div class="preview-content"><pre>${item.dataset.content}</pre></div>`;
+        }
+    } else if (item.dataset.sceneData) {
+        try {
+            const scene = JSON.parse(decodeURIComponent(item.dataset.sceneData));
+            previewHtml += `<div class="preview-content">
+                <h5>Scene: ${scene.title}</h5>
+                <p>Background: ${scene.background}</p>
+                <p>Characters: ${(scene.characters || []).join(', ')}</p>
+                <p>Duration: ${scene.duration}s</p>
+                <p>${scene.description?.slice(0, 200)}...</p>
+            </div>`;
+        } catch (e) {}
+    } else if (item.dataset.characterData) {
+        try {
+            const char = JSON.parse(decodeURIComponent(item.dataset.characterData));
+            previewHtml += `<div class="preview-content">
+                <h5>Character: ${char.name || 'Unnamed'}</h5>
+                <p>Preset: ${char.preset || 'adult'}</p>
+                <p>Animation: ${char.animation || 'idle'}</p>
+            </div>`;
+        } catch (e) {}
+    } else if (item.dataset.backgroundData) {
+        try {
+            const bg = JSON.parse(decodeURIComponent(item.dataset.backgroundData));
+            previewHtml += `<div class="preview-content">
+                <h5>Background Template</h5>
+                <p>Layers: ${bg.layers?.length || 0}</p>
+            </div>`;
+        } catch (e) {}
+    } else if (item.dataset.assetData) {
+        try {
+            const asset = JSON.parse(decodeURIComponent(item.dataset.assetData));
+            previewHtml += `<div class="preview-content">
+                <h5>Asset: ${asset.assetName || 'Unknown'}</h5>
+                <p>Category: ${asset.category || 'Unknown'}</p>
+                <p>Position: ${asset.position ? `(${asset.position.x.toFixed(1)}, ${asset.position.y.toFixed(1)}, ${asset.position.z.toFixed(1)})` : 'N/A'}</p>
+            </div>`;
+        } catch (e) {}
+    } else if (item.dataset.videoData) {
+        try {
+            const video = JSON.parse(decodeURIComponent(item.dataset.videoData));
+            previewHtml += `<div class="preview-content">
+                <h5>Exported Video</h5>
+                <p>Size: ${formatFileSize(video.size || 0)}</p>
+                <p>Date: ${formatDate(video.timestamp || 0)}</p>
+                <video controls style="max-width: 100%;" src="${URL.createObjectURL(video.blob)}"></video>
+            </div>`;
+        } catch (e) {}
+    }
+    
+    previewContent.innerHTML = previewHtml;
+    previewPanel.style.display = 'block';
+    
+    // Bind action buttons
+    $('#fmUseFile').onclick = () => useFileInScene(item);
+    $('#fmDownloadFile').onclick = () => downloadFileFromManager(item);
+    $('#fmDeleteFile').onclick = () => deleteFileFromManager(item);
+}
+
+function useFileInScene(item) {
+    const name = item.dataset.name;
+    const path = item.dataset.path;
+    
+    if (path.startsWith('Scenes/')) {
+        // Load scene
+        const sceneIndex = parseInt(name.match(/scene_(\d+)/)?.[1] || '1') - 1;
+        if (AppState.scenes && AppState.scenes[sceneIndex]) {
+            AppState.three.currentScene = sceneIndex;
+            rebuildSceneForPreview(sceneIndex);
+            renderSceneList();
+            showToast(`Loaded scene ${sceneIndex + 1}`, 'success');
+        }
+    } else if (path.startsWith('Characters/')) {
+        // Load character into current scene
+        const sceneIndex = parseInt(item.dataset.sceneIndex || '0');
+        const charIndex = parseInt(item.dataset.charIndex || '0');
+        if (AppState.three.characters3d[sceneIndex]?.[charIndex]) {
+            // Character already exists, just select it
+            showToast('Character loaded', 'success');
+        }
+    } else if (path.startsWith('Backgrounds/')) {
+        // Apply background to current scene
+        const bgKey = item.dataset.backgroundKey;
+        if (bgKey && BackgroundTemplates[bgKey]) {
+            applyEnvironmentPreset(bgKey);
+            showToast(`Applied background: ${bgKey}`, 'success');
+        }
+    } else if (path.startsWith('Audio/')) {
+        // Play audio
+        if (item.dataset.genre && AppState.audioManager) {
+            AppState.audioManager.playMusic(item.dataset.genre, 30);
+            showToast(`Playing ${item.dataset.genre} music`, 'success');
+        } else if (item.dataset.sfx && AppState.audioManager) {
+            AppState.audioManager.playSFX(item.dataset.sfx);
+            showToast(`Playing SFX: ${item.dataset.sfx}`, 'success');
+        }
+    } else if (path.startsWith('Props/')) {
+        // Add asset to scene
+        if (item.dataset.assetData && AppState.three.assetManager) {
+            try {
+                const asset = JSON.parse(decodeURIComponent(item.dataset.assetData));
+                AppState.three.assetManager.addAsset(asset.assetId, {
+                    position: asset.position,
+                    rotation: asset.rotation,
+                    scale: asset.scale,
+                    customization: asset.customization,
+                    variation: asset.variation
+                });
+                showToast(`Added ${asset.assetName} to scene`, 'success');
+            } catch (e) {
+                showToast('Failed to add asset', 'error');
+            }
+        }
+    } else if (path.startsWith('Project Files/')) {
+        if (name === 'story.txt' && item.dataset.content) {
+            const content = decodeURIComponent(item.dataset.content);
+            $('#storyInput').value = content;
+            AppState.story = content;
+            handleStoryInput();
+            showToast('Story loaded', 'success');
+        }
+    }
+    
+    closeFileManagerModal();
+}
+
+function downloadFileFromManager(item) {
+    const name = item.dataset.name;
+    
+    if (item.dataset.content) {
+        // JSON or text file
+        const content = decodeURIComponent(item.dataset.content);
+        const blob = new Blob([content], { type: 'application/json' });
+        downloadBlob(blob, name);
+    } else if (item.dataset.videoData) {
+        try {
+            const video = JSON.parse(decodeURIComponent(item.dataset.videoData));
+            downloadBlob(video.blob, video.name || name);
+        } catch (e) {
+            showToast('Download failed', 'error');
+        }
+    } else {
+        showToast('Cannot download this file type', 'warning');
+    }
+}
+
+function deleteFileFromManager(item) {
+    const path = item.dataset.path;
+    
+    if (confirm(`Delete ${item.dataset.name}?`)) {
+        // For now, just show toast - actual deletion would need backend
+        showToast('Delete functionality requires backend storage', 'warning');
+    }
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function formatDate(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function getFileIcon(filename) {
+    if (filename.endsWith('.json')) return '📄';
+    if (filename.endsWith('.txt')) return '📝';
+    if (filename.endsWith('.webm') || filename.endsWith('.mp4')) return '🎥';
+    if (filename.endsWith('.wav') || filename.endsWith('.mp3')) return '🎵';
+    if (filename.endsWith('.png') || filename.endsWith('.jpg')) return '🖼️';
+    return '📄';
+}
+
+function bindFileManagerEvents(fileData) {
+    $('#fmNewFolder').addEventListener('click', () => {
+        const name = prompt('Folder name:');
+        if (name) showToast('Folder creation requires backend', 'warning');
+    });
+    
+    $('#fmUploadFiles').addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.onchange = (e) => {
+            Array.from(e.target.files).forEach(file => {
+                showToast(`Uploaded: ${file.name}`, 'success');
+            });
+        };
+        input.click();
+    });
+    
+    $('#fmRefresh').addEventListener('click', () => {
+        const newData = buildFileTreeData();
+        populateFileCategories(newData);
+        renderFileList(newData.root, '');
+        updatePathBar('');
+        showToast('Refreshed', 'success');
+    });
+    
+    $('#fmSearch').addEventListener('input', debounce((e) => {
+        const query = e.target.value.toLowerCase();
+        $$('.file-item').forEach(item => {
+            const name = item.dataset.name.toLowerCase();
+            item.style.display = name.includes(query) ? 'flex' : 'none';
+        });
+    }, 300));
+    
+    $('#fmViewMode').addEventListener('change', (e) => {
+        $('#fmFileList').classList.toggle('grid-view', e.target.value === 'grid');
+    });
+    
+    $('#fmExportProject').addEventListener('click', () => {
+        if (AppState.projectManager) {
+            AppState.projectManager.downloadProject();
+        }
+    });
+    
+    $('#fmImportProject').addEventListener('click', () => {
+        if (AppState.projectManager) {
+            AppState.projectManager.loadProject();
+        }
+    });
+    
+    $('#fmClearCache').addEventListener('click', () => {
+        if (confirm('Clear all cached data?')) {
+            localStorage.removeItem('exportedVideos');
+            localStorage.removeItem('ai_animation_autosave');
+            showToast('Cache cleared', 'success');
+            $('#fmRefresh').click();
+        }
+    });
+}
+
+// ========================================
+// Render/Export UI
+// ========================================
+
+function createRenderUI(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const duration = calculateTotalDuration();
+    const sceneCount = AppState.scenes?.length || 0;
+    
+    container.innerHTML = `
+        <div class="render-wizard">
+            <div class="render-summary">
+                <h4>Render Summary</h4>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="summary-label">Scenes</span>
+                        <span class="summary-value">${sceneCount}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Total Duration</span>
+                        <span class="summary-value">${formatTime(duration)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Characters</span>
+                        <span class="summary-value">${countTotalCharacters()}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Estimated Frames</span>
+                        <span class="summary-value">${Math.ceil(duration * 30)} @ 30fps</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="render-presets">
+                <h4>Quality Preset</h4>
+                <div class="preset-grid" id="renderPresetGrid"></div>
+            </div>
+            
+            <div class="render-settings">
+                <h4>Advanced Settings</h4>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label class="label">Resolution</label>
+                        <select id="renderResolution" class="select">
+                            <option value="720p">720p (1280×720)</option>
+                            <option value="1080p" selected>1080p (1920×1080)</option>
+                            <option value="4k">4K (3840×2160)</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="label">Frame Rate</label>
+                        <select id="renderFramerate" class="select">
+                            <option value="15">15 FPS</option>
+                            <option value="24">24 FPS (Cinematic)</option>
+                            <option value="30" selected>30 FPS</option>
+                            <option value="60">60 FPS</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="label">Format</label>
+                        <select id="renderFormat" class="select">
+                            <option value="mp4_webcodecs">MP4 (WebCodecs H.264)</option>
+                            <option value="webm">WebM (VP9)</option>
+                            <option value="mp4_ffmpeg">MP4 (ffmpeg.wasm)</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="label">Bitrate (Mbps)</label>
+                        <input type="range" id="renderBitrate" min="2" max="50" step="1" value="10" class="slider">
+                        <span id="renderBitrateValue">10 Mbps</span>
+                    </div>
+                    <div class="setting-item full-width">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="renderIncludeAudio" checked> Include Audio
+                        </label>
+                    </div>
+                    <div class="setting-item full-width">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="renderIncludeSubtitles" checked> Include Subtitles
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="render-progress" id="renderProgress" style="display: none;">
+                <div class="progress-ring-container">
+                    <svg class="progress-ring" width="120" height="120">
+                        <circle class="progress-ring-bg" cx="60" cy="60" r="54" fill="none" stroke-width="8"/>
+                        <circle class="progress-ring-fg" cx="60" cy="60" r="54" fill="none" stroke-width="8" stroke-dasharray="339" stroke-dashoffset="339"/>
+                    </svg>
+                    <div class="progress-text">
+                        <span id="renderProgressPercent">0%</span>
+                        <p id="renderProgressStatus">Preparing...</p>
+                    </div>
+                </div>
+                <div class="progress-details">
+                    <div class="detail-row"><span>Frames:</span> <span id="renderFramesRendered">0</span> / <span id="renderTotalFrames">0</span></div>
+                    <div class="detail-row"><span>Time:</span> <span id="renderTimeElapsed">0s</span> / <span id="renderTimeEstimated">--</span></div>
+                </div>
+            </div>
+            
+            <div class="render-result" id="renderResult" style="display: none;">
+                <div class="result-icon success">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <h3>Video Rendered Successfully!</h3>
+                <p>Your animation is ready to download</p>
+                <video id="renderedVideo" controls style="max-width: 100%; border-radius: 12px; margin: 16px 0;"></video>
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-lg" id="renderDownloadBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Download MP4
+                    </button>
+                    <button class="btn btn-secondary" id="renderShareBtn">Share</button>
+                </div>
+            </div>
+            
+            <div class="render-actions">
+                <button class="btn btn-secondary" id="renderCancelBtn" style="display: none;">Cancel</button>
+                <button class="btn btn-primary btn-lg" id="renderStartBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
+                        <rect x="2" y="2" width="20" height="20" rx="2"/>
+                        <path d="M6 12l4 4 8-8"/>
+                    </svg>
+                    Start Render
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Render presets
+    renderPresetGrid();
+    
+    // Bind events
+    $('#renderBitrate').addEventListener('input', (e) => {
+        $('#renderBitrateValue').textContent = `${e.target.value} Mbps`;
+    });
+    
+    $('#renderStartBtn').addEventListener('click', startRender);
+    $('#renderCancelBtn').addEventListener('click', cancelRender);
+    $('#renderDownloadBtn').addEventListener('click', downloadRenderedVideo);
+    $('#renderShareBtn').addEventListener('click', shareRenderedVideo);
+}
+
+function renderPresetGrid() {
+    const grid = $('#renderPresetGrid');
+    if (!grid) return;
+    
+    const presets = {
+        draft: { name: 'Draft (Fast)', resolution: '720p', fps: 15, bitrate: 2, format: 'webm', desc: 'Quick preview, low quality' },
+        standard: { name: 'Standard', resolution: '1080p', fps: 30, bitrate: 8, format: 'webm', desc: 'Balanced quality/speed' },
+        high: { name: 'High Quality', resolution: '1080p', fps: 30, bitrate: 20, format: 'mp4_webcodecs', desc: 'Best for final output' },
+        ultra: { name: 'Ultra (4K)', resolution: '4k', fps: 30, bitrate: 50, format: 'mp4_ffmpeg', desc: 'Maximum quality, slow' },
+        social: { name: 'Social Media', resolution: '1080p', fps: 30, bitrate: 12, format: 'mp4_webcodecs', desc: 'Optimized for Instagram/TikTok' }
+    };
+    
+    grid.innerHTML = Object.entries(presets).map(([key, preset]) => `
+        <div class="preset-card" data-preset="${key}">
+            <div class="preset-name">${preset.name}</div>
+            <div class="preset-details">${preset.resolution} • ${preset.fps}fps • ${preset.bitrate}Mbps</div>
+            <div class="preset-desc">${preset.desc}</div>
+        </div>
+    `).join('');
+    
+    $$('.preset-card').forEach(card => {
+        card.addEventListener('click', () => selectRenderPreset(card.dataset.preset));
+    });
+    
+    // Select standard by default
+    selectRenderPreset('standard');
+}
+
+let selectedRenderPreset = 'standard';
+
+function selectRenderPreset(preset) {
+    selectedRenderPreset = preset;
+    $$('.preset-card').forEach(c => c.classList.remove('selected'));
+    $(`.preset-card[data-preset="${preset}"]`)?.classList.add('selected');
+    
+    const presets = {
+        draft: { resolution: '720p', fps: 15, bitrate: 2, format: 'webm' },
+        standard: { resolution: '1080p', fps: 30, bitrate: 8, format: 'webm' },
+        high: { resolution: '1080p', fps: 30, bitrate: 20, format: 'mp4_webcodecs' },
+        ultra: { resolution: '4k', fps: 30, bitrate: 50, format: 'mp4_ffmpeg' },
+        social: { resolution: '1080p', fps: 30, bitrate: 12, format: 'mp4_webcodecs' }
+    };
+    
+    const p = presets[preset];
+    $('#renderResolution').value = p.resolution;
+    $('#renderFramerate').value = p.fps;
+    $('#renderFormat').value = p.format;
+    $('#renderBitrate').value = p.bitrate;
+    $('#renderBitrateValue').textContent = `${p.bitrate} Mbps`;
+}
+
+function calculateTotalDuration() {
+    if (AppState.timeline) {
+        return AppState.timeline.duration;
+    }
+    if (AppState.scenes) {
+        return AppState.scenes.reduce((sum, s) => sum + (s.duration || 8), 0);
+    }
+    return 0;
+}
+
+function countTotalCharacters() {
+    if (!AppState.three?.characters3d) return 0;
+    return AppState.three.characters3d.reduce((sum, sceneChars) => {
+        return sum + (sceneChars?.length || 0);
+    }, 0);
+}
+
+async function startRender() {
+    const startBtn = $('#renderStartBtn');
+    const cancelBtn = $('#renderCancelBtn');
+    const progressDiv = $('#renderProgress');
+    const resultDiv = $('#renderResult');
+    const settingsDiv = $('.render-settings');
+    const presetsDiv = $('.render-presets');
+    const summaryDiv = $('.render-summary');
+    
+    // Hide settings, show progress
+    startBtn.style.display = 'none';
+    cancelBtn.style.display = 'inline-flex';
+    progressDiv.style.display = 'block';
+    resultDiv.style.display = 'none';
+    if (settingsDiv) settingsDiv.style.display = 'none';
+    if (presetsDiv) presetsDiv.style.display = 'none';
+    if (summaryDiv) summaryDiv.style.display = 'none';
+    
+    const config = {
+        width: RESOLUTIONS[$('#renderResolution').value]?.width || 1920,
+        height: RESOLUTIONS[$('#renderResolution').value]?.height || 1080,
+        framerate: parseInt($('#renderFramerate').value),
+        bitrate: parseInt($('#renderBitrate').value) * 1_000_000,
+        format: $('#renderFormat').value,
+        duration: calculateTotalDuration(),
+        includeAudio: $('#renderIncludeAudio').checked,
+        includeSubtitles: $('#renderIncludeSubtitles').checked
+    };
+    
+    const totalFrames = Math.ceil(config.duration * config.framerate);
+    $('#renderTotalFrames').textContent = totalFrames;
+    
+    const renderStartTime = Date.now();
+    
+    try {
+        if (!AppState.exportManager) {
+            initializeExportManager();
+        }
+        
+        AppState.exportManager.onProgress = (p) => {
+            const percent = Math.round(p * 100);
+            $('#renderProgressPercent').textContent = `${percent}%`;
+            $('#renderProgressFill').style.strokeDashoffset = 339 * (1 - p);
+            $('#renderFramesRendered').textContent = Math.round(p * totalFrames);
+            
+            const elapsed = (Date.now() - renderStartTime) / 1000;
+            const estimated = elapsed / (p || 0.001);
+            $('#renderTimeElapsed').textContent = `${Math.round(elapsed)}s`;
+            $('#renderTimeEstimated').textContent = `${Math.round(estimated)}s`;
+            
+            $('#renderProgressStatus').textContent = `Rendering frame ${Math.round(p * totalFrames)} / ${totalFrames}`;
+        };
+        
+        AppState.exportManager.onComplete = (result) => {
+            // Show result
+            progressDiv.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            resultDiv.style.display = 'block';
+            startBtn.style.display = 'inline-flex';
+            startBtn.textContent = 'Render Again';
+            
+            // Create video URL
+            const videoUrl = URL.createObjectURL(result.data);
+            $('#renderedVideo').src = videoUrl;
+            $('#renderedVideo').dataset.downloadUrl = videoUrl;
+            $('#renderedVideo').dataset.filename = result.filename;
+            
+            // Store for later download
+            window.lastRenderResult = result;
+            
+            showToast(`Render complete: ${result.filename}`, 'success');
+        };
+        
+        AppState.exportManager.onError = (err) => {
+            progressDiv.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            startBtn.style.display = 'inline-flex';
+            startBtn.textContent = 'Retry Render';
+            showToast('Render failed: ' + err.message, 'error');
+        };
+        
+        await AppState.exportManager.exportVideo(config);
+        
+    } catch (err) {
+        progressDiv.style.display = 'none';
+        cancelBtn.style.display = 'none';
+        startBtn.style.display = 'inline-flex';
+        startBtn.textContent = 'Retry Render';
+        showToast('Render failed: ' + err.message, 'error');
+    }
+}
+
+function cancelRender() {
+    if (AppState.exportManager) {
+        AppState.exportManager.cancel();
+    }
+    
+    $('#renderProgress').style.display = 'none';
+    $('#renderCancelBtn').style.display = 'none';
+    $('#renderStartBtn').style.display = 'inline-flex';
+    $('#renderStartBtn').textContent = 'Start Render';
+    showToast('Render cancelled', 'warning');
+}
+
+function downloadRenderedVideo() {
+    if (window.lastRenderResult) {
+        const url = URL.createObjectURL(window.lastRenderResult.data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = window.lastRenderResult.filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Download started', 'success');
+    } else if ($('#renderedVideo').dataset.downloadUrl) {
+        const a = document.createElement('a');
+        a.href = $('#renderedVideo').dataset.downloadUrl;
+        a.download = $('#renderedVideo').dataset.filename;
+        a.click();
+        showToast('Download started', 'success');
+    }
+}
+
+function shareRenderedVideo() {
+    if (navigator.share && window.lastRenderResult) {
+        const file = new File([window.lastRenderResult.data], window.lastRenderResult.filename, { 
+            type: window.lastRenderResult.data.type 
+        });
+        navigator.share({
+            title: 'My Animation',
+            text: 'Check out my animation!',
+            files: [file]
+        }).catch(err => {
+            if (err.name !== 'AbortError') {
+                showToast('Share failed', 'error');
+            }
+        });
+    } else {
+        showToast('Sharing not supported in this browser', 'warning');
+    }
+}
+
 function autoSequenceScenesToTimeline() {
     if (!AppState.scenes || AppState.scenes.length === 0) {
         showToast('No scenes to sequence', 'warning');
@@ -9507,6 +10609,27 @@ function addMobileButtonListener(buttonId, handler) {
 function initEventListeners() {
     $('#themeToggle').addEventListener('click', toggleTheme);
     
+    // Project Manager Modal
+    $('#projectManagerBtn').addEventListener('click', openProjectManagerModal);
+    $('#closeProjectManagerBtn').addEventListener('click', closeProjectManagerModal);
+    
+    // File Manager Modal
+    $('#fileManagerBtn').addEventListener('click', openFileManagerModal);
+    $('#closeFileManagerBtn').addEventListener('click', closeFileManagerModal);
+    
+    // Render/Export Modal
+    $('#renderBtn').addEventListener('click', openRenderModal);
+    $('#closeRenderBtn').addEventListener('click', closeRenderModal);
+    
+    // Close modals on overlay click
+    $$('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.style.display = 'none';
+            }
+        });
+    });
+    
     // Mobile-friendly input handling: input, keyup, and change events
     const storyInput = $('#storyInput');
     if (storyInput) {
@@ -10008,6 +11131,46 @@ function toggleTheme() {
     const isDark = html.getAttribute('data-theme') === 'dark';
     html.setAttribute('data-theme', isDark ? 'light' : 'dark');
     localStorage.setItem('theme', isDark ? 'light' : 'dark');
+}
+
+// ========================================
+// Modal Handlers
+// ========================================
+
+function openProjectManagerModal() {
+    const modal = $('#projectManagerModal');
+    modal.style.display = 'flex';
+    // Initialize project UI if not already done
+    if (!window.projectUIInitialized) {
+        createProjectUI(AppState.projectManager, 'projectManagerContainer');
+        window.projectUIInitialized = true;
+    }
+}
+
+function closeProjectManagerModal() {
+    $('#projectManagerModal').style.display = 'none';
+}
+
+function openFileManagerModal() {
+    const modal = $('#fileManagerModal');
+    modal.style.display = 'flex';
+    // Initialize file manager UI
+    createFileManagerUI('fileManagerContainer');
+}
+
+function closeFileManagerModal() {
+    $('#fileManagerModal').style.display = 'none';
+}
+
+function openRenderModal() {
+    const modal = $('#renderModal');
+    modal.style.display = 'flex';
+    // Initialize render UI
+    createRenderUI('renderContainer');
+}
+
+function closeRenderModal() {
+    $('#renderModal').style.display = 'none';
 }
 
 function handleStoryInput() {

@@ -825,7 +825,7 @@ export class ExportManager {
 // Export UI Integration
 // ========================================
 
-function createExportUI(exportManager, containerId) {
+export function createExportUI(exportManager, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
     
